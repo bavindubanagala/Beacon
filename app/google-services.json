@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "416776190814",
+    "project_id": "studio-6294784798-6c0e7",
+    "storage_bucket": "studio-6294784798-6c0e7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416776190814:android:82abe0d7fb87fbfb692dcf",
+        "android_client_info": {
+          "package_name": "com.beacon.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLgyp79tmQY0VplV8pMPeire8u_DA5U7o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

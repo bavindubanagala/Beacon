@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Beacon Tracker</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Welcome to Beacon Tracker</string>
+    <string name="onboarding_description">This app sends your location to the admin in real-time.</string>
+    <string name="device_id">Your Device ID</string>
+    <string name="copy_device_id">Copy Device ID</string>
+    <string name="ready_button">I\'m Ready - Start Tracking</string>
+    <string name="uninstall_warning">⚠️ Warning: If you uninstall this app, location tracking will stop.</string>
+
+    <!-- Status -->
+    <string name="tracking_active">✓ Tracking Active</string>
+    <string name="tracking_paused">⏸ Tracking Paused</string>
+    <string name="location_sending">Your location is being sent to the admin.</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="device_id_label">Device ID</string>
+    <string name="app_version">App Version</string>
+    <string name="os_version">OS Version</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="force_update">Force Update Now</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Beacon Tracking</string>
+    <string name="notification_text">Beacon Tracker is running</string>
+
+    <!-- Error Messages -->
+    <string name="error_location_permission">Location permission is required.</string>
+    <string name="error_location_disabled">Location services are disabled.</string>
+    <string name="error_device_not_authorized">Device not authorized. Please reinstall.</string>
+
+</resources>
