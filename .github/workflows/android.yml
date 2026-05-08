@@ -19,7 +19,7 @@ jobs:
           java-version: 21
 
       - name: Grant execute permission
-        run: chmod +x gradlew
+        run: chmod +x ./gradlew
 
       - name: Build APK
         run: ./gradlew assembleDebug
