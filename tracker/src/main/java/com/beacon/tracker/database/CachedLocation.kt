@@ -3,7 +3,7 @@ package com.beacon.tracker.database
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "cached_locations")
+@Entity(tableName = "CachedLocation")
 data class CachedLocation(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

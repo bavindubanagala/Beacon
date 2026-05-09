@@ -22,8 +22,10 @@ class FirebaseTrackerRepository(
      */
     suspend fun uploadLocationToHistory(location: Location): Result<Unit> {
         return try {
-            val deviceId = deviceAuthManager.getDeviceId()
-            val locationMap = mapOf(
+            val deviceId = deviceAuthManager.getDeviceId() ?: return Result.failure(
+            	Exception("Device ID is null")
+            )
+            val locationMap: Map<String, Any> = mapOf(
                 "timestamp" to location.timestamp,
                 "latitude" to location.latitude,
                 "longitude" to location.longitude,
@@ -65,10 +67,12 @@ class FirebaseTrackerRepository(
         deviceMotionStatus: String
     ): Result<Unit> {
         return try {
-            val deviceId = deviceAuthManager.getDeviceId()
+            val deviceId = deviceAuthManager.getDeviceId() ?: return Result.failure(
+            	Exception("Device ID is null")
+            )
             val now = Date()
 
-            val updateMap = mapOf(
+            val updateMap: Map<String, Any> = mapOf(
                 "last_location" to mapOf(
                     "latitude" to latitude,
                     "longitude" to longitude,
@@ -108,7 +112,9 @@ class FirebaseTrackerRepository(
         deviceMotionStatus: String
     ): Result<Unit> {
         return try {
-            val deviceId = deviceAuthManager.getDeviceId()
+            val deviceId = deviceAuthManager.getDeviceId() ?: return Result.failure(
+            	Exception("Device ID is null")
+            )
             val liveLocationData = mapOf(
                 "latitude" to latitude,
                 "longitude" to longitude,
@@ -139,7 +145,9 @@ class FirebaseTrackerRepository(
      */
     suspend fun getDeviceSettings(): Result<Map<String, Any?>> {
         return try {
-            val deviceId = deviceAuthManager.getDeviceId()
+            val deviceId = deviceAuthManager.getDeviceId() ?: return Result.failure(
+            	Exception("Device ID is null")
+            )
             val snapshot = firestore.collection(FirebaseCollections.DEVICES)
                 .document(deviceId)
                 .get()
@@ -161,7 +169,9 @@ class FirebaseTrackerRepository(
      */
     suspend fun isDeviceAuthorized(): Result<Boolean> {
         return try {
-            val deviceId = deviceAuthManager.getDeviceId()
+            val deviceId = deviceAuthManager.getDeviceId() ?: return Result.failure(
+            	Exception("Device ID is null")
+            )
             val snapshot = firestore.collection(FirebaseCollections.DEVICES)
                 .document(deviceId)
                 .get()
@@ -170,7 +180,7 @@ class FirebaseTrackerRepository(
             Result.success(snapshot.exists())
         } catch (e: Exception) {
             Log.e(tag, "Failed to check device authorization", e)
-            Result.failure(Boolean(false))
+            Result.failure(Exception("Device not authorized"))
         }
     }
 
@@ -179,10 +189,12 @@ class FirebaseTrackerRepository(
      */
     suspend fun updateTrackingPauseState(paused: Boolean): Result<Unit> {
         return try {
-            val deviceId = deviceAuthManager.getDeviceId()
+            val deviceId = deviceAuthManager.getDeviceId() ?: return Result.failure(
+            	Exception("Device ID is null")
+            )
             firestore.collection(FirebaseCollections.DEVICES)
                 .document(deviceId)
-                .update("tracking_enabled" to !paused)
+                .update("tracking_enabled",!paused)
                 .await()
 
             Log.d(tag, "Tracking pause state updated: paused=$paused")

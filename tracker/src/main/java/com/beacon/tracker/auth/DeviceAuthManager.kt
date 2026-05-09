@@ -20,7 +20,8 @@ class DeviceAuthManager(context: Context) {
     )
 
     fun getDeviceId(): String {
-        var deviceId = encryptedPrefs.getString(SharedPrefsKeys.DEVICE_ID, "")
+        // getString returns String? — coerce to non-null with ?: ""
+        var deviceId = encryptedPrefs.getString(SharedPrefsKeys.DEVICE_ID, "") ?: ""
         if (deviceId.isEmpty()) {
             deviceId = UUID.randomUUID().toString()
             encryptedPrefs.edit().putString(SharedPrefsKeys.DEVICE_ID, deviceId).apply()
@@ -29,7 +30,8 @@ class DeviceAuthManager(context: Context) {
     }
 
     fun getDeviceSecret(): String {
-        var secret = encryptedPrefs.getString(SharedPrefsKeys.DEVICE_SECRET, "")
+        // getString returns String? — coerce to non-null with ?: ""
+        var secret = encryptedPrefs.getString(SharedPrefsKeys.DEVICE_SECRET, "") ?: ""
         if (secret.isEmpty()) {
             secret = generateSecureSecret()
             encryptedPrefs.edit().putString(SharedPrefsKeys.DEVICE_SECRET, secret).apply()
@@ -38,7 +40,6 @@ class DeviceAuthManager(context: Context) {
     }
 
     private fun generateSecureSecret(): String {
-        // Generate a 32-character secure random secret
         val charPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
         return (1..32)
             .map { charPool.random() }
@@ -53,3 +54,4 @@ class DeviceAuthManager(context: Context) {
         encryptedPrefs.edit().clear().apply()
     }
 }
+
