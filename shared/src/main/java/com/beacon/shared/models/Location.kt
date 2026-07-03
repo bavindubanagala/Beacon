@@ -1,10 +1,8 @@
 package com.beacon.shared.models
 
-import java.util.Date
-
 data class Location(
     val deviceId: String = "",
-    val timestamp: Date = Date(),
+    val timestamp: Long = 0L,
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val accuracy: Float = 0f,
@@ -33,7 +31,7 @@ data class Location(
         fun fromMap(map: Map<String, Any?>): Location {
             return Location(
                 deviceId = map["device_id"] as? String ?: "",
-                timestamp = (map["timestamp"] as? com.google.firebase.Timestamp)?.toDate() ?: Date(),
+                timestamp = (map["timestamp"] as? Number)?.toLong() ?: 0L,
                 latitude = (map["latitude"] as? Number)?.toDouble() ?: 0.0,
                 longitude = (map["longitude"] as? Number)?.toDouble() ?: 0.0,
                 accuracy = (map["accuracy"] as? Number)?.toFloat() ?: 0f,

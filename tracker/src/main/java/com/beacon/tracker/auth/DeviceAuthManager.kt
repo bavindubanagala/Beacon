@@ -6,7 +6,7 @@ import androidx.security.crypto.MasterKey
 import com.beacon.shared.constants.SharedPrefsKeys
 import java.util.UUID
 
-class DeviceAuthManager(context: Context) {
+class DeviceAuthManager(private val context: Context) {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()

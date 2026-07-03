@@ -52,10 +52,13 @@ android {
 }
 
 dependencies {
-    implementation "com.google.android.material:material:1.11.0"
 
-    // Shared module
-    implementation project(":shared")
+    // 🔥 FIXED shared module (this was your main crash point)
+    implementation(project(":shared"))
+
+    // Material + Security
+    implementation "com.google.android.material:material:1.11.0"
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
 
     // Firebase BOM
     implementation platform("com.google.firebase:firebase-bom:32.1.0")
@@ -65,11 +68,11 @@ dependencies {
     implementation "com.google.firebase:firebase-messaging"
     implementation "com.google.firebase:firebase-analytics"
 
-    // Google Play Services
+    // Google Maps + Location
     implementation "com.google.android.gms:play-services-maps:18.1.0"
     implementation "com.google.android.gms:play-services-location:21.0.1"
 
-    // Jetpack Compose
+    // Compose
     implementation "androidx.compose.ui:ui:1.5.0"
     implementation "androidx.compose.material:material:1.5.0"
     implementation "androidx.compose.material3:material3:1.1.0"
@@ -79,17 +82,17 @@ dependencies {
     implementation "androidx.compose.ui:ui-tooling-preview:1.5.0"
     debugImplementation "androidx.compose.ui:ui-tooling:1.5.0"
 
-    // Jetpack Activities & Navigation
+    // Activity + Navigation
     implementation "androidx.activity:activity-compose:1.7.2"
     implementation "androidx.navigation:navigation-compose:2.7.0"
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1"
 
-    // Core AndroidX
+    // Core Android
     implementation "androidx.core:core-ktx:1.10.1"
     implementation "androidx.appcompat:appcompat:1.6.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
 
-    // Room Database
+    // Room
     implementation "androidx.room:room-runtime:2.5.2"
     implementation "androidx.room:room-ktx:2.5.2"
     kapt "androidx.room:room-compiler:2.5.2"
@@ -110,10 +113,7 @@ dependencies {
     // WorkManager
     implementation "androidx.work:work-runtime-ktx:2.8.1"
 
-    // Networking/Connectivity
-    implementation "androidx.work:work-runtime-ktx:2.8.1"
-
-    // Testing
+    // Tests
     testImplementation "junit:junit:4.13.2"
     androidTestImplementation "androidx.test.ext:junit:1.1.5"
     androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"

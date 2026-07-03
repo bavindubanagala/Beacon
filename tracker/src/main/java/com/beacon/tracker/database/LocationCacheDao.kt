@@ -14,14 +14,14 @@ interface LocationCacheDao {
     @Delete
     suspend fun deleteLocation(location: CachedLocation): Int
 
-    @Query("SELECT * FROM CachedLocation WHERE synced = 0")
+    @Query("SELECT * FROM cached_location WHERE synced = 0")
     suspend fun getUnSyncedLocations(): List<CachedLocation>
 
-    @Query("SELECT * FROM CachedLocation ORDER BY timestamp DESC LIMIT :limit")
+    @Query("SELECT * FROM cached_location ORDER BY timestamp DESC LIMIT :limit")
     suspend fun getRecentLocations(limit: Int): List<CachedLocation>
 
     @Query("""
-        SELECT * FROM CachedLocation 
+        SELECT * FROM cached_location 
         WHERE timestamp BETWEEN :startTime AND :endTime
     """)
     suspend fun getLocationsByTimeRange(
@@ -29,15 +29,15 @@ interface LocationCacheDao {
         endTime: Long
     ): List<CachedLocation>
 
-    @Query("DELETE FROM CachedLocation WHERE timestamp < :cutoffTime")
+    @Query("DELETE FROM cached_location WHERE timestamp < :cutoffTime")
     suspend fun deleteOldLocations(cutoffTime: Long): Int
 
-    @Query("UPDATE CachedLocation SET synced = 1 WHERE id IN (:ids)")
+    @Query("UPDATE cached_location SET synced = 1 WHERE id IN (:ids)")
     suspend fun markLocationsSynced(ids: List<Int>): Int
 
-    @Query("DELETE FROM CachedLocation WHERE synced = 1")
+    @Query("DELETE FROM cached_location WHERE synced = 1")
     suspend fun clearSyncedLocations(): Int
 
-    @Query("SELECT COUNT(*) FROM CachedLocation WHERE synced = 0")
+    @Query("SELECT COUNT(*) FROM cached_location WHERE synced = 0")
     suspend fun getUnSyncedCount(): Int
 }
