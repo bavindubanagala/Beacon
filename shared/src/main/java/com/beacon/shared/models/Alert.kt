@@ -1,9 +1,12 @@
 package com.beacon.shared.models
 
 data class Alert(
-    val alert_id: String = "",
-    val alert_type: String = "",
+    val id: String = "",
+    val alert_type: String = "", // LOW_BATTERY, OFFLINE, GEOFENCE
     val device_id: String = "",
-    val alert_severity: String = "",
-    val created_at: Long = 0L
+    val device_name: String = "",
+    val alert_severity: String = "INFO", // INFO, WARNING, CRITICAL
+    val message: String = "",
+    val created_at: Long = System.currentTimeMillis(),
+    val is_read: Boolean = false
 )

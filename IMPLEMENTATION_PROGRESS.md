@@ -13,33 +13,15 @@
 - ✅ All models have `toMap()` and `fromMap()` for Firestore serialization
 
 ### Tracker App (Core)
-- ✅ **DeviceAuthManager**: Secure device_id + device_secret generation & storage in EncryptedSharedPreferences
-  - Generates UUID device_id on first launch
-  - Generates 32-character secure random secret
-  - Never exposed to admin
-- ✅ **LocationTrackingService** (Foreground Service - PRIMARY):
-  - Handler-based location request loop (not WorkManager primary)
-  - Implements 30-300 second configurable tracking interval
-  - Three accuracy levels: high (GPS only), medium (mixed), low (network)
-  - Uploads to Firestore location_history, updates device status, and RTDB live locations
-  - Graceful handling of device not authorized (idle state, no aggressive retrying)
-  - Handles tracking pause from admin
-  - Persistent foreground notification
-- ✅ **FirebaseTrackerRepository**:
-  - uploadLocationToHistory() - Stores in Firestore subcollection
-  - updateDeviceStatus() - Updates parent device doc with latest location/battery/signal
-  - updateLiveLocation() - Writes to RTDB for real-time admin updates
-  - getDeviceSettings() - Fetches config from Firestore
-  - isDeviceAuthorized() - Checks if device still exists (graceful removal)
-  - updateTrackingPauseState() - Pauses/resumes tracking
-- ✅ **BootCompletedReceiver**: Auto-starts LocationTrackingService on device reboot
-- ✅ **Onboarding Screen** (Jetpack Compose):
-  - Displays generated device_id
-  - Copy button with feedback
-  - Requests location + background + notification permissions
-  - Starts LocationTrackingService after onboarding
-- ✅ **Status Screen**: Shows tracking status, battery, signal, device info
-- ✅ Placeholder services for battery & signal monitoring (structure ready)
+- ✅ **DeviceAuthManager**: Secure device_id + device_secret generation & storage
+- ✅ **LocationTrackingService**: Foreground service with timer loop
+- ✅ **FirebaseTrackerRepository**: History, Status, and Live updates
+- ✅ **MainActivity**: Status Screen in Compose
+
+### Admin App (Core)
+- ✅ **Repositories**: Device, Location, Alert, Group, and Settings fully implemented
+- ✅ **Map Screen**: Real-time listener for live updates
+- ✅ **Alerts Screen**: Basic UI for active alerts
 
 ### Admin App (Core)
 - ✅ **AuthManager**:

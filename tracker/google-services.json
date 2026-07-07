@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "416776190814",
-    "project_id": "studio-6294784798-6c0e7",
-    "storage_bucket": "studio-6294784798-6c0e7.firebasestorage.app"
+    "project_number": "1077230320295",
+    "firebase_url": "https://gen-lang-client-0281237877-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "gen-lang-client-0281237877",
+    "storage_bucket": "gen-lang-client-0281237877.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:416776190814:android:82abe0d7fb87fbfb692dcf",
+        "mobilesdk_app_id": "1:1077230320295:android:114be0ebd7e517b48a7982",
         "android_client_info": {
           "package_name": "com.beacon.admin"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCLgyp79tmQY0VplV8pMPeire8u_DA5U7o"
+          "current_key": "AIzaSyBibDLGLvj-JD7ZbwsYR1uJM6BYFn6rBfA"
         }
       ],
       "services": {
@@ -26,7 +27,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:416776190814:android:f1e7cbb9ac3cbffc692dcf",
+        "mobilesdk_app_id": "1:1077230320295:android:6d965e3ad97c34a88a7982",
         "android_client_info": {
           "package_name": "com.beacon.tracker"
         }
@@ -34,7 +35,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCLgyp79tmQY0VplV8pMPeire8u_DA5U7o"
+          "current_key": "AIzaSyBibDLGLvj-JD7ZbwsYR1uJM6BYFn6rBfA"
         }
       ],
       "services": {

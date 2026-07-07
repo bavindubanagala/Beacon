@@ -53,5 +53,21 @@ class DeviceAuthManager(private val context: Context) {
     fun clearAuth() {
         encryptedPrefs.edit().clear().apply()
     }
+
+    fun isPaired(): Boolean {
+        return encryptedPrefs.getBoolean("is_paired", false)
+    }
+
+    fun setPaired(paired: Boolean) {
+        encryptedPrefs.edit().putBoolean("is_paired", paired).apply()
+    }
+
+    fun isDarkMode(): Boolean {
+        return encryptedPrefs.getBoolean("dark_mode", false)
+    }
+
+    fun setDarkMode(enabled: Boolean) {
+        encryptedPrefs.edit().putBoolean("dark_mode", enabled).apply()
+    }
 }
 

@@ -1,21 +1,8 @@
 package com.beacon.admin.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Slider
-import androidx.compose.material.Surface
-import androidx.compose.material.Switch
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,11 +11,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.MaterialTheme
+import com.beacon.admin.auth.AuthManager
 
 @Composable
-fun SettingsScreen() {
-    val darkMode = remember { mutableStateOf(false) }
+fun SettingsScreen(
+    authManager: AuthManager,
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit,
+    onLogout: () -> Unit
+) {
     val defaultTrackingInterval = remember { mutableStateOf(60f) }
     val lowBatteryThreshold = remember { mutableStateOf(20f) }
     val offlineTimeout = remember { mutableStateOf(300f) }
@@ -53,8 +44,8 @@ fun SettingsScreen() {
                     title = "Dark Mode",
                     content = {
                         Switch(
-                            checked = darkMode.value,
-                            onCheckedChange = { darkMode.value = it }
+                            checked = isDarkMode,
+                            onCheckedChange = { onDarkModeChange(it) }
                         )
                     }
                 )
@@ -140,6 +131,21 @@ fun SettingsScreen() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Save Settings")
+                }
+            }
+
+            // Logout Button
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = {
+                        authManager.signOut()
+                        onLogout()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                ) {
+                    Text("Logout")
                 }
             }
 

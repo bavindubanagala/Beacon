@@ -18,35 +18,96 @@ class FirebaseTrackerRepository(
 
     suspend fun uploadLocationToHistory(location: Location): Result<Unit> {
         return try {
-
             val deviceId = deviceAuthManager.getDeviceId()
                 ?: return Result.failure(Exception("Device ID is null"))
-
-            val locationMap = mapOf(
-                "timestamp" to location.timestamp, // ✅ LONG ONLY
-                "latitude" to location.latitude,
-                "longitude" to location.longitude,
-                "accuracy" to location.accuracy,
-                "provider" to location.provider,
-                "speed" to location.speed,
-                "heading" to location.heading,
-                "battery_level" to location.batteryLevel,
-                "signal_strength" to location.signalStrength,
-                "device_motion_status" to location.deviceMotionStatus
-            )
 
             firestore.collection(FirebaseCollections.DEVICES)
                 .document(deviceId)
                 .collection(FirebaseCollections.LOCATION_HISTORY)
                 .document(location.timestamp.toString())
-                .set(locationMap)
+                .set(location.toMap())
                 .await()
 
-            Log.d(tag, "Location uploaded successfully: $deviceId")
+            Log.d(tag, "Location history uploaded successfully: $deviceId")
             Result.success(Unit)
-
         } catch (e: Exception) {
-            Log.e(tag, "Upload failed", e)
+            Log.e(tag, "Upload to history failed", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateDeviceStatus(
+        latitude: Double,
+        longitude: Double,
+        accuracy: Float,
+        batteryLevel: Int,
+        signalStrength: Int,
+        deviceMotionStatus: String
+    ): Result<Unit> {
+        return try {
+            val deviceId = deviceAuthManager.getDeviceId()
+                ?: return Result.failure(Exception("Device ID is null"))
+
+            val statusUpdate = mapOf(
+                "last_location" to mapOf(
+                    "latitude" to latitude,
+                    "longitude" to longitude,
+                    "accuracy" to accuracy,
+                    "timestamp" to System.currentTimeMillis()
+                ),
+                "batteryLevel" to batteryLevel,
+                "battery_level" to batteryLevel,
+                "signal_strength" to signalStrength,
+                "device_motion_status" to deviceMotionStatus,
+                "last_seen" to System.currentTimeMillis(),
+                "status" to "online"
+            )
+
+            firestore.collection(FirebaseCollections.DEVICES)
+                .document(deviceId)
+                .update(statusUpdate)
+                .await()
+
+            Log.d(tag, "Device status updated successfully: $deviceId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(tag, "Update device status failed", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateLiveLocation(
+        latitude: Double,
+        longitude: Double,
+        accuracy: Float,
+        batteryLevel: Int,
+        signalStrength: Int,
+        deviceMotionStatus: String
+    ): Result<Unit> {
+        return try {
+            val deviceId = deviceAuthManager.getDeviceId()
+                ?: return Result.failure(Exception("Device ID is null"))
+
+            val liveData = mapOf(
+                "latitude" to latitude,
+                "longitude" to longitude,
+                "accuracy" to accuracy,
+                "battery_level" to batteryLevel,
+                "signal_strength" to signalStrength,
+                "device_motion_status" to deviceMotionStatus,
+                "last_update_timestamp" to System.currentTimeMillis(),
+                "status" to "online"
+            )
+
+            realtimeDb.getReference(RealtimeDBPaths.LIVE_LOCATIONS)
+                .child(deviceId)
+                .setValue(liveData)
+                .await()
+
+            Log.d(tag, "Live location updated successfully: $deviceId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(tag, "Update live location failed", e)
             Result.failure(e)
         }
     }

@@ -65,6 +65,14 @@ class AuthManager(context: Context) {
         return encryptedPrefs.getString(SharedPrefsKeys.ADMIN_EMAIL, "") ?: ""
     }
 
+    fun isDarkMode(): Boolean {
+        return encryptedPrefs.getBoolean("dark_mode", false)
+    }
+
+    fun setDarkMode(enabled: Boolean) {
+        encryptedPrefs.edit().putBoolean("dark_mode", enabled).apply()
+    }
+
     suspend fun updatePassword(newPassword: String): Result<Unit> {
         return try {
             firebaseAuth.currentUser?.updatePassword(newPassword)?.await()

@@ -19,4 +19,114 @@ class DeviceRepository(
             Result.failure(e)
         }
     }
+
+    suspend fun pairDevice(code: String, friendlyName: String, ownerId: String): Result<Unit> {
+        return try {
+            // 1. Find the pairing code
+            val pairingDoc = firestore.collection("pairing_codes")
+                .document(code)
+                .get()
+                .await()
+
+            if (!pairingDoc.exists()) {
+                return Result.failure(Exception("Invalid pairing code"))
+            }
+
+            val deviceId = pairingDoc.getString("deviceId") 
+                ?: return Result.failure(Exception("Invalid code data"))
+
+            // 2. Update the device document (use set with merge in case it doesn't exist yet)
+            val updates = mapOf(
+                "is_paired" to true,
+                "deviceId" to deviceId,
+                "device_id" to deviceId,
+                "ownerId" to ownerId,
+                "owner_id" to ownerId,
+                "deviceName" to friendlyName.ifEmpty { "New Device" },
+                "device_name" to friendlyName.ifEmpty { "New Device" },
+                "status" to "online"
+            )
+
+            firestore.collection("devices")
+                .document(deviceId)
+                .set(updates, com.google.firebase.firestore.SetOptions.merge())
+                .await()
+
+            // 3. Cleanup pairing code
+            firestore.collection("pairing_codes")
+                .document(code)
+                .delete()
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun setTrackingMode(
+        deviceId: String, 
+        mode: String, 
+        intervalSeconds: Int, 
+        autoRevertSeconds: Int, 
+        isEmergency: Boolean
+    ): Result<Unit> {
+        return try {
+            val updates = mapOf(
+                "command_mode" to mode,
+                "commandMode" to mode,
+                "interval_seconds" to intervalSeconds,
+                "intervalSeconds" to intervalSeconds,
+                "auto_revert_seconds" to autoRevertSeconds,
+                "autoRevertSeconds" to autoRevertSeconds,
+                "is_emergency_mode" to isEmergency,
+                "isEmergencyMode" to isEmergency,
+                "command_timestamp" to System.currentTimeMillis(),
+                "commandTimestamp" to System.currentTimeMillis()
+            )
+            firestore.collection("devices").document(deviceId).update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun removeDevice(deviceId: String): Result<Unit> {
+        return try {
+            firestore.collection("devices").document(deviceId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun renameDevice(deviceId: String, newName: String): Result<Unit> {
+        return try {
+            val updates = mapOf(
+                "deviceName" to newName,
+                "device_name" to newName
+            )
+            firestore.collection("devices").document(deviceId).update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun getDevicesListener(
+        ownerId: String,
+        onUpdate: (List<Device>) -> Unit,
+        onError: (Exception) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration {
+        return collection
+            .whereEqualTo("ownerId", ownerId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    onError(e)
+                    return@addSnapshotListener
+                }
+                val devices = snapshot?.documents?.mapNotNull { it.toDevice() } ?: emptyList()
+                onUpdate(devices)
+            }
+    }
 }

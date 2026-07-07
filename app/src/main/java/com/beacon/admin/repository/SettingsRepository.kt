@@ -20,4 +20,16 @@ class SettingsRepository(
             Result.failure(e)
         }
     }
+
+    suspend fun updateSettings(settings: Map<String, Any>): Result<Unit> {
+        return try {
+            firestore.collection(FirestoreCollections.ADMIN_SETTINGS)
+                .document("default")
+                .set(settings, com.google.firebase.firestore.SetOptions.merge())
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

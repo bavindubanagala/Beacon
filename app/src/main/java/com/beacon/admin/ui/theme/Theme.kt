@@ -1,53 +1,50 @@
 package com.beacon.admin.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val DarkColorPalette = darkColors(
-    primary = Color(0xFF2196F3),
-    primaryVariant = Color(0xFF1565C0),
-    secondary = Color(0xFF4CAF50),
-    secondaryVariant = Color(0xFF2E7D32),
-    background = Color(0xFF121212),
-    surface = Color(0xFF1E1E1E),
-    error = Color(0xFFE57373),
-    onPrimary = Color.White,
+private val DarkColorScheme = darkColorScheme(
+    primary = BeaconCyan,
+    onPrimary = Color.Black,
+    secondary = BeaconViolet,
     onSecondary = Color.White,
+    background = DarkBackground,
     onBackground = Color.White,
+    surface = DarkSurface,
     onSurface = Color.White,
+    surfaceVariant = DarkBorder,
+    onSurfaceVariant = Color.LightGray,
+    error = SeverityCritical,
     onError = Color.White
 )
 
-private val LightColorPalette = lightColors(
-    primary = Color(0xFF2196F3),
-    primaryVariant = Color(0xFF1565C0),
-    secondary = Color(0xFF4CAF50),
-    secondaryVariant = Color(0xFF2E7D32),
-    background = Color.White,
-    surface = Color(0xFFFAFAFA),
-    error = Color(0xFFE57373),
-    onPrimary = Color.White,
+private val LightColorScheme = lightColorScheme(
+    primary = BeaconCyan,
+    onPrimary = Color.Black,
+    secondary = BeaconViolet,
     onSecondary = Color.White,
+    background = Color.White,
     onBackground = Color.Black,
+    surface = Color(0xFFFAFAFA),
     onSurface = Color.Black,
+    surfaceVariant = Color(0xFFEEEEEE),
+    onSurfaceVariant = Color.DarkGray,
+    error = SeverityCritical,
     onError = Color.White
 )
 
 @Composable
 fun BeaconAdminTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable() () -> Unit
+    content: @Composable () -> Unit
 ) {
-    val colors = if (darkTheme) DarkColorPalette else LightColorPalette
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
-        colors = colors,
-        typography = androidx.compose.material.Typography(),
-        shapes = androidx.compose.material.Shapes(),
+        colorScheme = colorScheme,
+        typography = Typography(), // Will update in later phase if needed
         content = content
     )
 }
