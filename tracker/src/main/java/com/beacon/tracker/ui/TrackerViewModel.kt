@@ -10,14 +10,17 @@ import com.beacon.tracker.auth.DeviceAuthManager
 import com.beacon.tracker.services.LocationTrackingService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import android.content.Intent
+import android.util.Log
 
 class TrackerViewModel(application: Application) : AndroidViewModel(application) {
     private val deviceAuthManager = DeviceAuthManager(application)
     private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
     
     private val _deviceId = mutableStateOf(deviceAuthManager.getDeviceId())
     val deviceId: State<String> = _deviceId
@@ -43,7 +46,22 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     private var pairingListener: ListenerRegistration? = null
 
     init {
+        ensureAnonymousAuth()
         startPairingListener()
+    }
+
+    private fun ensureAnonymousAuth() {
+        if (auth.currentUser == null) {
+            viewModelScope.launch {
+                try {
+                    auth.signInAnonymously().await()
+                    Log.d("TrackerViewModel", "Anonymous auth success: ${auth.currentUser?.uid}")
+                } catch (e: Exception) {
+                    Log.e("TrackerViewModel", "Anonymous auth failed", e)
+                    _statusMessage.value = "Setup Error: Enable 'Anonymous Auth' in Firebase Console"
+                }
+            }
+        }
     }
 
     private fun startPairingListener() {
@@ -68,21 +86,36 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 _statusMessage.value = "Generating code..."
+
+                // 0. Ensure we have an anonymous identity first
+                if (auth.currentUser == null) {
+                    try {
+                        auth.signInAnonymously().await()
+                    } catch (e: Exception) {
+                        _statusMessage.value = "Auth failed: Enable Anonymous Auth in Firebase"
+                        return@launch
+                    }
+                }
                 
                 // 1. Reset paired status locally and in Firestore
                 _isPaired.value = false
                 try {
+                    val deviceUpdates = mapOf(
+                        "is_paired" to false,
+                        "trackerAuthUid" to (auth.currentUser?.uid ?: "")
+                    )
                     db.collection("devices").document(deviceId)
-                        .update("is_paired", false)
+                        .set(deviceUpdates, com.google.firebase.firestore.SetOptions.merge())
                         .await()
                 } catch (e: Exception) {
-                    // Document might not exist yet, that's fine
+                    Log.e("TrackerViewModel", "Failed to reset device doc", e)
                 }
 
-                // 2. Create pairing code with expiresAt
+                // 2. Create pairing code with expiresAt and tracker UID
                 val pairingData = mapOf(
                     "code" to code,
                     "deviceId" to deviceId,
+                    "trackerAuthUid" to (auth.currentUser?.uid ?: ""),
                     "createdAt" to System.currentTimeMillis(),
                     "expiresAt" to expiresAt
                 )

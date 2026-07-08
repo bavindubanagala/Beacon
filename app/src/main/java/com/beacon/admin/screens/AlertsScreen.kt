@@ -20,8 +20,9 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlertsScreen(alertRepository: AlertRepository) {
+fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository: AlertRepository) {
 
+    val currentUserId = authManager.getCurrentUser()?.uid ?: ""
     val alerts = remember { mutableStateOf<List<Alert>>(emptyList()) }
     val isLoading = remember { mutableStateOf(true) }
     val errorMessage = remember { mutableStateOf("") }
@@ -30,8 +31,9 @@ fun AlertsScreen(alertRepository: AlertRepository) {
     val filters = listOf("All", "Unread", "Geofence", "Battery", "Offline")
     var selectedFilter by remember { mutableStateOf("All") }
 
-    LaunchedEffect(Unit) {
-        val result = alertRepository.getActiveAlerts()
+    LaunchedEffect(currentUserId) {
+        if (currentUserId.isEmpty()) return@LaunchedEffect
+        val result = alertRepository.getActiveAlerts(currentUserId)
         if (result.isSuccess) {
             alerts.value = result.getOrDefault(emptyList())
         } else {

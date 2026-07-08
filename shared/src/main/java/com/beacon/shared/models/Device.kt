@@ -8,6 +8,7 @@ data class Device(
     val groupId: String? = null,
     val is_paired: Boolean = false,
     val ownerId: String = "",
+    val trackerAuthUid: String? = null,
     val trackingMode: String = "interval",
     val intervalSeconds: Int = 900, // Default 15 mins
     val autoRevertSeconds: Int = 1800, // Default 30 mins, 0 = off

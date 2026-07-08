@@ -17,25 +17,28 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
+    authManager: com.beacon.admin.auth.AuthManager,
     deviceRepository: DeviceRepository,
     alertRepository: AlertRepository,
     onAddDeviceClick: () -> Unit
 ) {
+    val currentUserId = authManager.getCurrentUser()?.uid ?: ""
     var deviceCount by remember { mutableStateOf(0) }
     var onlineCount by remember { mutableStateOf(0) }
     var activeAlertCount by remember { mutableStateOf(0) }
-    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentUserId) {
+        if (currentUserId.isEmpty()) return@LaunchedEffect
+        
         // Simple counts for the summary
-        val dResult = deviceRepository.getAllDevices()
+        val dResult = deviceRepository.getAllDevices(currentUserId)
         if (dResult.isSuccess) {
             val devices = dResult.getOrDefault(emptyList())
             deviceCount = devices.size
             onlineCount = devices.count { it.status == "online" }
         }
         
-        val aResult = alertRepository.getActiveAlerts()
+        val aResult = alertRepository.getActiveAlerts(currentUserId)
         if (aResult.isSuccess) {
             activeAlertCount = aResult.getOrDefault(emptyList()).size
         }
@@ -95,14 +98,6 @@ fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.weight(1f))
-        
-        // Technical feel - small footer
-        Text(
-            text = "BEACON CONTROL HUB V2.0",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-        )
     }
 }
 

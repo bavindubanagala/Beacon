@@ -132,16 +132,18 @@ fun StatusUpdateReceiver(viewModel: TrackerViewModel) {
 @Composable
 fun PermissionRequest() {
     val context = LocalContext.current
-    val permissions = arrayOf(
+    var showSettingsDialog by remember { mutableStateOf(false) }
+
+    // On Android 11+, background location must be requested SEPARATELY after foreground permissions are granted.
+    val foregroundPermissions = arrayOf(
         android.Manifest.permission.ACCESS_FINE_LOCATION,
         android.Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { result ->
-        if (result.values.any { it }) {
-            // Permission granted, restart service to be sure
+    val backgroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
             val serviceIntent = Intent(context, LocationTrackingService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
@@ -151,12 +153,64 @@ fun PermissionRequest() {
         }
     }
 
-    LaunchedEffect(Unit) {
-        val allGranted = permissions.all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+    val foregroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val allForegroundGranted = result.values.all { it }
+        if (allForegroundGranted) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                backgroundLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            } else {
+                // For older versions, we already have everything
+                val serviceIntent = Intent(context, LocationTrackingService::class.java)
+                context.startService(serviceIntent)
+            }
+        } else {
+            showSettingsDialog = true
         }
-        if (!allGranted) {
-            launcher.launch(permissions)
+    }
+
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSettingsDialog = false },
+            title = { Text("Permissions Required") },
+            text = { Text("Beacon needs location access to track this device. Please enable location permissions in Settings.") },
+            confirmButton = {
+                Button(onClick = {
+                    showSettingsDialog = false
+                    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = android.net.Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                }) {
+                    Text("Open Settings")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSettingsDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        val fineGranted = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val backgroundGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+        } else true
+
+        if (!fineGranted) {
+            foregroundLauncher.launch(foregroundPermissions)
+        } else if (!backgroundGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            backgroundLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        } else {
+            val serviceIntent = Intent(context, LocationTrackingService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package com.beacon.admin.repository
 import com.beacon.shared.mapper.toDevice
 import com.beacon.shared.models.Device
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Filter
 import kotlinx.coroutines.tasks.await
 
 class DeviceRepository(
@@ -10,9 +11,15 @@ class DeviceRepository(
 ) {
     private val collection = firestore.collection("devices")
 
-    suspend fun getAllDevices(): Result<List<Device>> {
+    suspend fun getAllDevices(ownerId: String): Result<List<Device>> {
         return try {
-            val snapshot = collection.get().await()
+            val snapshot = collection
+                .where(Filter.or(
+                    Filter.equalTo("ownerId", ownerId),
+                    Filter.equalTo("owner_id", ownerId)
+                ))
+                .get()
+                .await()
             val devices = snapshot.documents.mapNotNull { it.toDevice() }
             Result.success(devices)
         } catch (e: Exception) {
@@ -34,6 +41,7 @@ class DeviceRepository(
 
             val deviceId = pairingDoc.getString("deviceId") 
                 ?: return Result.failure(Exception("Invalid code data"))
+            val trackerAuthUid = pairingDoc.getString("trackerAuthUid")
 
             // 2. Update the device document (use set with merge in case it doesn't exist yet)
             val updates = mapOf(
@@ -42,6 +50,7 @@ class DeviceRepository(
                 "device_id" to deviceId,
                 "ownerId" to ownerId,
                 "owner_id" to ownerId,
+                "trackerAuthUid" to trackerAuthUid,
                 "deviceName" to friendlyName.ifEmpty { "New Device" },
                 "device_name" to friendlyName.ifEmpty { "New Device" },
                 "status" to "online"
@@ -119,7 +128,10 @@ class DeviceRepository(
         onError: (Exception) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
         return collection
-            .whereEqualTo("ownerId", ownerId)
+            .where(Filter.or(
+                Filter.equalTo("ownerId", ownerId),
+                Filter.equalTo("owner_id", ownerId)
+            ))
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
                     onError(e)

@@ -97,7 +97,6 @@ fun MainContent(
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit
 ) {
-    val navController = rememberNavController()
     var isAuthenticated by remember { mutableStateOf(authManager.isAuthenticated()) }
     
     // Monitor auth changes
@@ -109,6 +108,40 @@ fun MainContent(
             }
         }
     }
+
+    if (!isAuthenticated) {
+        AuthScreen(authManager) {
+            isAuthenticated = true
+        }
+    } else {
+        key(isAuthenticated) {
+            AuthenticatedAppLayout(
+                authManager = authManager,
+                deviceRepository = deviceRepository,
+                groupRepository = groupRepository,
+                locationRepository = locationRepository,
+                alertRepository = alertRepository,
+                fenceRepository = fenceRepository,
+                isDarkMode = isDarkMode,
+                onDarkModeChange = onDarkModeChange
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AuthenticatedAppLayout(
+    authManager: AuthManager,
+    deviceRepository: DeviceRepository,
+    groupRepository: GroupRepository,
+    locationRepository: LocationRepository,
+    alertRepository: AlertRepository,
+    fenceRepository: FenceRepository,
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit
+) {
+    val navController = rememberNavController()
     
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -116,69 +149,77 @@ fun MainContent(
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
             
-            if (isAuthenticated) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = when (currentDestination?.route) {
-                                Screen.Home.route -> "Beacon Hub"
-                                Screen.Map.route -> "Live Map"
-                                Screen.Devices.route -> "Devices"
-                                Screen.Alerts.route -> "Alerts"
-                                Screen.History.route -> "History"
-                                else -> "Beacon Admin"
-                            },
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    },
-                    actions = {
-                        IconButton(onClick = { onDarkModeChange(!isDarkMode) }) {
-                            Icon(
-                                imageVector = if (isDarkMode) Icons.Rounded.WbSunny else Icons.Rounded.Bedtime,
-                                contentDescription = "Toggle Theme"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = when {
+                            currentDestination?.route?.startsWith("map/") == true -> "Device Location"
+                            currentDestination?.route == Screen.Home.route -> "Beacon Hub"
+                            currentDestination?.route == Screen.Map.route -> "Live Map"
+                            currentDestination?.route == Screen.Devices.route -> "Devices"
+                            currentDestination?.route == Screen.Alerts.route -> "Alerts"
+                            currentDestination?.route?.startsWith(Screen.History.route) == true -> "History"
+                            else -> "Beacon Admin"
+                        },
+                        style = MaterialTheme.typography.titleMedium
                     )
+                },
+                navigationIcon = {
+                    // Show back button if we are not on a top-level screen
+                    val isTopLevel = currentDestination?.route in listOf(
+                        Screen.Home.route, Screen.Map.route, Screen.Devices.route, Screen.Alerts.route, Screen.History.route
+                    )
+                    if (!isTopLevel) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onDarkModeChange(!isDarkMode) }) {
+                        Icon(
+                            imageVector = if (isDarkMode) Icons.Rounded.WbSunny else Icons.Rounded.Bedtime,
+                            contentDescription = "Toggle Theme"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
-            }
+            )
         },
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
             
-            if (isAuthenticated) {
-                val showBottomBar = currentDestination?.route in listOf(
-                    Screen.Home.route, Screen.Map.route, Screen.Devices.route, Screen.Alerts.route
-                ) || currentDestination?.route?.startsWith(Screen.History.route) == true
-                  || currentDestination?.route?.startsWith("map/") == true
+            val showBottomBar = currentDestination?.route in listOf(
+                Screen.Home.route, Screen.Map.route, Screen.Devices.route, Screen.Alerts.route
+            ) || currentDestination?.route?.startsWith(Screen.History.route) == true
+              || currentDestination?.route?.startsWith("map/") == true
 
-                if (showBottomBar) {
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 8.dp
-                    ) {
-                        val items = listOf(Screen.Map, Screen.Devices, Screen.Home, Screen.Alerts, Screen.History)
-                        items.forEach { screen ->
-                            NavigationBarItem(
-                                icon = { Icon(screen.icon, contentDescription = null) },
-                                label = { }, // Icon-only
-                                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                onClick = {
-                                    navController.navigate(screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
+            if (showBottomBar) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp
+                ) {
+                    val items = listOf(Screen.Map, Screen.Devices, Screen.Home, Screen.Alerts, Screen.History)
+                    items.forEach { screen ->
+                        NavigationBarItem(
+                            icon = { Icon(screen.icon, contentDescription = null) },
+                            label = { }, // Icon-only
+                            selected = currentDestination?.hierarchy?.any { it.route?.startsWith(screen.route) == true } == true,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
                                     }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                            )
-                        }
+                            }
+                        )
                     }
                 }
             }
@@ -186,24 +227,16 @@ fun MainContent(
     ) { innerPadding ->
         NavHost(
             navController = navController, 
-            startDestination = if (isAuthenticated) Screen.Home.route else Screen.Auth.route, 
+            startDestination = Screen.Home.route, 
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Auth.route) {
-                AuthScreen(authManager) {
-                    isAuthenticated = true
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Auth.route) { inclusive = true }
-                    }
-                }
-            }
             composable(Screen.Home.route) {
                 HomeScreen(
+                    authManager = authManager,
                     deviceRepository = deviceRepository,
                     alertRepository = alertRepository,
                     onAddDeviceClick = {
                         navController.navigate(Screen.Devices.route)
-                        // Note: In Phase 3/4 we'll make this specifically open the pairing flow
                     }
                 )
             }
@@ -223,20 +256,28 @@ fun MainContent(
             }
             composable(Screen.Map.route) {
                 MapScreen(
-                    onBack = { navController.popBackStack() },
-                    fenceRepository = fenceRepository
+                    authManager = authManager,
+                    deviceRepository = deviceRepository,
+                    fenceRepository = fenceRepository,
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable("map/{deviceId}") { backStackEntry ->
                 val deviceId = backStackEntry.arguments?.getString("deviceId")
                 MapScreen(
+                    authManager = authManager,
+                    deviceRepository = deviceRepository,
+                    fenceRepository = fenceRepository,
                     initialDeviceId = deviceId,
-                    onBack = { navController.popBackStack() },
-                    fenceRepository = fenceRepository
+                    onBack = { navController.popBackStack() }
                 )
             }
+            composable(Screen.Auth.route) {
+                // This shouldn't be reached in the AuthenticatedAppLayout
+                // but we keep it to satisfy Screen.Auth object if needed
+            }
             composable(Screen.Alerts.route) {
-                AlertsScreen(alertRepository = alertRepository)
+                AlertsScreen(authManager = authManager, alertRepository = alertRepository)
             }
             composable(Screen.History.route + "/{deviceId}") { backStackEntry ->
                 val deviceId = backStackEntry.arguments?.getString("deviceId") ?: ""
@@ -250,7 +291,6 @@ fun MainContent(
                     }
                 }
             }
-            // Settings screen removed in favor of per-device settings (Phase 3)
         }
     }
 }

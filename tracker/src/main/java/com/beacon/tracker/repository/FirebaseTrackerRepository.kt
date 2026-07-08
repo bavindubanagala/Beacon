@@ -65,7 +65,7 @@ class FirebaseTrackerRepository(
 
             firestore.collection(FirebaseCollections.DEVICES)
                 .document(deviceId)
-                .update(statusUpdate)
+                .set(statusUpdate, com.google.firebase.firestore.SetOptions.merge())
                 .await()
 
             Log.d(tag, "Device status updated successfully: $deviceId")

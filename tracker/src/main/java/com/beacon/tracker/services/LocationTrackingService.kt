@@ -22,6 +22,7 @@ import com.beacon.tracker.MainActivity
 import com.beacon.tracker.auth.DeviceAuthManager
 import com.beacon.tracker.repository.FirebaseTrackerRepository
 import com.google.android.gms.location.*
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.*
@@ -111,6 +112,19 @@ class LocationTrackingService : Service() {
         deviceAuthManager = DeviceAuthManager(this)
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val firestore = FirebaseFirestore.getInstance()
+        val auth = FirebaseAuth.getInstance()
+        
+        if (auth.currentUser == null) {
+            serviceScope.launch {
+                try {
+                    auth.signInAnonymously().await()
+                    Log.d(TAG, "Anonymous auth success in Service: ${auth.currentUser?.uid}")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Anonymous auth failed in Service", e)
+                }
+            }
+        }
+
         repository = FirebaseTrackerRepository(
             firestore,
             FirebaseDatabase.getInstance("https://gen-lang-client-0281237877-default-rtdb.asia-southeast1.firebasedatabase.app/"),
@@ -229,7 +243,7 @@ class LocationTrackingService : Service() {
             "commandMode" to null
         )
         FirebaseFirestore.getInstance().collection("devices").document(deviceId)
-            .update(updates)
+            .set(updates, com.google.firebase.firestore.SetOptions.merge())
     }
 
     private fun updateNotification() {
@@ -449,11 +463,15 @@ class LocationTrackingService : Service() {
                 val deviceMap = mapOf(
                     "deviceId" to deviceId,
                     "device_id" to deviceId,
+                    "trackerAuthUid" to (FirebaseAuth.getInstance().currentUser?.uid ?: ""),
                     "deviceName" to finalName,
                     "device_name" to finalName,
                     "status" to "online",
+                    "batteryLevel" to batteryLevel,
+                    "battery_level" to batteryLevel,
                     "last_seen" to System.currentTimeMillis()
                 )
+                Log.d("Beacon", "battery=$batteryLevel")
                 FirebaseFirestore.getInstance().collection("devices")
                     .document(deviceId)
                     .set(deviceMap, com.google.firebase.firestore.SetOptions.merge())
@@ -488,7 +506,7 @@ class LocationTrackingService : Service() {
     private fun updateInsideFencesInFirestore() {
         val deviceId = deviceAuthManager.getDeviceId()
         FirebaseFirestore.getInstance().collection("devices").document(deviceId)
-            .update("insideFenceIds", insideFenceIds.toList())
+            .set(mapOf("insideFenceIds" to insideFenceIds.toList()), com.google.firebase.firestore.SetOptions.merge())
     }
 
     private fun triggerAlert(type: String, message: String, severity: String, data: Map<String, Double>) {
