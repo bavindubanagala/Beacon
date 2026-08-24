@@ -9,11 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.beacon.admin.repository.DeviceRepository
 import com.beacon.admin.repository.AlertRepository
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -26,11 +23,11 @@ fun HomeScreen(
     var deviceCount by remember { mutableStateOf(0) }
     var onlineCount by remember { mutableStateOf(0) }
     var activeAlertCount by remember { mutableStateOf(0) }
-
+    
     LaunchedEffect(currentUserId) {
         if (currentUserId.isEmpty()) return@LaunchedEffect
         
-        // Simple counts for the summary
+        // 1. Initial Device counts
         val dResult = deviceRepository.getAllDevices(currentUserId)
         if (dResult.isSuccess) {
             val devices = dResult.getOrDefault(emptyList())
@@ -38,9 +35,28 @@ fun HomeScreen(
             onlineCount = devices.count { it.status == "online" }
         }
         
+        // 2. Initial Alert count
         val aResult = alertRepository.getActiveAlerts(currentUserId)
         if (aResult.isSuccess) {
             activeAlertCount = aResult.getOrDefault(emptyList()).size
+        }
+    }
+
+    // Listener for real-time counts
+    DisposableEffect(currentUserId) {
+        if (currentUserId.isEmpty()) return@DisposableEffect onDispose {}
+        
+        val listener = deviceRepository.getDevicesListener(
+            ownerId = currentUserId,
+            onUpdate = { devices ->
+                deviceCount = devices.size
+                onlineCount = devices.count { it.status == "online" }
+            },
+            onError = {}
+        )
+        
+        onDispose {
+            listener.remove()
         }
     }
 
@@ -59,44 +75,27 @@ fun HomeScreen(
             fontWeight = FontWeight.Bold
         )
 
-        // Stats Cards Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            StatCard(
-                label = "Devices",
-                value = deviceCount.toString(),
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                label = "Online",
-                value = onlineCount.toString(),
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                label = "Alerts",
-                value = activeAlertCount.toString(),
-                modifier = Modifier.weight(1f),
-                isAlert = activeAlertCount > 0
-            )
+            StatCard(label = "Devices", value = deviceCount.toString(), modifier = Modifier.weight(1f))
+            StatCard(label = "Online", value = onlineCount.toString(), modifier = Modifier.weight(1f))
+            StatCard(label = "Alerts", value = activeAlertCount.toString(), modifier = Modifier.weight(1f), isAlert = activeAlertCount > 0)
         }
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Primary Action
         Button(
             onClick = onAddDeviceClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp),
+            modifier = Modifier.fillMaxWidth().height(64.dp),
             shape = MaterialTheme.shapes.medium
         ) {
             Icon(Icons.Rounded.Add, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text("Add New Device", style = MaterialTheme.typography.titleMedium)
         }
-
+        
         Spacer(modifier = Modifier.weight(1f))
     }
 }

@@ -18,6 +18,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.NotificationsNone
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository: AlertRepository) {
@@ -25,21 +30,30 @@ fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository
     val currentUserId = authManager.getCurrentUser()?.uid ?: ""
     val alerts = remember { mutableStateOf<List<Alert>>(emptyList()) }
     val isLoading = remember { mutableStateOf(true) }
+    val isClearing = remember { mutableStateOf(false) }
     val errorMessage = remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
     
     // Filter Chips States
     val filters = listOf("All", "Unread", "Geofence", "Battery", "Offline")
     var selectedFilter by remember { mutableStateOf("All") }
 
-    LaunchedEffect(currentUserId) {
-        if (currentUserId.isEmpty()) return@LaunchedEffect
-        val result = alertRepository.getActiveAlerts(currentUserId)
-        if (result.isSuccess) {
-            alerts.value = result.getOrDefault(emptyList())
-        } else {
-            errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to load alerts"
+    fun loadAlerts() {
+        if (currentUserId.isEmpty()) return
+        isLoading.value = true
+        scope.launch {
+            val result = alertRepository.getActiveAlerts(currentUserId)
+            if (result.isSuccess) {
+                alerts.value = result.getOrDefault(emptyList())
+            } else {
+                errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to load alerts"
+            }
+            isLoading.value = false
         }
-        isLoading.value = false
+    }
+
+    LaunchedEffect(currentUserId) {
+        loadAlerts()
     }
 
     Surface(color = MaterialTheme.colorScheme.background) {
@@ -48,24 +62,64 @@ fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text(
-                "Alerts",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Alerts",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                if (alerts.value.isNotEmpty()) {
+                    TextButton(
+                        onClick = {
+                            isClearing.value = true
+                            scope.launch {
+                                val result = alertRepository.clearAllAlerts(currentUserId)
+                                if (result.isSuccess) {
+                                    alerts.value = emptyList()
+                                } else {
+                                    errorMessage.value = "Failed to clear alerts"
+                                }
+                                isClearing.value = false
+                            }
+                        },
+                        enabled = !isClearing.value,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        if (isClearing.value) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text("Clear All")
+                        }
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (errorMessage.value.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                 ) {
-                    Text(
-                        errorMessage.value,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    Row(
                         modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            errorMessage.value,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        IconButton(onClick = { errorMessage.value = "" }) {
+                            Icon(androidx.compose.material.icons.Icons.Rounded.Close, null, modifier = Modifier.size(16.dp))
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -77,7 +131,6 @@ fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Simplified for now - just showing them for UI
                 filters.take(3).forEach { filter ->
                     FilterChip(
                         selected = selectedFilter == filter,
@@ -96,14 +149,27 @@ fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository
             } else {
                 if (alerts.value.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "No active alerts 🎉",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                androidx.compose.material.icons.Icons.Rounded.NotificationsNone,
+                                null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Text(
+                                "No active alerts 🎉",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            TextButton(onClick = { loadAlerts() }) {
+                                Text("Refresh")
+                            }
+                        }
                     }
                 } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxSize()) {
                         items(alerts.value) { alert ->
                             AlertCard(alert)
                         }

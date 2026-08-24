@@ -45,9 +45,12 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
 
     private var pairingListener: ListenerRegistration? = null
 
+    private val _isSosActive = mutableStateOf(false)
+    val isSosActive: State<Boolean> = _isSosActive
+
     init {
         ensureAnonymousAuth()
-        startPairingListener()
+        startDeviceListener()
     }
 
     private fun ensureAnonymousAuth() {
@@ -64,7 +67,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun startPairingListener() {
+    private fun startDeviceListener() {
         val deviceId = _deviceId.value
         pairingListener = db.collection("devices").document(deviceId)
             .addSnapshotListener { snapshot, e ->
@@ -73,6 +76,9 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     val paired = snapshot.getBoolean("is_paired") ?: false
                     _isPaired.value = paired
                     deviceAuthManager.setPaired(paired)
+                    
+                    val sos = snapshot.getBoolean("isEmergencyMode") ?: snapshot.getBoolean("is_emergency_mode") ?: false
+                    _isSosActive.value = sos
                 }
             }
     }
@@ -161,6 +167,86 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     fun toggleDarkMode(enabled: Boolean) {
         _isDarkMode.value = enabled
         deviceAuthManager.setDarkMode(enabled)
+    }
+
+    fun triggerSos() {
+        val deviceId = _deviceId.value
+        viewModelScope.launch {
+            try {
+                val updates = mapOf(
+                    "sosActive" to true,
+                    "sosTimestamp" to System.currentTimeMillis(),
+                    "commandMode" to "live",
+                    "command_mode" to "live",
+                    "is_emergency_mode" to true,
+                    "isEmergencyMode" to true,
+                    "command_timestamp" to System.currentTimeMillis(),
+                    "commandTimestamp" to System.currentTimeMillis()
+                )
+                db.collection("devices").document(deviceId).update(updates).await()
+                _statusMessage.value = "SOS Triggered!"
+                
+                // Trigger SOS Alert to Firestore
+                val alert = com.beacon.shared.models.Alert(
+                    id = java.util.UUID.randomUUID().toString(),
+                    alert_type = "SOS_ACTIVE",
+                    device_id = deviceId,
+                    device_name = "Tracker Device",
+                    alert_severity = "CRITICAL",
+                    message = "SOS EMERGENCY ACTIVATED",
+                    created_at = System.currentTimeMillis()
+                )
+                db.collection("devices").document(deviceId).collection("alerts").document(alert.id).set(alert).await()
+
+            } catch (e: Exception) {
+                _statusMessage.value = "SOS Failed: ${e.message}"
+            }
+        }
+    }
+
+    fun resetAndUnpair() {
+        val id = _deviceId.value
+        viewModelScope.launch {
+            try {
+                _statusMessage.value = "Unpairing..."
+                // 1. Delete from Firestore (Removes from Admin)
+                db.collection("devices").document(id).delete().await()
+                
+                // 2. Clean up any existing pairing codes for this device
+                val codes = db.collection("pairing_codes")
+                    .whereEqualTo("deviceId", id)
+                    .get()
+                    .await()
+                for (doc in codes.documents) {
+                    doc.reference.delete().await()
+                }
+
+                // 3. Reset local state
+                deviceAuthManager.clearAuth()
+                _deviceId.value = deviceAuthManager.getDeviceId()
+                _isPaired.value = false
+                _pairingCode.value = null
+                _statusMessage.value = "Device reset successfully"
+            } catch (e: Exception) {
+                _statusMessage.value = "Reset failed: ${e.message}"
+            }
+        }
+    }
+
+    fun checkPairingStatus() {
+        val id = _deviceId.value
+        viewModelScope.launch {
+            try {
+                val doc = db.collection("devices").document(id).get().await()
+                if (doc.exists()) {
+                    val paired = doc.getBoolean("is_paired") ?: false
+                    _isPaired.value = paired
+                    deviceAuthManager.setPaired(paired)
+                }
+            } catch (e: Exception) {
+                Log.e("TrackerViewModel", "Failed to check pairing", e)
+            }
+        }
     }
 
     override fun onCleared() {

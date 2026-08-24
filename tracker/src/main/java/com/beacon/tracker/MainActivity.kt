@@ -1,39 +1,41 @@
 package com.beacon.tracker
 
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import android.content.ClipData
-import android.content.ClipboardManager
-import androidx.compose.material3.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beacon.tracker.services.LocationTrackingService
 import com.beacon.tracker.ui.TrackerViewModel
 import com.beacon.tracker.ui.theme.BeaconTrackerTheme
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontFamily
-
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,50 +60,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContent(viewModel: TrackerViewModel) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        val isPaired by viewModel.isPaired
-        val isDarkMode by viewModel.isDarkMode
-        
-        // Listen for status updates from service
-        StatusUpdateReceiver(viewModel)
-        
-        // Request permissions if not granted
-        PermissionRequest()
-        
-        Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text("Beacon Tracker", style = MaterialTheme.typography.titleMedium) },
-                    actions = {
-                        IconButton(onClick = { viewModel.toggleDarkMode(!isDarkMode) }) {
-                            Icon(
-                                imageVector = if (isDarkMode) Icons.Rounded.WbSunny else Icons.Rounded.Bedtime,
-                                contentDescription = "Toggle Theme"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            }
-        ) { innerPadding ->
-            Box(Modifier.padding(innerPadding)) {
-                if (isPaired) {
-                    StatusScreen(viewModel)
-                } else {
-                    PairingScreen(viewModel)
-                }
-            }
-        }
+    val isPaired by viewModel.isPaired
+    StatusUpdateReceiver(viewModel)
+    PermissionRequest()
+
+    if (isPaired) {
+        StatusScreen(viewModel)
+    } else {
+        PairingScreen(viewModel)
     }
 }
 
@@ -134,7 +102,6 @@ fun PermissionRequest() {
     val context = LocalContext.current
     var showSettingsDialog by remember { mutableStateOf(false) }
 
-    // On Android 11+, background location must be requested SEPARATELY after foreground permissions are granted.
     val foregroundPermissions = arrayOf(
         android.Manifest.permission.ACCESS_FINE_LOCATION,
         android.Manifest.permission.ACCESS_COARSE_LOCATION
@@ -161,7 +128,6 @@ fun PermissionRequest() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 backgroundLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             } else {
-                // For older versions, we already have everything
                 val serviceIntent = Intent(context, LocationTrackingService::class.java)
                 context.startService(serviceIntent)
             }
@@ -220,9 +186,16 @@ fun PairingScreen(viewModel: TrackerViewModel) {
     val pairingCode by viewModel.pairingCode
     val expiresAt by viewModel.pairingExpiresAt
     val context = LocalContext.current
-    
     var timeLeft by remember { mutableStateOf(0L) }
     
+    // PERIODIC CHECK for pairing status (Fallback for listener)
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(10000) // Check every 10 seconds
+            viewModel.checkPairingStatus()
+        }
+    }
+
     LaunchedEffect(expiresAt) {
         while (expiresAt > System.currentTimeMillis()) {
             timeLeft = (expiresAt - System.currentTimeMillis()) / 1000
@@ -243,18 +216,14 @@ fun PairingScreen(viewModel: TrackerViewModel) {
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        
         Spacer(modifier = Modifier.height(8.dp))
-        
         Text(
             text = "THIS DEVICE IS NOT PAIRED",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = FontFamily.Monospace
         )
-        
         Spacer(modifier = Modifier.height(48.dp))
-        
         if (pairingCode == null || timeLeft <= 0) {
             Button(
                 onClick = { viewModel.generatePairingCode() },
@@ -270,9 +239,7 @@ fun PairingScreen(viewModel: TrackerViewModel) {
                 color = MaterialTheme.colorScheme.primary,
                 fontFamily = FontFamily.Monospace
             )
-            
             Spacer(modifier = Modifier.height(12.dp))
-            
             Text(
                 text = pairingCode!!,
                 style = MaterialTheme.typography.displayLarge,
@@ -280,10 +247,13 @@ fun PairingScreen(viewModel: TrackerViewModel) {
                 letterSpacing = 8.sp,
                 fontFamily = FontFamily.Monospace
             )
-            
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(onClick = { viewModel.checkPairingStatus() }) {
+                Icon(Icons.Rounded.Sync, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Check if paired", style = MaterialTheme.typography.labelSmall)
+            }
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Countdown Timer
             val minutes = timeLeft / 60
             val seconds = timeLeft % 60
             Text(
@@ -292,9 +262,7 @@ fun PairingScreen(viewModel: TrackerViewModel) {
                 color = if (timeLeft < 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontFamily = FontFamily.Monospace
             )
-
             Spacer(modifier = Modifier.height(32.dp))
-            
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
                     onClick = {
@@ -308,7 +276,6 @@ fun PairingScreen(viewModel: TrackerViewModel) {
                 ) {
                     Text("Copy")
                 }
-
                 OutlinedButton(
                     onClick = { viewModel.generatePairingCode() },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -317,93 +284,238 @@ fun PairingScreen(viewModel: TrackerViewModel) {
                     Text("Regenerate")
                 }
             }
+
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            TextButton(
+                onClick = { viewModel.resetAndUnpair() },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+            ) {
+                Text("Reset Device & Delete ID", style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }
 
 @Composable
+fun SosButton(
+    isActive: Boolean,
+    onTrigger: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "sos_waves")
+    
+    val wave1Scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "wave1_scale"
+    )
+    
+    val wave1Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "wave1_alpha"
+    )
+
+    val wave2Scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, delayMillis = 500, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "wave2_scale"
+    )
+    
+    val wave2Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, delayMillis = 500, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "wave2_alpha"
+    )
+
+    Box(
+        modifier = modifier.size(200.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isActive) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(
+                    color = Color.Red.copy(alpha = wave1Alpha),
+                    radius = (size.minDimension / 4) * wave1Scale
+                )
+                drawCircle(
+                    color = Color.Red.copy(alpha = wave2Alpha),
+                    radius = (size.minDimension / 4) * wave2Scale
+                )
+            }
+        }
+
+        Surface(
+            onClick = onTrigger,
+            modifier = Modifier.size(120.dp),
+            shape = CircleShape,
+            color = if (isActive) Color.Red else MaterialTheme.colorScheme.errorContainer,
+            shadowElevation = if (isActive) 12.dp else 4.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "SOS",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Black,
+                        color = if (isActive) Color.White else MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    if (isActive) {
+                        Text(
+                            text = "ACTIVE",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun StatusScreen(viewModel: TrackerViewModel) {
     val deviceId by viewModel.deviceId
     val isUpdating by viewModel.isUpdating
     val statusMessage by viewModel.statusMessage
+    val isDarkMode by viewModel.isDarkMode
+    val isSosActive by viewModel.isSosActive
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Tracking Active",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF4CAF50)
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = "BEACON TRACKER SERVICE",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = FontFamily.Monospace
-        )
-        
-        Spacer(modifier = Modifier.height(48.dp))
-        
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Beacon Tracker", style = MaterialTheme.typography.titleMedium) },
+                actions = {
+                    IconButton(onClick = { viewModel.toggleDarkMode(!isDarkMode) }) {
+                        Icon(
+                            imageVector = if (isDarkMode) Icons.Rounded.WbSunny else Icons.Rounded.Bedtime,
+                            contentDescription = "Toggle Theme"
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically)
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "STATUS: ${statusMessage.uppercase()}",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.primary
+                    text = if (isSosActive) "Emergency SOS Active" else "Tracking Active",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isSosActive) MaterialTheme.colorScheme.error else Color(0xFF4CAF50)
                 )
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
                 Text(
-                    text = "ID: $deviceId",
+                    text = "BEACON TRACKER SERVICE",
                     style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = FontFamily.Monospace
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-        
-        Button(
-            onClick = { viewModel.forceUpdate() },
-            enabled = !isUpdating,
-            modifier = Modifier.fillMaxWidth().height(64.dp),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            if (isUpdating) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-                Spacer(Modifier.width(12.dp))
-                Text("Syncing...")
-            } else {
-                Icon(Icons.Rounded.Refresh, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Force Update Now")
+            
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(
+                        text = "STATUS: ${statusMessage.uppercase()}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "ID: $deviceId",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            // Cool SOS Button
+            var showSosConfirm by remember { mutableStateOf(false) }
+            SosButton(
+                isActive = isSosActive,
+                onTrigger = {
+                    if (!isSosActive) {
+                        showSosConfirm = true
+                    }
+                }
+            )
 
-        TextButton(onClick = { viewModel.generatePairingCode() }) {
-            Text("Need to re-pair? Generate new code", style = MaterialTheme.typography.bodySmall)
+            if (showSosConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showSosConfirm = false },
+                    title = { Text("Trigger Emergency SOS?") },
+                    text = { Text("This will immediately alert your admin and broadcast your live location.") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showSosConfirm = false
+                                viewModel.triggerSos()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Confirm SOS")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showSosConfirm = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            Button(
+                onClick = { viewModel.forceUpdate() },
+                enabled = !isUpdating,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                if (isUpdating) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(Icons.Rounded.Refresh, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Force Sync Location")
+                }
+            }
+
+            TextButton(onClick = { viewModel.generatePairingCode() }) {
+                Text("Device Re-pair / Logout", style = MaterialTheme.typography.bodySmall)
+            }
+
+            TextButton(
+                onClick = { viewModel.resetAndUnpair() },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+            ) {
+                Text("UNPAIR & DELETE ALL DATA", style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }

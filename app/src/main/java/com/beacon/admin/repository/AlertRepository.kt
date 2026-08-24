@@ -62,4 +62,54 @@ class AlertRepository(
             Result.failure(e)
         }
     }
+
+    suspend fun resolveSos(deviceId: String): Result<Unit> {
+        return try {
+            firestore.collection("devices").document(deviceId)
+                .update(mapOf("sosActive" to false))
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun clearAllAlerts(ownerId: String): Result<Unit> {
+        return try {
+            // 1. Get all device IDs for this owner
+            val devicesSnapshot = firestore.collection("devices")
+                .where(Filter.or(
+                    Filter.equalTo("ownerId", ownerId),
+                    Filter.equalTo("owner_id", ownerId)
+                ))
+                .get()
+                .await()
+            
+            val deviceIds = devicesSnapshot.documents.map { it.id }
+            if (deviceIds.isEmpty()) return Result.success(Unit)
+
+            // 2. Fetch and delete alerts for each device
+            // Using a batch for efficiency
+            val batch = firestore.batch()
+            
+            // Note: firestore.collectionGroup("alerts") is read-only for queries, 
+            // so we must delete from each sub-collection.
+            for (deviceId in deviceIds) {
+                val alertsSnapshot = firestore.collection("devices")
+                    .document(deviceId)
+                    .collection("alerts")
+                    .get()
+                    .await()
+                
+                for (doc in alertsSnapshot.documents) {
+                    batch.delete(doc.reference)
+                }
+            }
+            
+            batch.commit().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

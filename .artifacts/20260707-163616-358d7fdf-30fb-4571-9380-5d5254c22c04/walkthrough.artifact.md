@@ -46,6 +46,6 @@ This phase establishes the visual foundation for the Beacon redesign, migrating 
     - Switched to monospace typography for device IDs and status logs.
     - Integrated the global theme toggle in the `TopAppBar`.
 
-## Verification Summary
-- **Build Success**: Both apps successfully compiled with `./gradlew app:assembleDebug tracker:assembleDebug`.
-- **Theme Integrity**: Verified that `MaterialTheme.colorScheme` is correctly referenced and that experimental M3 APIs are handled with `@OptIn`.
+## Testing & Installation
+You can download the generated APK for the Tracker app to test on physical devices:
+- [tracker-app-redesign.apk](file:///home/bavindubanagala/.cache/Google/AndroidStudio2026.1.1/projects/beacon.7b6a74c1/.artifacts/20260707-163616-358d7fdf-30fb-4571-9380-5d5254c22c04/tracker-app-redesign.apk)

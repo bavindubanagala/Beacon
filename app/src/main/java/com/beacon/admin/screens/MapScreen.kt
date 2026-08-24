@@ -7,6 +7,8 @@ import android.net.Uri
 import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -69,32 +71,41 @@ fun MapScreen(
     val currentUserId = authManager.getCurrentUser()?.uid ?: ""
     val isDarkMode = androidx.compose.foundation.isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
-    
-    Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", 0))
 
+    LaunchedEffect(Unit) {
+        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", 0))
+    }
     val liveLocations = remember { mutableStateMapOf<String, Map<String, Any>>() }
     val ownedDeviceIds = remember { mutableStateListOf<String>() }
     val markers = remember { mutableStateMapOf<String, Marker>() }
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var hasCentered by remember { mutableStateOf(false) }
-    
+
+    val eventsOverlay = remember { 
+        MapEventsOverlay(object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint) = false
+            override fun longPressHelper(p: GeoPoint) = false
+        }) 
+    }
+
     // Filters
     val filters = listOf("Live", "Offline", "Not Tracking", "Fences")
     val selectedFilters = remember { mutableStateListOf("Live", "Fences") }
-
     // Jump to Device Menu
     var showDeviceMenu by remember { mutableStateOf(false) }
     var selectedDeviceId by remember { mutableStateOf<String?>(null) }
     val ownedDevices = remember { mutableStateListOf<com.beacon.shared.models.Device>() }
-
     // Geofences
     val fences = remember { mutableStateListOf<Fence>() }
     var showFenceSheet by remember { mutableStateOf(false) }
     var selectedFence by remember { mutableStateOf<Fence?>(null) }
+    var draggingFence by remember { mutableStateOf<Fence?>(null) }
+    // Bottom Sheet for Device Info
+    var showDeviceSheet by remember { mutableStateOf<com.beacon.shared.models.Device?>(null) }
 
     DisposableEffect(currentUserId) {
         if (currentUserId.isEmpty()) return@DisposableEffect onDispose {}
-        
+
         // 1. Listen for Firestore Device changes
         val dListener = deviceRepository.getDevicesListener(
             ownerId = currentUserId,
@@ -109,7 +120,6 @@ fun MapScreen(
                 android.util.Log.e("MapScreen", "Error listening for devices: ${e.message}")
             }
         )
-
         // 2. Listen for Realtime DB Location changes
         val database = com.beacon.admin.repository.RealtimeLocationRepository.getInstance()
         val liveRef = database.getReference(RealtimeDBPaths.LIVE_LOCATIONS)
@@ -118,10 +128,10 @@ fun MapScreen(
                 snapshot.children.forEach { child ->
                     val deviceId = child.key ?: return@forEach
                     val data = child.value as? Map<String, Any> ?: return@forEach
-                    
+
                     // Always store the data, even if not "owned" yet (to handle race conditions)
                     liveLocations[deviceId] = data
-                    
+
                     // Centering Logic for specific device request
                     if (deviceId == initialDeviceId && !hasCentered) {
                         val lat = (data["latitude"] as? Number)?.toDouble() ?: 0.0
@@ -138,25 +148,22 @@ fun MapScreen(
             }
         }
         liveRef.addValueEventListener(rtdbListener)
-
         val fJob = scope.launch {
             fenceRepository.getAllFences().onSuccess {
                 fences.clear()
                 fences.addAll(it)
             }
         }
-
-        onDispose { 
+        onDispose {
             dListener.remove()
             liveRef.removeEventListener(rtdbListener)
             fJob.cancel()
         }
     }
-
     // Reactive Marker Management
     LaunchedEffect(ownedDeviceIds.size, liveLocations.size) {
         val mv = mapView ?: return@LaunchedEffect
-        
+
         // Remove markers for devices no longer owned
         val currentIds = markers.keys.toList()
         currentIds.forEach { id ->
@@ -165,13 +172,26 @@ fun MapScreen(
                 markers.remove(id)
             }
         }
-
-        // Add/Update markers for owned devices
+        // Add/Update markers for devices
         ownedDeviceIds.forEach { id ->
+            // If we are in a device-specific map, only show that device
+            if (initialDeviceId != null && id != initialDeviceId) return@forEach
+            
             val data = liveLocations[id] ?: return@forEach
+            val status = data["status"] as? String ?: "offline"
+            
+            // Filter Logic
+            val isLive = status == "online"
+            val isOffline = status == "offline"
+            val isNotTracking = (data["trackingMode"] as? String) == "off"
+            
+            if (isLive && !selectedFilters.contains("Live")) return@forEach
+            if (isOffline && !selectedFilters.contains("Offline")) return@forEach
+            if (isNotTracking && !selectedFilters.contains("Not Tracking")) return@forEach
+
             val lat = (data["latitude"] as? Number)?.toDouble() ?: 0.0
             val lon = (data["longitude"] as? Number)?.toDouble() ?: 0.0
-            
+
             if (lat != 0.0 && lon != 0.0) {
                 val marker = markers[id] ?: Marker(mv).apply {
                     title = ownedDevices.find { it.deviceId == id }?.deviceName ?: id
@@ -183,14 +203,12 @@ fun MapScreen(
         }
         mv.invalidate()
     }
-
     val snackbarHostState = remember { SnackbarHostState() }
-
     // Jump to Device Effect
     LaunchedEffect(selectedDeviceId) {
         val id = selectedDeviceId ?: return@LaunchedEffect
         val data = liveLocations[id]
-        
+
         if (data == null) {
             snackbarHostState.showSnackbar("Device location unavailable (Offline)")
         } else {
@@ -204,37 +222,51 @@ fun MapScreen(
         }
         selectedDeviceId = null
     }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FloatingActionButton(
-                    onClick = {
-                        selectedFence = Fence(
-                            centerLat = mapView?.mapCenter?.latitude ?: 0.0,
-                            centerLng = mapView?.mapCenter?.longitude ?: 0.0
-                        )
-                        showFenceSheet = true
-                    },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Icon(Icons.Rounded.AddLocation, contentDescription = "Add Fence")
-                }
+            if (draggingFence == null) {
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FloatingActionButton(
+                        onClick = {
+                            selectedFence = Fence(
+                                centerLat = mapView?.mapCenter?.latitude ?: 0.0,
+                                centerLng = mapView?.mapCenter?.longitude ?: 0.0
+                            )
+                            showFenceSheet = true
+                        },
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
+                        Icon(Icons.Rounded.AddLocation, contentDescription = "Add Fence")
+                    }
+                    FloatingActionButton(
+                        onClick = {
+                            val lastLoc = if (initialDeviceId != null) liveLocations[initialDeviceId] else liveLocations.values.firstOrNull()
+                            if (lastLoc != null) {
+                                val lat = lastLoc["latitude"]
+                                val lon = lastLoc["longitude"]
+                                val uri = Uri.parse("google.navigation:q=$lat,$lon")
+                                context.startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        Icon(Icons.Rounded.Directions, contentDescription = "Directions")
+                    }
 
-                FloatingActionButton(
-                    onClick = {
-                        val lastLoc = liveLocations.values.firstOrNull()
-                        if (lastLoc != null) {
-                            val lat = lastLoc["latitude"]
-                            val lon = lastLoc["longitude"]
-                            val uri = Uri.parse("google.navigation:q=$lat,$lon")
-                            context.startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps"))
+                    // NEW: Info button for specific device
+                    if (initialDeviceId != null) {
+                        FloatingActionButton(
+                            onClick = {
+                                ownedDevices.find { it.deviceId == initialDeviceId }?.let {
+                                    showDeviceSheet = it
+                                }
+                            },
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        ) {
+                            Icon(Icons.Rounded.Info, contentDescription = "Info")
                         }
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(Icons.Rounded.Directions, contentDescription = "Directions")
+                    }
                 }
             }
         }
@@ -245,15 +277,15 @@ fun MapScreen(
                     MapView(ctx).apply {
                         setTileSource(TileSourceFactory.MAPNIK)
                         setMultiTouchControls(true)
-                        val defaultZoom = if (initialDeviceId != null) 18.0 else 14.0
+                        val defaultZoom = if (initialDeviceId != null) 20.0 else 14.0
                         controller.setZoom(defaultZoom)
                         mapView = this
-                        
+
                         if (isDarkMode) {
                             // Clean Dark Mode: Greyscale then Invert
                             val matrix = ColorMatrix()
                             matrix.setSaturation(0f) // Remove all colors (eliminates brown)
-                            
+
                             val inverse = ColorMatrix(floatArrayOf(
                                 -1.0f, 0.0f, 0.0f, 0.0f, 255.0f,
                                 0.0f, -1.0f, 0.0f, 0.0f, 255.0f,
@@ -261,25 +293,22 @@ fun MapScreen(
                                 0.0f, 0.0f, 0.0f, 1.0f, 0.0f
                             ))
                             matrix.postConcat(inverse)
-                            
+
                             overlayManager.tilesOverlay.setColorFilter(ColorMatrixColorFilter(matrix))
                             // Set background to match theme to hide "white squares" while loading
                             setBackgroundColor(android.graphics.Color.parseColor("#0A0D12"))
                         }
-
-                        // Click events for selecting fences or adding new ones
+                        // Click events for selecting fences
                         val eventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
                             override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
-                                // Logic to select existing fence could go here
                                 return false
                             }
                             override fun longPressHelper(p: GeoPoint): Boolean {
-                                selectedFence = Fence(centerLat = p.latitude, centerLng = p.longitude)
-                                showFenceSheet = true
-                                return true
+                                return false
                             }
                         })
-                        overlays.add(eventsOverlay)
+                        // Use overlayManager to ensure order
+                        overlayManager.add(eventsOverlay)
                     }
                 },
                 modifier = Modifier.fillMaxSize(),
@@ -295,21 +324,27 @@ fun MapScreen(
                             0.0f, 0.0f, 0.0f, 1.0f, 0.0f
                         ))
                         matrix.postConcat(inverse)
-                        
+
                         mv.overlayManager.tilesOverlay.setColorFilter(ColorMatrixColorFilter(matrix))
                         mv.setBackgroundColor(android.graphics.Color.parseColor("#0A0D12"))
                     } else {
                         mv.overlayManager.tilesOverlay.setColorFilter(null)
                         mv.setBackgroundColor(android.graphics.Color.WHITE)
                     }
-                    mv.overlays.filterIsInstance<Polygon>().forEach { mv.overlays.remove(it) }
                     
+                    // Clear and Re-add Overlays in correct order
+                    mv.overlays.clear()
+                    
+                    // 1. Events Overlay first (lowest priority for touches)
+                    mv.overlays.add(eventsOverlay)
+
+                    // 2. Fences
                     if (selectedFilters.contains("Fences")) {
                         fences.forEach { fence ->
                             val polygon = Polygon(mv)
                             polygon.points = Polygon.pointsAsCircle(GeoPoint(fence.centerLat, fence.centerLng), fence.radiusMeters)
                             polygon.title = fence.name
-                            
+
                             if (fence.type == "zone") {
                                 polygon.fillPaint.color = 0x2200D9E8.toInt()
                                 polygon.outlinePaint.color = 0xFF00D9E8.toInt()
@@ -318,7 +353,7 @@ fun MapScreen(
                                 polygon.outlinePaint.color = 0xFF8B7FFF.toInt()
                             }
                             polygon.outlinePaint.strokeWidth = 2f
-                            
+
                             polygon.setOnClickListener { _, _, _ ->
                                 selectedFence = fence
                                 showFenceSheet = true
@@ -327,90 +362,210 @@ fun MapScreen(
                             mv.overlays.add(polygon)
                         }
                     }
+
+                    // 3. Device Markers
+                    markers.values.forEach { marker ->
+                        // The marker position is already updated in the LaunchedEffect
+                        mv.overlays.add(marker)
+                    }
+
+                    // 4. Dragging Fence (Top priority)
+                    draggingFence?.let { fence ->
+                        val draggingPolygon = Polygon(mv)
+                        draggingPolygon.points = Polygon.pointsAsCircle(GeoPoint(fence.centerLat, fence.centerLng), fence.radiusMeters)
+                        draggingPolygon.fillPaint.color = 0x44FF5252.toInt()
+                        draggingPolygon.outlinePaint.color = 0xFFFF5252.toInt()
+                        draggingPolygon.outlinePaint.strokeWidth = 3f
+                        mv.overlays.add(draggingPolygon)
+
+                        val draggingMarker = Marker(mv)
+                        draggingMarker.position = GeoPoint(fence.centerLat, fence.centerLng)
+                        draggingMarker.relatedObject = "dragging"
+                        draggingMarker.title = "Drag to Place"
+                        draggingMarker.isDraggable = true
+                        draggingMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                        
+                        draggingMarker.setOnMarkerDragListener(object : Marker.OnMarkerDragListener {
+                            override fun onMarkerDrag(marker: Marker) {
+                                draggingPolygon.points = Polygon.pointsAsCircle(marker.position, fence.radiusMeters)
+                                mv.invalidate()
+                            }
+                            override fun onMarkerDragEnd(marker: Marker) {
+                                draggingFence = draggingFence?.copy(
+                                    centerLat = marker.position.latitude,
+                                    centerLng = marker.position.longitude
+                                )
+                                draggingPolygon.points = Polygon.pointsAsCircle(marker.position, fence.radiusMeters)
+                                mv.invalidate()
+                            }
+                            override fun onMarkerDragStart(marker: Marker) {
+                                marker.closeInfoWindow()
+                            }
+                        })
+                        mv.overlays.add(draggingMarker)
+                    }
+
                     mv.invalidate()
+                },
+                onRelease = { mv ->
+                    mv.onDetach()
+                    mapView = null
                 }
             )
-
             // Filter Chips Overlay
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.TopStart)
-            ) {
-                Row(
+            if (initialDeviceId == null || selectedFilters.contains("Fences")) {
+                Column(
                     modifier = Modifier
-                        .horizontalScroll(androidx.compose.foundation.rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(16.dp)
+                        .align(Alignment.TopStart)
                 ) {
-                    filters.forEach { filter ->
+                    if (initialDeviceId == null) {
+                        Row(
+                            modifier = Modifier
+                                .horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            filters.forEach { filter ->
+                                FilterChip(
+                                    selected = selectedFilters.contains(filter),
+                                    onClick = {
+                                        if (selectedFilters.contains(filter)) selectedFilters.remove(filter)
+                                        else selectedFilters.add(filter)
+                                    },
+                                    label = { Text(filter) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    } else {
+                        // Device-specific view: just Fences
                         FilterChip(
-                            selected = selectedFilters.contains(filter),
+                            selected = selectedFilters.contains("Fences"),
                             onClick = {
-                                if (selectedFilters.contains(filter)) selectedFilters.remove(filter)
-                                else selectedFilters.add(filter)
+                                if (selectedFilters.contains("Fences")) selectedFilters.remove("Fences")
+                                else selectedFilters.add("Fences")
                             },
-                            label = { Text(filter) },
+                            label = { Text("Fences") },
                             colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant, // Gray when unselected
-                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    // Jump to Device Dropdown
+                    Box {
+                        Button(
+                            onClick = { showDeviceMenu = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(4.dp),
+                            shape = MaterialTheme.shapes.small,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Icon(Icons.Rounded.Search, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Jump to Device", style = MaterialTheme.typography.labelLarge)
+                        }
+                        DropdownMenu(
+                            expanded = showDeviceMenu,
+                            onDismissRequest = { showDeviceMenu = false }
+                        ) {
+                            if (ownedDevices.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("No devices found") },
+                                    onClick = { showDeviceMenu = false }
+                                )
+                            } else {
+                                ownedDevices.forEach { device ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Box(
+                                                    Modifier
+                                                        .size(8.dp)
+                                                        .background(
+                                                            if (device.status == "online") Color(0xFF4CAF50) else Color.Gray,
+                                                            androidx.compose.foundation.shape.CircleShape
+                                                        )
+                                                )
+                                                Spacer(Modifier.width(12.dp))
+                                                Text(device.deviceName)
+                                            }
+                                        },
+                                        onClick = {
+                                            showDeviceMenu = false
+                                            selectedDeviceId = device.deviceId
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
+            }
 
-                Spacer(Modifier.height(8.dp))
-
-                // Jump to Device Dropdown
-                Box {
-                    Button(
-                        onClick = { showDeviceMenu = true },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(4.dp),
-                        shape = MaterialTheme.shapes.small,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                        modifier = Modifier.height(40.dp)
+            if (draggingFence != null) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                        .padding(bottom = 32.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp,
+                    shadowElevation = 4.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Rounded.Search, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Jump to Device", style = MaterialTheme.typography.labelLarge)
-                    }
-
-                    DropdownMenu(
-                        expanded = showDeviceMenu,
-                        onDismissRequest = { showDeviceMenu = false }
-                    ) {
-                        if (ownedDevices.isEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text("No devices found") },
-                                onClick = { showDeviceMenu = false }
-                            )
-                        } else {
-                            ownedDevices.forEach { device ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Box(
-                                                Modifier
-                                                    .size(8.dp)
-                                                    .background(
-                                                        if (device.status == "online") Color(0xFF4CAF50) else Color.Gray,
-                                                        androidx.compose.foundation.shape.CircleShape
-                                                    )
-                                            )
-                                            Spacer(Modifier.width(12.dp))
-                                            Text(device.deviceName)
+                        Text(
+                            "Positioning Fence",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            draggingFence?.name ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "Drag the red marker on the map to place it",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            OutlinedButton(
+                                onClick = { draggingFence = null },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Cancel")
+                            }
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        fenceRepository.saveFence(draggingFence!!)
+                                        draggingFence = null
+                                        fenceRepository.getAllFences().onSuccess {
+                                            fences.clear()
+                                            fences.addAll(it)
                                         }
-                                    },
-                                    onClick = {
-                                        showDeviceMenu = false
-                                        selectedDeviceId = device.deviceId
                                     }
-                                )
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Confirm Placement")
                             }
                         }
                     }
@@ -432,6 +587,16 @@ fun MapScreen(
         }
     }
 
+    // Device Info Bottom Sheet
+    if (showDeviceSheet != null) {
+        DeviceSettingsSheet(
+            device = showDeviceSheet!!,
+            onDismiss = { showDeviceSheet = null },
+            deviceRepository = deviceRepository
+        )
+    }
+
+    // Geofence Editing Sheet
     if (showFenceSheet && selectedFence != null) {
         FenceEditSheet(
             fence = selectedFence!!,
@@ -447,6 +612,11 @@ fun MapScreen(
                 showFenceSheet = false
                 selectedFence = null
             },
+            onMove = { fenceToMove ->
+                draggingFence = fenceToMove
+                showFenceSheet = false
+                selectedFence = null
+            },
             onDelete = { id ->
                 scope.launch {
                     fenceRepository.deleteFence(id)
@@ -459,120 +629,5 @@ fun MapScreen(
                 selectedFence = null
             }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FenceEditSheet(
-    fence: Fence,
-    onDismiss: () -> Unit,
-    onSave: (Fence) -> Unit,
-    onDelete: (String) -> Unit
-) {
-    var name by remember { mutableStateOf(fence.name) }
-    var type by remember { mutableStateOf(fence.type) }
-    var radius by remember { mutableStateOf(fence.radiusMeters.toFloat()) }
-    var alertOnEnter by remember { mutableStateOf(fence.alertOnEnter) }
-    var alertOnExit by remember { mutableStateOf(fence.alertOnExit) }
-    var alertFrequency by remember { mutableStateOf(fence.alertFrequency) }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        dragHandle = { BottomSheetDefaults.DragHandle() }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 48.dp)
-        ) {
-            Text(
-                text = if (fence.id.isEmpty()) "New Geofence" else "Edit Geofence",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Fence Name (e.g. Home)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text("Fence Type", style = MaterialTheme.typography.titleSmall)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("zone" to "Zone", "checkpoint" to "Checkpoint").forEach { (t, label) ->
-                    FilterChip(
-                        selected = type == t,
-                        onClick = { type = t },
-                        label = { Text(label) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text("Radius: ${radius.toInt()}m", style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-            Slider(
-                value = radius,
-                onValueChange = { radius = it },
-                valueRange = 10f..1000f
-            )
-
-            if (type == "zone") {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = alertOnEnter, onCheckedChange = { alertOnEnter = it })
-                    Text("Alert on Enter", style = MaterialTheme.typography.bodyMedium)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = alertOnExit, onCheckedChange = { alertOnExit = it })
-                    Text("Alert on Exit", style = MaterialTheme.typography.bodyMedium)
-                }
-            } else {
-                Text("Alert Frequency", style = MaterialTheme.typography.titleSmall)
-                // Simplified dropdown/choice
-                listOf("every_time" to "Every time", "once_ever" to "Once ever", "once_per_day" to "Once per day").forEach { (freq, label) ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = alertFrequency == freq, onClick = { alertFrequency = freq })
-                        Text(label, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = {
-                    onSave(fence.copy(
-                        name = name,
-                        type = type,
-                        radiusMeters = radius.toDouble(),
-                        alertOnEnter = alertOnEnter,
-                        alertOnExit = alertOnExit,
-                        alertFrequency = alertFrequency
-                    ))
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Save Geofence")
-            }
-
-            if (fence.id.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                TextButton(
-                    onClick = { onDelete(fence.id) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete Fence")
-                }
-            }
-        }
     }
 }

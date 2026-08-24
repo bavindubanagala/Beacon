@@ -13,16 +13,23 @@ data class Device(
     val intervalSeconds: Int = 900, // Default 15 mins
     val autoRevertSeconds: Int = 1800, // Default 30 mins, 0 = off
     val isEmergencyMode: Boolean = false,
+    val batterySavingEnabled: Boolean = true,
+    val stationaryIntervalMinutes: Int = 45,
     val commandMode: String? = null,
     val commandDurationMinutes: Int? = null, // Deprecated, but keep for now
     val commandTimestamp: Long? = null,
     val alertThresholds: AlertThresholds = AlertThresholds(),
-    val alertsEnabled: Boolean = true
+    val alertsEnabled: Boolean = true,
+    val sosFallbackPhone: String = "",
+    val customColor: Int? = null,
+    val deviceModel: String = "",
+    val pairingDate: Long? = null
 )
 
 data class AlertThresholds(
     val lowBatteryPercent: Int = 15,
     val offlineThresholdMinutes: Int = 10,
+    val speedLimitKmH: Int = 0, // 0 = disabled
     val geofences: List<GeofenceZone> = emptyList()
 )
 

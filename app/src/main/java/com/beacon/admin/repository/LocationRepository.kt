@@ -56,4 +56,28 @@ class LocationRepository(
             Result.failure(e)
         }
     }
+
+    suspend fun pruneOldHistory(deviceId: String, retentionDays: Int): Result<Int> {
+        return try {
+            val cutoff = System.currentTimeMillis() - (retentionDays.toLong() * 24 * 60 * 60 * 1000L)
+            val snapshot = firestore
+                .collection(FirebaseCollections.DEVICES)
+                .document(deviceId)
+                .collection(FirebaseCollections.LOCATION_HISTORY)
+                .whereLessThan("timestamp", cutoff)
+                .get()
+                .await()
+
+            var count = 0
+            val batch = firestore.batch()
+            for (doc in snapshot.documents) {
+                batch.delete(doc.reference)
+                count++
+            }
+            batch.commit().await()
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

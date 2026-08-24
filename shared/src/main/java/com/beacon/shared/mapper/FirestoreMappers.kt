@@ -34,6 +34,8 @@ fun DocumentSnapshot.toDevice(): Device {
         intervalSeconds = ((get("interval_seconds") ?: get("intervalSeconds") ?: 900L) as? Number)?.toInt() ?: 900,
         autoRevertSeconds = ((get("auto_revert_seconds") ?: get("autoRevertSeconds") ?: 1800L) as? Number)?.toInt() ?: 1800,
         isEmergencyMode = getBoolean("is_emergency_mode") ?: getBoolean("isEmergencyMode") ?: false,
+        batterySavingEnabled = getBoolean("battery_saving_enabled") ?: getBoolean("batterySavingEnabled") ?: true,
+        stationaryIntervalMinutes = ((get("stationary_interval_minutes") ?: get("stationaryIntervalMinutes") ?: 45L) as? Number)?.toInt() ?: 45,
         commandMode = getString("command_mode") ?: getString("commandMode"),
         commandDurationMinutes = ((get("command_duration_minutes") ?: get("commandDurationMinutes")) as? Number)?.toInt(),
         commandTimestamp = ((get("command_timestamp") ?: get("commandTimestamp")) as? Number)?.toLong()

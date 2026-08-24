@@ -73,12 +73,17 @@ class DeviceRepository(
         }
     }
 
-    suspend fun setTrackingMode(
-        deviceId: String, 
-        mode: String, 
-        intervalSeconds: Int, 
-        autoRevertSeconds: Int, 
-        isEmergency: Boolean
+    suspend fun updateDeviceSettings(
+        deviceId: String,
+        mode: String,
+        intervalSeconds: Int,
+        autoRevertSeconds: Int,
+        isEmergency: Boolean,
+        batterySavingEnabled: Boolean,
+        stationaryIntervalMinutes: Int,
+        lowBatteryPercent: Int,
+        offlineThresholdMinutes: Int,
+        sosFallbackPhone: String
     ): Result<Unit> {
         return try {
             val updates = mapOf(
@@ -90,6 +95,13 @@ class DeviceRepository(
                 "autoRevertSeconds" to autoRevertSeconds,
                 "is_emergency_mode" to isEmergency,
                 "isEmergencyMode" to isEmergency,
+                "battery_saving_enabled" to batterySavingEnabled,
+                "batterySavingEnabled" to batterySavingEnabled,
+                "stationary_interval_minutes" to stationaryIntervalMinutes,
+                "stationaryIntervalMinutes" to stationaryIntervalMinutes,
+                "alertThresholds.lowBatteryPercent" to lowBatteryPercent,
+                "alertThresholds.offlineThresholdMinutes" to offlineThresholdMinutes,
+                "sosFallbackPhone" to sosFallbackPhone,
                 "command_timestamp" to System.currentTimeMillis(),
                 "commandTimestamp" to System.currentTimeMillis()
             )
@@ -117,6 +129,33 @@ class DeviceRepository(
             )
             firestore.collection("devices").document(deviceId).update(updates).await()
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun cleanupInactiveDevices(ownerId: String): Result<Int> {
+        return try {
+            val snapshot = collection
+                .where(Filter.or(
+                    Filter.equalTo("ownerId", ownerId),
+                    Filter.equalTo("owner_id", ownerId)
+                ))
+                .get()
+                .await()
+            
+            val now = System.currentTimeMillis()
+            val thirtyDaysMs = 30L * 24 * 60 * 60 * 1000L
+            var count = 0
+            
+            for (doc in snapshot.documents) {
+                val lastSeen = doc.getLong("last_seen") ?: doc.getLong("lastSeen") ?: 0L
+                if (now - lastSeen > thirtyDaysMs) {
+                    doc.reference.delete().await()
+                    count++
+                }
+            }
+            Result.success(count)
         } catch (e: Exception) {
             Result.failure(e)
         }

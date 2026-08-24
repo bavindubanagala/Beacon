@@ -1,0 +1,1191 @@
+--------- beginning of main
+07-08 09:31:45.763   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.763   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.775  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.777  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.780   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.780   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.804   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.804   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.817  3000  3007 I com.sec.epdg: Background concurrent copying GC freed 6145KB AllocSpace bytes, 0(0B) LOS objects, 69% free, 2749KB/8893KB, paused 251us,143us total 129.028ms
+07-08 09:31:45.819   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.820   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.825   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:45.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.856  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.856  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.858   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.858   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.876   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:45.878   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.878   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.882  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.882  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.899   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.899   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.907   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:45.913  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.913  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.918 12488 12488 I adbd    : adbd service requested 'shell,v2,raw:am start -n com.beacon.admin/.MainActivity'
+07-08 09:31:45.918   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.919   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.932  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.933  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.938   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.939   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.941   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:45.958   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:45.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.967  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.968  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.970  1435  1474 I SemDvfsHyPerManager: acquire hyper - APP_LAUNCH/1435@931, type = -999
+07-08 09:31:45.970   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 2801092  [1435 / 931]    HINT : APP_LAUNCH    list : 
+07-08 09:31:45.971   865   897 I mtkpower_client: perf_lock_acq, hdl:0, dur:0, num:2, tid:897
+07-08 09:31:45.971  4405  4405 I SemDvfsHyPerManager: acquire hyper - APP_START_SHORT/4405@12, type = -999
+07-08 09:31:45.972   865   897 I mtkpower_client: ret_hdl:73231
+07-08 09:31:45.972   865   897 I mtkpower_client: perf_lock_acq, hdl:0, dur:0, num:2, tid:897
+07-08 09:31:45.972   868   926 I libPowerHal: [perfLockAcq] idx:0 hdl:73231 hint:-1 pid:865 duration:0 lock_user:vendor.samsung. => ret_hdl:73231
+07-08 09:31:45.973   868   926 I libPowerHal: [PE] (less) /proc/mcdi/state set +prefix:enable 0;
+--------- beginning of system
+07-08 09:31:45.973  4405  4405 I R0      : limitGPUFreq:: freq = -1
+07-08 09:31:45.973  4405  4405 I R0      : limitCPUFreq:: freq = -1
+07-08 09:31:45.975   865   897 I mtkpower_client: ret_hdl:73232
+07-08 09:31:45.975   865   897 I mtkpower_client: perf_lock_acq, hdl:0, dur:0, num:2, tid:897
+07-08 09:31:45.977   868   926 I libPowerHal: [perfLockAcq] idx:1 hdl:73232 hint:-1 pid:865 duration:0 lock_user:vendor.samsung. => ret_hdl:73232
+07-08 09:31:45.978   868   926 I libPowerHal: vendor.samsung.: cpu_ctrl set cpu freq: 1800000 -1 -1 -1
+07-08 09:31:45.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.979   865   897 I mtkpower_client: ret_hdl:73233
+07-08 09:31:45.979  1435  4403 D ActivityTaskManager: startActivityAsUser: callingPid=18062, callingUid=2000, caller=com.android.server.wm.ActivityTaskManagerService.startActivityAsUser:1816 com.android.server.am.ActivityManagerService.startActivityAsUserWithFeature:3747 com.android.server.am.ActivityManagerShellCommand.runStartActivity:656 com.android.server.am.ActivityManagerShellCommand.onCommand:222 com.android.modules.utils.BasicShellCommandHandler.exec:97 android.os.ShellCommand.exec:38 com.android.server.am.ActivityManagerService.onShellCommand:11276 
+07-08 09:31:45.980   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 9757165  [4405 / 12]    HINT : APP_START    list : [TIMEOUT / 1500] 
+07-08 09:31:45.980  1435  1467 I ChimeraSystemEventListener: appLaunchIntent package name is: com.beacon.admin
+07-08 09:31:45.981   865   897 I HYPER-HAL: [RequestManager.cpp]releaseLocked(): Released ID : 9721849
+07-08 09:31:45.981   865   897 I HYPER-HAL: [RequestManager.cpp]releaseLocked(): Released ID : 9713030
+07-08 09:31:45.981  1435  4403 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.beacon.admin/.MainActivity} from uid 2000
+07-08 09:31:45.981  1435  4403 I Pageboost: stop alp
+07-08 09:31:45.981   868   926 I libPowerHal: [perfLockAcq] idx:2 hdl:73233 hint:-1 pid:865 duration:0 lock_user:vendor.samsung. => ret_hdl:73233
+07-08 09:31:45.982  1435  4403 D ActivityTaskManager: startActivity: reason=startActivityAsUser, result=-92
+07-08 09:31:45.982   868   926 I libPowerHal: [PE] vendor.samsung. update cmd:1000000, param:0
+07-08 09:31:45.983   868   926 I libPowerHal: [PE] vendor.samsung. update cmd:1000000 param:0
+07-08 09:31:45.983  2902  2902 E pageboostd: Received HALT command code 2
+07-08 09:31:45.991   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:45.992  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.992  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:45.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:45.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.009   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.017  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.018  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.038   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.038   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.041   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.045  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.046  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.057   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.058   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.058   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.078   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.078  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.078   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.079  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.095  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.095  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.099   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.099   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.108   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.113  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.114  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.118   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.118   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.125   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.138  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.138   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.138   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.138  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.141   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.154  1862  1969 D MobileStatusTracker(1/2): onSignalStrengthsChanged level=3, vendorLevel=3
+07-08 09:31:46.156  1862  1969 D MobileSignalController(1/2): notifyListener: enabled=true, connected=true, dataConnected=true, networkType=LTE/LTE_CA (4G+), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=, level=3, ca=true, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:46.156  3000 29123 I EPDG -- SIM1 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-105 rsrp=-104 rsrq=-15 rssnr=8 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:46.158   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.160   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.160   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.162  1862  1969 D NetworkController: SignalStrength from intent slotId=1
+07-08 09:31:46.165  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.166  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.178   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.178   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.188   905   905 I BufferQueueProducer: [com.trophygames.truckmanager/com.applovin.adview.AppLovinFullscreenActivity$_4835#244149](this:0xb400007489040838,id:-1,api:0,p:-1,c:905) queueBuffer: fps=30.50 dur=1016.27 max=116.56 min=16.20
+07-08 09:31:46.190   855   939 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.500837,dur:1016.37,max:115.77,min:15.89  
+07-08 09:31:46.191   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.195  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.196  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.198   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.198   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.207   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.209  1435  4493 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+07-08 09:31:46.209  1435  4493 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+07-08 09:31:46.209  1435  4493 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+07-08 09:31:46.218   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.218   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.228  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.228  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.238   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.238   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.240   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.258   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.258   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.260  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.261  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.274   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.279   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.279   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.294  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.294  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.299   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.299   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.308   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.311  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.311  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.319   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.319   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.322   587   587 D io_stats: !@ 179,0 r 93324834 1398933382 w 57723215 831297428 d 0 0 f 0 0 iot 63437432 0 th 0 0 0 pt 0 inp 0 0 844688.387
+07-08 09:31:46.340   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.340   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.344   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.345 32644  1002 I android.vending: Explicit concurrent copying GC freed 1056KB AllocSpace bytes, 0(0B) LOS objects, 32% free, 49MB/73MB, paused 419us,274us total 1.001s
+07-08 09:31:46.345 32644 32651 I android.vending: WaitForGcToComplete blocked Background on Explicit for 1.001s
+07-08 09:31:46.353  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.353  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.358   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.358   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.375   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.380  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.381  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.392   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.399   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.399   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.411  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.411  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.418   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.418   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.424   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.433  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.433  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.438   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.438   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.458   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.459   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.459   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.478   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.478   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.480  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.480  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.498  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.498   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.498   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.498  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.510   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.518   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.518   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.521  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.521  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.524   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.540   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.540   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.542   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.547  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.547  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.557   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.558   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.559   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.579   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.579   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.584  1862  1862 D SecPowerUI.Notification: showChargingNotice oldChargingType : 11 / currentChargingType : 11, oldChargingTime : 6843000 / mChargingTime : 6843000
+07-08 09:31:46.584  1862  1862 D SecPowerUI.Notification: There is no change about charging status, so return!
+07-08 09:31:46.585  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.585  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.598   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.599   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.607   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.611  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.613  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.636  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.637  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.639   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.639   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.642   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.657   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.659   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.659   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.663  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.664  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.678   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.678   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.692   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.697  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.697  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.699   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.699   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.718   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.719   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.724   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.730  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.731  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.759   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.759   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.792  1220  1220 D connsyslogger: Open FIFO for close
+07-08 09:31:46.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.819   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.819   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.842   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.859  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.859  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.879   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.879   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.892   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.899   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.899   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.904  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.904  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.919   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.919   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.924   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.926  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.927  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.938   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.939   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.944  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.944  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.954  1862  1969 D MobileStatusTracker(0/1): onSignalStrengthsChanged level=4, vendorLevel=4
+07-08 09:31:46.955  3000 29123 I EPDG -- SIM0 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-95 rsrp=-94 rsrq=-9 rssnr=10 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=4 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=4 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:46.956  1862  1969 D MobileSignalController(0/1): notifyListener: enabled=true, connected=true, dataConnected=false, networkType=LTE (4G), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=, level=4, ca=false, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:46.956   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.957  1862  1969 D NetworkController: SignalStrength from intent slotId=0
+07-08 09:31:46.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.961  3000 29130 I EPDG -- SIM0 [SMARTCELLULAR]: DataSIM OutOfService area or Roaming -> Data SIM ROVE OUT
+07-08 09:31:46.963  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.963  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.973   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.980   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.980   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.990   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:46.998   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.998   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:46.998  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:46.999  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.013  1435 17799 I SystemUiVisibilityPolicyController: handleMessage: entry what = 101
+07-08 09:31:47.017  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.017  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.018   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.018   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.024   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.040   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.044  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.045  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.059   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.059   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.064  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.065  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.074   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.079   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.079   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.081   865 18065 I mtkpower_client: perf_lock_rel, hdl:73231, tid:18065
+07-08 09:31:47.081   865 18065 I mtkpower_client: perf_lock_rel, hdl:73232, tid:18065
+07-08 09:31:47.082   868   926 I libPowerHal: [perfLockRel] hdl:73231, idx:0
+07-08 09:31:47.083   868   926 I libPowerHal: [PD] vendor.samsung. update cmd:1c3c000, param:1
+07-08 09:31:47.083   868   926 I libPowerHal: [PD] (less) /proc/mcdi/state set +prefix:enable 1;
+07-08 09:31:47.084   865 18065 I mtkpower_client: perf_lock_rel, hdl:73233, tid:18065
+07-08 09:31:47.084   868   926 I libPowerHal: [perfLockRel] hdl:73232, idx:1
+07-08 09:31:47.085   868   926 I libPowerHal: vendor.samsung.: cpu_ctrl set cpu freq: -1 -1 -1 -1
+07-08 09:31:47.086   868   926 I libPowerHal: [perfLockRel] hdl:73233, idx:2
+07-08 09:31:47.086   868   926 I libPowerHal: [PD] vendor.samsung. update cmd:1000000, param:-1
+07-08 09:31:47.086   865 18065 I HYPER-HAL: [RequestManager.cpp]releaseLocked(): Released ID : 2801092
+07-08 09:31:47.086   868   926 I libPowerHal: [PD] vendor.samsung. update cmd:1000000 param:-1
+07-08 09:31:47.091   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.096  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.097  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.099   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.099   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.119   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.119   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.124   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.129  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.130  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.139   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.139   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.157   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.158   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.158   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.160  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.161  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.173  1862  1969 D MobileStatusTracker(1/2): onSignalStrengthsChanged level=3, vendorLevel=3
+07-08 09:31:47.175  3000 29123 I EPDG -- SIM1 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-105 rsrp=-105 rsrq=-14 rssnr=6 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:47.177  1862  1969 D MobileSignalController(1/2): notifyListener: enabled=true, connected=true, dataConnected=true, networkType=LTE/LTE_CA (4G+), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=, level=3, ca=true, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:47.177  1862  1969 D NetworkController: SignalStrength from intent slotId=1
+07-08 09:31:47.179   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.179   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.187  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.188  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.189  5143 14218 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+07-08 09:31:47.190  5143 14218 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing, NearbyConnections.TxAdvertisement}
+07-08 09:31:47.190   855   939 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.988186,dur:1000.38,max:117.89,min:15.39  
+07-08 09:31:47.192   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.200   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.200   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.220   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.220   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.240   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.240   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.260   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.260   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.280   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.280   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.300   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.300   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.310 32644  1002 I android.vending: Explicit concurrent copying GC freed 407KB AllocSpace bytes, 0(0B) LOS objects, 33% free, 48MB/72MB, paused 506us,125us total 963.831ms
+07-08 09:31:47.316   905   959 D SurfaceFlinger: [SF client] REMOVE (0xb400007488df91c0) for (32644:com.android.vending)
+07-08 09:31:47.319   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.320   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.321   905   905 I BufferQueueProducer: [com.trophygames.truckmanager/com.applovin.adview.AppLovinFullscreenActivity$_4835#244149](this:0xb400007489040838,id:-1,api:0,p:-1,c:905) queueBuffer: fps=28.24 dur=1133.14 max=133.30 min=16.05
+07-08 09:31:47.326   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.328  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.328  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.340   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.340   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.354  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.355  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.357   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.359   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.359   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.378   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.382  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.382  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.391   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.399   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.399   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.405  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.406  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.407   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.419   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.419   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.424   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.431  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.431  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.457   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.458   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.459   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.461  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.461  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.479   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.479   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.481  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.481   865 18066 I HYPER-HAL: [RequestManager.cpp]releaseLocked(): Released ID : 9757165
+07-08 09:31:47.482  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.491  4405 29090 I R0      : limitGPUFreq:: freq = -1
+07-08 09:31:47.491  4405 29090 I R0      : limitCPUFreq:: freq = -1
+07-08 09:31:47.491   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.498  4405  4708 I R0      : limitGPUFreq:: freq = -1
+07-08 09:31:47.498  4405  4708 I R0      : limitCPUFreq:: freq = -1
+07-08 09:31:47.498   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.498   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.499  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@13, type = -999
+07-08 09:31:47.500   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1027474  [1420 / 13]    HINT :      list : [GPUMinFreq / 299000] 
+07-08 09:31:47.506   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.507  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.508  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.519   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.519   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.533  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.533  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.537  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@7, type = -999
+07-08 09:31:47.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.540   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.541   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1018885  [1420 / 7]    HINT :      list : [CPUMaxFreq / 1800000] 
+07-08 09:31:47.554  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.554  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.557   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.559   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.559   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.574   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.579   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.579   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.598  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.598  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.599   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.599   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.626   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.633  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.634  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.639   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.639   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.639   865   897 I HYPER-HAL: [RequestManager.cpp]releaseLocked(): Released ID : 1018885
+07-08 09:31:47.658   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.661   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.661   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.667  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.667  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.679   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.679   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.691   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.700   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.700   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.707  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.708  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.719   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.719   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.724   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.747  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.747  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.759   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.759   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.773   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.776  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.777  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.806   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.811  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.812  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.818   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.819   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.834  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.834  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.841   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.854  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.855  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.857   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.878   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.878   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.881  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.882  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.892   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.898   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.899   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.902  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.902  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.908   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.908  1862  1969 D MobileStatusTracker(1/2): onDataActivity: direction=2
+07-08 09:31:47.913  1862  1969 D MobileSignalController(1/2): notifyListener: enabled=true, connected=true, dataConnected=true, networkType=LTE/LTE_CA (4G+), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=out, level=3, ca=true, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:47.919   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.919   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.923   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.930  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.931  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.938   905   905 I BufferQueueProducer: [StatusBar$_1862#90](this:0xb400007480150838,id:-1,api:0,p:-1,c:905) queueBuffer: fps=0.33 dur=3048.55 max=3048.55 min=3048.55
+07-08 09:31:47.938   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.938   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.951  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.951  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.958   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.958   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.973   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:47.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.989  1435  1791 D NetdEventListenerService: DNS Requested by : 150, 10386
+07-08 09:31:47.994  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.995  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:47.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:47.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.011   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.043 32644  1002 I android.vending: Explicit concurrent copying GC freed 8107KB AllocSpace bytes, 4(160KB) LOS objects, 37% free, 40MB/64MB, paused 855us,262us total 732.236ms
+07-08 09:31:48.046  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.046  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.059   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.059   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.073   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.076  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.077  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.079   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.079   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.099   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.100   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.119   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.119   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.139   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.139   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.159   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.159   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.179   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.180   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.188  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@6, type = -999
+07-08 09:31:48.189   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1017457  [1420 / 6]    HINT :      list : [GPUMaxFreq / 850000] 
+07-08 09:31:48.196  1862  1969 D MobileStatusTracker(1/2): onSignalStrengthsChanged level=3, vendorLevel=3
+07-08 09:31:48.197  3000 29123 I EPDG -- SIM1 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-103 rsrp=-103 rsrq=-13 rssnr=6 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:48.198  1862  1969 D MobileSignalController(1/2): notifyListener: enabled=true, connected=true, dataConnected=true, networkType=LTE/LTE_CA (4G+), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=out, level=3, ca=true, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:48.199  1862  1969 D NetworkController: SignalStrength from intent slotId=1
+07-08 09:31:48.199   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.199   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.216  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.217  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.219   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.220   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.224   855   939 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:27.100449,dur:1033.19,max:151.76,min:15.59  
+07-08 09:31:48.225   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.238  1862  1969 D MobileStatusTracker(0/1): onSignalStrengthsChanged level=4, vendorLevel=4
+07-08 09:31:48.238  3000 29123 I EPDG -- SIM0 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-93 rsrp=-93 rsrq=-9 rssnr=10 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=4 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=4 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:48.240   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.240   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.241   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.247  1862  1969 D MobileSignalController(0/1): notifyListener: enabled=true, connected=true, dataConnected=false, networkType=LTE (4G), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=, level=4, ca=false, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:48.247  1862  1969 D NetworkController: SignalStrength from intent slotId=0
+07-08 09:31:48.249  3000 29130 I EPDG -- SIM0 [SMARTCELLULAR]: DataSIM OutOfService area or Roaming -> Data SIM ROVE OUT
+07-08 09:31:48.259   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.259   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.266  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.267  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.279   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.279   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.290   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.291  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.292  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.299   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.299   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.317  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.317  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.318   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.319   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.324   587   587 D io_stats: !@ 179,0 r 93324836 1398933390 w 57723248 831297644 d 0 0 f 0 0 iot 63437460 0 th 0 0 0 pt 0 inp 0 0 844690.388
+07-08 09:31:48.324   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.337   905   905 I BufferQueueProducer: [com.trophygames.truckmanager/com.applovin.adview.AppLovinFullscreenActivity$_4835#244149](this:0xb400007489040838,id:-1,api:0,p:-1,c:905) queueBuffer: fps=29.53 dur=1016.02 max=150.31 min=16.31
+07-08 09:31:48.338  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.339   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.339   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.339  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.340   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.356   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.359   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.359   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.363  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.364  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.385  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.385  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.390   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.399   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.399   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.407   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.416  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.417  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.420   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.420   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.440   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.445  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.446  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.459   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.459   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.467  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.467  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.474   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.478   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.478   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.492   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.496  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.497  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.499   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.499   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.518   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.518   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.523   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.530  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.530  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.551  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.552  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.559   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.559   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.560   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.578   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.578   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.581  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.582  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.591   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.599   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.599   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.624   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.628  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.629  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.639   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.639   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.642 32644  1002 I android.vending: Explicit concurrent copying GC freed 41KB AllocSpace bytes, 0(0B) LOS objects, 37% free, 40MB/64MB, paused 341us,125us total 599.313ms
+07-08 09:31:48.658   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.658   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.658   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.672  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.672  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.679   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.680   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.698   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.698   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.703  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.704  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.706   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.718   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.718   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.725   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.732  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.732  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.756   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.758   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.758   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.764  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.764  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.778   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.784  1862  1969 D MobileStatusTracker(0/1): onDataActivity: direction=3
+07-08 09:31:48.787  1862  1969 D MobileSignalController(0/1): notifyListener: enabled=true, connected=true, dataConnected=false, networkType=LTE (4G), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=inout, level=4, ca=false, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:48.787  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@6, type = -999
+07-08 09:31:48.789   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1017457  [1420 / 6]    HINT :      list : [GPUMaxFreq / 743000] 
+07-08 09:31:48.790   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.792  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.792  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.811  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.811  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.818   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.819   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.823   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.836  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.837  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.840   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.858   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.865  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.866  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.879   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.879   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.889   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.896  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.896  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.898   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.898   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.914  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.914  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.918   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.918   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.920  1862  1969 D MobileStatusTracker(1/2): onDataActivity: direction=3
+07-08 09:31:48.923   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.926  1862  1969 D MobileSignalController(1/2): notifyListener: enabled=true, connected=true, dataConnected=true, networkType=LTE/LTE_CA (4G+), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=inout, level=3, ca=true, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:48.939   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.939   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.942   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.947  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.948  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:48.952  1844  1844 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=985718675 mSleepTimeMs=332573600 mIdleTimeMs=648312983 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[16560, 5400, 5740, 34934, 69880],mRxTimeMs=1852091}]}
+07-08 09:31:48.954   905   905 I BufferQueueProducer: [StatusBar$_1862#90](this:0xb400007480150838,id:-1,api:0,p:-1,c:905) queueBuffer: fps=0.98 dur=1016.43 max=1016.43 min=1016.43
+07-08 09:31:48.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.973   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:48.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:48.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.038  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@6, type = -999
+07-08 09:31:49.039   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1017457  [1420 / 6]    HINT :      list : [GPUMaxFreq / 850000] 
+07-08 09:31:49.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.059   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.060   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.080   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.080   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.096  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.097  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.100   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.100   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.119   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.120   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.125   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.125  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.126  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.138   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.139   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.140   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.159   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.159   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.162  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.163  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.179   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.179   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.191   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.199   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.199   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.204  1862  1969 D MobileStatusTracker(1/2): onSignalStrengthsChanged level=3, vendorLevel=3
+07-08 09:31:49.207  3000 29123 I EPDG -- SIM1 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-103 rsrp=-102 rsrq=-14 rssnr=6 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:49.207  1862  1969 D MobileSignalController(1/2): notifyListener: enabled=true, connected=true, dataConnected=true, networkType=LTE/LTE_CA (4G+), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=inout, level=3, ca=true, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:49.208  1862  1969 D NetworkController: SignalStrength from intent slotId=1
+07-08 09:31:49.219   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.219   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.219  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.220  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.238  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@6, type = -999
+07-08 09:31:49.239   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.239   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.240 32644  1002 I android.vending: Explicit concurrent copying GC freed 77KB AllocSpace bytes, 0(0B) LOS objects, 37% free, 40MB/64MB, paused 218us,133us total 597.292ms
+07-08 09:31:49.242   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1017457  [1420 / 6]    HINT :      list : [GPUMaxFreq / 743000] 
+07-08 09:31:49.255   855   939 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:30.049465,dur:1031.63,max:151.32,min:15.49  
+07-08 09:31:49.256  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.256   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.257  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.259   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.259   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.278   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.278   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.282  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.283  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.288  1435  1644 D InputReader: Btn_touch(10): value=1 when=844691.353108
+07-08 09:31:49.289  1435  1644 I InputReader: Touch event's action is 0x0 (id=3, t=0) [pCnt=1, s=0.25447 ] when=844691.353108
+07-08 09:31:49.291   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.294  1435  1435 D PowerManagerService: [api] userActivity : event: 0 flags: 0 (uid: 1000 pid: 1435) <- handleMotionEvent() in com.android.server.accessibility.AccessibilityInputFilter:481 eventTime = 844691353 displayId = 0
+07-08 09:31:49.297  1435  1435 D InputDispatcher: Inject motion (0/0): action=0x0, time=844691353108000, f=0x0, d=0 dsdx=0.000000 dtdx=1.000000
+07-08 09:31:49.298  1435  1643 I InputDispatcher: Delivering touch to (1862): action: 0x4, f=0x800, d=0, '45ec826', t=1 
+07-08 09:31:49.299  1435  1643 I InputDispatcher: Delivering touch to (4835): action: 0x0, f=0x800, d=0, 'ab9affb', t=1 +(-59,809)*(0.75)
+07-08 09:31:49.300   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.300   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.300  1435  1643 D PowerManagerService: [api] userActivityFromNative :  (event: 2 flags: 0 displayId: 0) eventTime = 844691353
+07-08 09:31:49.300  2347  2347 I TouchInteractionService: onInputEvent, inputConsumer = com.android.quickstep.l2@3258ee4
+07-08 09:31:49.301  1435  1643 D PowerManagerService: UserActivityStateListenerState: 1
+07-08 09:31:49.302  1862  1862 D TwoFingerGesture: onDetecting in EdgeBackGestureHandler
+07-08 09:31:49.302  1435  1465 I GestureDetector: obtain mCurrentDownEvent. id: 63769184 caller: com.android.server.wm.SystemGesturesPointerEventListener.onPointerEvent:203 com.android.server.wm.PointerEventDispatcher.onInputEvent:53 android.view.InputEventReceiver.dispatchInputEvent:285 
+07-08 09:31:49.303  1435  1465 I GestureDetector: obtain mCurrentDownEvent. id: 63769184 caller: com.android.server.wm.SystemPerformancePointerEventListener.onPointerEvent:89 com.android.server.wm.PointerEventDispatcher.onInputEvent:53 android.view.InputEventReceiver.dispatchInputEvent:285 
+07-08 09:31:49.308  4835  4835 I ViewRootImpl@a80f9bb[AppLovinFullscreenActivity]: ViewPostIme pointer 0
+07-08 09:31:49.313  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.314  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.319   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.320   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.322  1435  1465 I GestureDetector: obtain mCurrentMotionEventRaw. action: 2 id: 628481725
+07-08 09:31:49.322  1435  1465 I GestureDetector: obtain mCurrentMotionEventRaw. action: 2 id: 628481725
+07-08 09:31:49.324   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.339   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.339   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.359   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.360   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.398   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.399   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.412  1435  1644 D InputReader: Btn_touch(10): value=0 when=844691.476617
+07-08 09:31:49.412  1435  1644 I InputReader: Touch event's action is 0x1 (id=3, t=0) [pCnt=1, s=] when=844691.476617
+07-08 09:31:49.413  1435  1435 D InputDispatcher: Inject motion (0/0): action=0x1, time=844691476617000, f=0x0, d=0 dsdx=0.000000 dtdx=1.000000
+07-08 09:31:49.413  1435  1643 I InputDispatcher: Delivering touch to (4835): action: 0x1, f=0x800, d=0, 'ab9affb', t=1 +(-59,809)*(0.75)
+07-08 09:31:49.414  1862  1862 D TwoFingerGesture: onEnd EdgeBackGestureHandler
+07-08 09:31:49.414  2347  2347 I TouchInteractionService: reset
+07-08 09:31:49.415  1862  1922 V Navbar.Store: handleEvent(0) ResetBottomGestureHintVI(noArguments=true) [Module] 
+07-08 09:31:49.415  1862  1922 V Navbar.Store: [Band]GESTURE_PACK_RESET_HINT_VI
+07-08 09:31:49.415  1862  1922 V Navbar.Store: apply(0) ResetHintVI
+07-08 09:31:49.419   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.419   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.421   905   905 I BufferQueueProducer: [com.trophygames.truckmanager/com.applovin.adview.AppLovinFullscreenActivity$_4835#244149](this:0xb400007489040838,id:-1,api:0,p:-1,c:905) queueBuffer: fps=26.77 dur=1083.14 max=150.36 min=16.36
+07-08 09:31:49.421  4835  4835 I ViewRootImpl@a80f9bb[AppLovinFullscreenActivity]: ViewPostIme pointer 1
+07-08 09:31:49.424   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.437  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.438  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.458   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.460   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.460   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.478   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.478   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.479  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.479  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.498  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.499   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.499   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.499  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.508   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.512  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.513  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.516  1862  1969 D MobileStatusTracker(0/1): onSignalStrengthsChanged level=4, vendorLevel=4
+07-08 09:31:49.517  3000 29123 I EPDG -- SIM0 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-93 rsrp=-93 rsrq=-9 rssnr=13 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=4 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=4 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:49.518   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.518   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.519  1862  1969 D MobileSignalController(0/1): notifyListener: enabled=true, connected=true, dataConnected=false, networkType=LTE (4G), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=inout, level=4, ca=false, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:49.519  1862  1969 D NetworkController: SignalStrength from intent slotId=0
+07-08 09:31:49.521  3000 29130 I EPDG -- SIM0 [SMARTCELLULAR]: DataSIM OutOfService area or Roaming -> Data SIM ROVE OUT
+07-08 09:31:49.523   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.537  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@7, type = -999
+07-08 09:31:49.538   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1018885  [1420 / 7]    HINT :      list : [CPUMaxFreq / 1800000] 
+07-08 09:31:49.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.540   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.549  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.549  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.558   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.558   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.573   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.578   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.578   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.580  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.580  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.588   865   897 I HYPER-HAL: [RequestManager.cpp]releaseLocked(): Released ID : 1018885
+07-08 09:31:49.599   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.599   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.602  1435  1435 I GestureDetector: handleMessage TAP
+07-08 09:31:49.603  1435  1465 I GestureDetector: handleMessage TAP
+07-08 09:31:49.606   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.612  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.612  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.619   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.623   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.633  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.634  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.638   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.639   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.656   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.659   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.659   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.659  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.659  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.678   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.678   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.680  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.680  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.689   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.699   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.699   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.706   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.710  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.710  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.718   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.719   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.723   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.733  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.733  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.739   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.756   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.758   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.758   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.760  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.761  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.773   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.794  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.794  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.799   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.805   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.818   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.818   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.827  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.827  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.839   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.845  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.846  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.858   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.860   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.860   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.865  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.866  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.873   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.879   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.879   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.890   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.897  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.898  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.898   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.898   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.920   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.920   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.925   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.940   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.940   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.942 32644  1002 I android.vending: Explicit concurrent copying GC freed 36KB AllocSpace bytes, 0(0B) LOS objects, 37% free, 40MB/64MB, paused 316us,243us total 701.484ms
+07-08 09:31:49.943  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.944  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.957   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.974  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.975  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:49.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.979   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.991   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:49.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:49.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.001  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.001  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.022   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.029  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.029  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.038   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.050  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.050  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.057   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.059   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.059   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.073   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.079   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.079   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.081  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.081  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.098  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.099  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.099   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.099   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.107   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.119   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.119   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.138  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@6, type = -999
+07-08 09:31:50.139   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1017457  [1420 / 6]    HINT :      list : [GPUMaxFreq / 850000] 
+07-08 09:31:50.139   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.139   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.159   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.159   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.179   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.179   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.197   850 10105 D [BT]    : mtk_bt_op: BT_VND_OP_LPM_WAKE_SET_STATE
+07-08 09:31:50.199   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.199   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.204  1862  1969 D MobileStatusTracker(1/2): onSignalStrengthsChanged level=3, vendorLevel=3
+07-08 09:31:50.205  3000 29123 I EPDG -- SIM1 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-103 rsrp=-102 rsrq=-14 rssnr=8 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=3 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=3 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:50.210  1862  1969 D MobileSignalController(1/2): notifyListener: enabled=true, connected=true, dataConnected=true, networkType=LTE/LTE_CA (4G+), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=inout, level=3, ca=true, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:50.212  1862  1969 D NetworkController: SignalStrength from intent slotId=1
+07-08 09:31:50.220   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.220   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.223   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.226  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.226  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.239   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.239   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.256   855   939 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:28.967386,dur:1001.13,max:116.65,min:15.16  
+07-08 09:31:50.259   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.260   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.260   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.266  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.267  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.279   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.279   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.290   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.291  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.291  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.299   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.299   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.313  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.314  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.319   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.319   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.322   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.325   587   587 D io_stats: !@ 179,0 r 93324842 1398933426 w 57723404 831298728 d 0 0 f 0 0 iot 63437496 0 th 0 0 0 pt 0 inp 0 0 844692.389
+07-08 09:31:50.335  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.336  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.338   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.338   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.339   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.356   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.359   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.359   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.362  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.362  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.372   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.379   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.380   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.385  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.386  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.398   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.398   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.407   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.413  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.413  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.418   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.419   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.437   905   905 I BufferQueueProducer: [com.trophygames.truckmanager/com.applovin.adview.AppLovinFullscreenActivity$_4835#244149](this:0xb400007489040838,id:-1,api:0,p:-1,c:905) queueBuffer: fps=32.48 dur=1015.99 max=116.63 min=16.22
+07-08 09:31:50.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.439   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.440   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.443  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.444  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.455   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.458   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.458   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.476  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.477  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.479   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.479   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.498   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.498   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.503  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.505  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.506   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.518   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.519   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.529  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.530  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.539   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.541   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.557   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.558  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.559  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.560   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.560   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.578   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.579   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.587  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.588  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.589   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.600   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.600   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.620   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.620   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.624   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.625  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.627  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.640   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.640   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.659   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.660   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.660   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.666  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.668  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.680   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.680   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.700   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.700   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.708   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.720   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.720   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.740   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.740   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.740  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@6, type = -999
+07-08 09:31:50.742   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1017457  [1420 / 6]    HINT :      list : [GPUMaxFreq / 743000] 
+07-08 09:31:50.749 32644  1002 I android.vending: Explicit concurrent copying GC freed 48KB AllocSpace bytes, 0(0B) LOS objects, 37% free, 40MB/64MB, paused 481us,237us total 806.472ms
+07-08 09:31:50.759   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.759   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.779   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.787  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.788  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.800   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.800   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.809  1862  1969 D MobileStatusTracker(0/1): onSignalStrengthsChanged level=4, vendorLevel=4
+07-08 09:31:50.809  3000 29123 I EPDG -- SIM0 [SMARTCELLULAR]: onSignalStrengthsChanged: SignalStrength:{mCdma=Invalid,mGsm=Invalid,mWcdma=Invalid,mTdscdma=Invalid,mLte=CellSignalStrengthLte: rssi=-93 rsrp=-93 rsrq=-9 rssnr=12 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=4 parametersUseForLevel=0,mNr=Invalid,SignalBarInfo{ lteLevel=4 },rat=14,primary=CellSignalStrengthLte}
+07-08 09:31:50.814  1862  1969 D MobileSignalController(0/1): notifyListener: enabled=true, connected=true, dataConnected=false, networkType=LTE (4G), emergencyOnly=false, roaming=false, isDefault=true, dataActivity=inout, level=4, ca=false, mmWave=false, disabledDataIcon=false, simCard=ETC
+07-08 09:31:50.814  1862  1969 D NetworkController: SignalStrength from intent slotId=0
+07-08 09:31:50.817  3000 29130 I EPDG -- SIM0 [SMARTCELLULAR]: DataSIM OutOfService area or Roaming -> Data SIM ROVE OUT
+07-08 09:31:50.819   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.820   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.822  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.823  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.824   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.840   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.840   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.841   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.857  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.857  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.859   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.873   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.880   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.880   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.894  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.895  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.896   855  1103 W MDP     : DpTilePath: threadLoop 23ms, 0, 0, 22
+07-08 09:31:50.898   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.899   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.906   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.918   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.918   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.926  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.927  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.939   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.939   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.955  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.955  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.956   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.959   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.963  4405  4708 I R0      : limitGPUFreq:: freq = -1
+07-08 09:31:50.964  4405  4708 I R0      : limitCPUFreq:: freq = -1
+07-08 09:31:50.972   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:50.978   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.978   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.995  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.995  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:50.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:50.999   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.018  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.018  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.018   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.019   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.022   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:51.037  1420 18048 I SemDvfsHyPerManager: acquire hyper - com.samsung.android.game.gos/1420@6, type = -999
+07-08 09:31:51.038   865   897 I HYPER-HAL: [RequestManager.cpp]acquire(): Acquired ID : 1017457  [1420 / 6]    HINT :      list : [GPUMaxFreq / 850000] 
+07-08 09:31:51.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.039   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.046  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.046  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.059   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:51.060   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.060   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.061 12488 12488 I adbd    : adbd service requested 'shell,v2:export ANDROID_LOG_TAGS="''"; exec logcat '-d''
+07-08 09:31:51.070  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.071  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.073   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:51.078   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.078   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.098  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.099  4835  5081 E GPUAUX  : [AUX]GuiExtAuxCheckAuxPath:663: Null anb
+07-08 09:31:51.100   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.101   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.106   855  1103 E PQ      : [PQ][PQSessionManager] PQSessionManager::getPQSession m_PQSupport == 0
+07-08 09:31:51.120   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0
+07-08 09:31:51.120   849 16270 D AudioALSAStreamManager: getMode(), mAudioMode = 0

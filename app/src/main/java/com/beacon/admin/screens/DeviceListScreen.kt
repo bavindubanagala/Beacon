@@ -221,7 +221,6 @@ fun DeviceItem(
     onRemoveClick: (Device) -> Unit
 ) {
     if (!device.is_paired) return
-    var showMenu by remember { mutableStateOf(false) }
     
     val statusColor = when (device.trackingMode) {
         "live" -> MaterialTheme.colorScheme.primary
@@ -283,30 +282,6 @@ fun DeviceItem(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                        )
-                    }
-                }
-
-                IconButton(onClick = { onSettingsClick(device) }) {
-                    Icon(Icons.Rounded.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-
-                Box {
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        DropdownMenuItem(
-                            text = { Text("View Map") },
-                            onClick = { showMenu = false; onMapClick(device) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("History") },
-                            onClick = { showMenu = false; onHistoryClick(device) }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Remove Device", color = MaterialTheme.colorScheme.error) },
-                            onClick = { showMenu = false; onRemoveClick(device) }
                         )
                     }
                 }
