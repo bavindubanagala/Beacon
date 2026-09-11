@@ -49,14 +49,10 @@ class FirebaseTrackerRepository(
                 ?: return Result.failure(Exception("Device ID is null"))
 
             val statusUpdate = mapOf(
-                "last_location" to mapOf(
-                    "latitude" to latitude,
-                    "longitude" to longitude,
-                    "accuracy" to accuracy,
-                    "timestamp" to System.currentTimeMillis()
-                ),
+                "latitude" to latitude,
+                "longitude" to longitude,
+                "accuracy" to accuracy,
                 "batteryLevel" to batteryLevel,
-                "battery_level" to batteryLevel,
                 "signal_strength" to signalStrength,
                 "device_motion_status" to deviceMotionStatus,
                 "last_seen" to System.currentTimeMillis(),

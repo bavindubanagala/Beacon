@@ -1,394 +1,197 @@
 package com.beacon.admin.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.beacon.admin.auth.AuthManager
-import com.beacon.admin.repository.DeviceRepository
-import com.beacon.admin.repository.SettingsRepository
-import com.beacon.shared.models.Device
-import kotlinx.coroutines.launch
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.beacon.admin.ui.components.GlassCard
+import com.beacon.admin.ui.theme.*
+import com.beacon.admin.ui.viewmodels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    authManager: AuthManager,
-    deviceRepository: DeviceRepository,
-    settingsRepository: SettingsRepository,
-    locationRepository: com.beacon.admin.repository.LocationRepository,
-    isDarkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit,
-    onLogout: () -> Unit
+    modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onSignedOut: () -> Unit = {}
 ) {
-    val scope = rememberCoroutineScope()
-    val currentUserId = authManager.getCurrentUser()?.uid ?: ""
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scrollState = rememberScrollState()
 
-    var defaultTrackingInterval by remember { mutableStateOf(60f) }
-    var lowBatteryThreshold by remember { mutableStateOf(20f) }
-    var offlineTimeout by remember { mutableStateOf(300f) }
-    var historyRetentionDays by remember { mutableStateOf(90f) }
-
-    var devices by remember { mutableStateOf<List<Device>>(emptyList()) }
-    var showDeviceSelection by remember { mutableStateOf(false) }
-    var selectedDeviceIds by remember { mutableStateOf(setOf<String>()) }
-
-    // Load initial settings
-    LaunchedEffect(Unit) {
-        settingsRepository.getSettings().onSuccess { data ->
-            (data["defaultTrackingInterval"] as? Number)?.let { defaultTrackingInterval = it.toFloat() }
-            (data["lowBatteryThreshold"] as? Number)?.let { lowBatteryThreshold = it.toFloat() }
-            (data["offlineTimeout"] as? Number)?.let { offlineTimeout = it.toFloat() }
-            (data["historyRetentionDays"] as? Number)?.let { historyRetentionDays = it.toFloat() }
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = ObsidianBase,
+        topBar = {
+            TopAppBar(
+                title = { Text("Fleet & Admin Settings", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = ObsidianBase)
+            )
         }
-        
-        deviceRepository.getAllDevices(currentUserId).onSuccess {
-            devices = it
-            
-            // Batch A4: Automatic History Pruning
-            it.forEach { device ->
-                locationRepository.pruneOldHistory(device.deviceId, historyRetentionDays.toInt())
-            }
-        }
-    }
-
-    if (showDeviceSelection) {
-        AlertDialog(
-            onDismissRequest = { showDeviceSelection = false },
-            title = { Text("Select Devices") },
-            text = {
-                Column(modifier = Modifier.heightIn(max = 400.dp)) {
-                    Text("Select which devices to apply these settings to:", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(8.dp))
-                    LazyColumn {
-                        items(devices) { device ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = selectedDeviceIds.contains(device.deviceId),
-                                    onCheckedChange = { checked ->
-                                        selectedDeviceIds = if (checked) {
-                                            selectedDeviceIds + device.deviceId
-                                        } else {
-                                            selectedDeviceIds - device.deviceId
-                                        }
-                                    }
-                                )
-                                Text(device.deviceName.ifEmpty { "Unknown Device" })
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            // 1. Save global settings
-                            settingsRepository.updateSettings(mapOf(
-                                "defaultTrackingInterval" to defaultTrackingInterval,
-                                "lowBatteryThreshold" to lowBatteryThreshold,
-                                "offlineTimeout" to offlineTimeout,
-                                "historyRetentionDays" to historyRetentionDays
-                            ))
-
-                            // 2. Apply to selected devices
-                            devices.filter { selectedDeviceIds.contains(it.deviceId) }.forEach { device ->
-                                deviceRepository.updateDeviceSettings(
-                                    deviceId = device.deviceId,
-                                    mode = device.trackingMode,
-                                    intervalSeconds = defaultTrackingInterval.toInt(),
-                                    autoRevertSeconds = device.autoRevertSeconds,
-                                    isEmergency = device.isEmergencyMode,
-                                    batterySavingEnabled = device.batterySavingEnabled,
-                                    stationaryIntervalMinutes = device.stationaryIntervalMinutes,
-                                    lowBatteryPercent = lowBatteryThreshold.toInt(),
-                                    offlineThresholdMinutes = (offlineTimeout / 60).toInt(),
-                                    sosFallbackPhone = device.sosFallbackPhone
-                                )
-                            }
-                            showDeviceSelection = false
-                        }
-                    }
-                ) {
-                    Text("Apply & Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeviceSelection = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    Surface(color = MaterialTheme.colorScheme.background) {
-        LazyColumn(
+    ) { padding ->
+        Column(
             modifier = Modifier
+                .padding(padding)
                 .fillMaxSize()
-                .padding(16.dp)
+                .verticalScroll(scrollState)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item {
-                Text(
-                    "Global Settings",
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(bottom = 24.dp),
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            // 1. Fleet Default Tracking Policies
+            SettingsSection(title = "Fleet Tracking Policies", icon = Icons.Rounded.Devices) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Default Tracking Interval", style = MaterialTheme.typography.labelMedium, color = TextMuted)
+                    TrackingIntervalSelector(
+                        selected = uiState.defaultTrackingInterval,
+                        onSelected = { viewModel.updateDefaultTrackingInterval(it) }
+                    )
+                    
+                    Text("Low Battery Warning Threshold: ${uiState.lowBatteryThreshold.toInt()}%", 
+                        style = MaterialTheme.typography.labelMedium, color = TextMuted)
+                    Slider(
+                        value = uiState.lowBatteryThreshold,
+                        onValueChange = { viewModel.updateLowBatteryThreshold(it) },
+                        valueRange = 5f..30f,
+                        colors = SliderDefaults.colors(thumbColor = BeaconCyan, activeTrackColor = BeaconCyan)
+                    )
 
-            // Theme & Troubleshooting
-            item {
-                SettingCard(
-                    title = "App Preferences",
-                    content = {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("Dark Mode", style = MaterialTheme.typography.bodyLarge)
-                                Switch(
-                                    checked = isDarkMode,
-                                    onCheckedChange = { onDarkModeChange(it) }
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { /* TODO: Troubleshooting */ },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
-                            ) {
-                                Text("Background Optimization Guide")
-                            }
-                        }
-                    }
-                )
-            }
-
-            // Tracking Interval
-            item {
-                SettingCard(
-                    title = "Default Tracking Interval",
-                    subtitle = "${defaultTrackingInterval.toInt()} seconds",
-                    content = {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Slider(
-                                value = defaultTrackingInterval,
-                                onValueChange = { defaultTrackingInterval = it },
-                                valueRange = 15f..3600f,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                "Base interval for all active tracking",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                )
-            }
-
-            // Low Battery Threshold
-            item {
-                SettingCard(
-                    title = "Low Battery Alert Threshold",
-                    subtitle = "${lowBatteryThreshold.toInt()}%",
-                    content = {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Slider(
-                                value = lowBatteryThreshold,
-                                onValueChange = { lowBatteryThreshold = it },
-                                valueRange = 5f..50f,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                "Notify when any device battery drops below this",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                )
-            }
-
-            // Offline Timeout
-            item {
-                SettingCard(
-                    title = "Offline Alert Timeout",
-                    subtitle = "${offlineTimeout.toInt()} seconds",
-                    content = {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Slider(
-                                value = offlineTimeout,
-                                onValueChange = { offlineTimeout = it },
-                                valueRange = 60f..3600f,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                "Alert if a device hasn't checked in for this long",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                )
-            }
-
-            // History Retention
-            item {
-                SettingCard(
-                    title = "Location History Retention",
-                    subtitle = "${historyRetentionDays.toInt()} days",
-                    content = {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Slider(
-                                value = historyRetentionDays,
-                                onValueChange = { historyRetentionDays = it },
-                                valueRange = 1f..365f,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                "Automatically delete location data older than this to save space and maintain privacy.",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                )
-            }
-
-            // Cleanup Stale Devices
-            item {
-                var cleaning by remember { mutableStateOf(false) }
-                var cleanResult by remember { mutableStateOf<Int?>(null) }
-                
-                SettingCard(
-                    title = "Device Maintenance",
-                    content = {
-                        Column {
-                            Text(
-                                "Automatically remove devices that haven't been seen for more than 30 days.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            Button(
-                                onClick = {
-                                    cleaning = true
-                                    scope.launch {
-                                        val result = deviceRepository.cleanupInactiveDevices(currentUserId)
-                                        cleanResult = result.getOrDefault(0)
-                                        cleaning = false
-                                    }
-                                },
-                                enabled = !cleaning,
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                            ) {
-                                if (cleaning) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onSecondary)
-                                } else {
-                                    Text("Cleanup Inactive Devices")
-                                }
-                            }
-                            
-                            cleanResult?.let { count ->
-                                Text(
-                                    "Removed $count inactive devices",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
-                            }
-                        }
-                    }
-                )
-            }
-
-            // Save Button
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(
-                    onClick = {
-                        selectedDeviceIds = devices.map { it.deviceId }.toSet()
-                        showDeviceSelection = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Text("Save & Apply to Devices", style = MaterialTheme.typography.titleMedium)
+                    SettingToggleItem(
+                        title = "SOS Auto-Escalation",
+                        subtitle = "Automatically alert all admins on SOS",
+                        checked = uiState.autoEscalateSos,
+                        onCheckedChange = { viewModel.toggleAutoEscalateSos(it) }
+                    )
                 }
             }
 
-            // Logout Button
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = {
-                        authManager.signOut()
-                        onLogout()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Logout")
+            // 2. Account & Security Controls
+            SettingsSection(title = "Account & Security", icon = Icons.Rounded.Security) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    AccountInfoRow("Email", uiState.adminEmail)
+                    AccountInfoRow("Role", uiState.adminRole)
+                    AccountInfoRow("Last Login", uiState.lastLogin)
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Button(
+                        onClick = { viewModel.signOut(onSignedOut) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = BeaconCrimson.copy(alpha = 0.2f), contentColor = BeaconCrimson),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Sign Out")
+                    }
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
+            // 3. App Preferences & Maintenance
+            SettingsSection(title = "System & Maintenance", icon = Icons.Rounded.Settings) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SystemStatusItem("Firestore Connection", uiState.firestoreConnected)
+                    SystemStatusItem("Sync Queue", uiState.offlineSyncQueueSize == 0, "Empty")
+                    
+                    OutlinedButton(
+                        onClick = { viewModel.clearMapCache() },
+                        modifier = Modifier.fillMaxWidth(),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassSurfaceBorder),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Clear Map Tile Cache", color = TextPrimary)
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun SettingsSection(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, content: @Composable () -> Unit) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = BeaconCyan, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(title, style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                content()
             }
         }
     }
 }
 
 @Composable
-fun SettingCard(
-    title: String,
-    subtitle: String? = null,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+private fun TrackingIntervalSelector(selected: String, onSelected: (String) -> Unit) {
+    val options = listOf("High Accuracy", "Balanced", "Battery Saver")
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(GlassSurfaceBorder.copy(alpha = 0.3f)),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            if (subtitle != null) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
+        options.forEach { option ->
+            val isSelected = selected == option
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (isSelected) BeaconCyan else Color.Transparent)
+                    .clickable { onSelected(option) }
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(option, color = if (isSelected) Color.Black else TextMuted, style = MaterialTheme.typography.labelSmall)
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun SettingToggleItem(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+            Text(subtitle, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange, colors = SwitchDefaults.colors(checkedThumbColor = BeaconCyan))
+    }
+}
 
-            content()
+@Composable
+private fun AccountInfoRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = TextMuted)
+        Text(value, style = MaterialTheme.typography.bodySmall, color = TextPrimary, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun SystemStatusItem(label: String, isHealthy: Boolean, customValue: String? = null) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = TextMuted)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(if (isHealthy) BeaconCyan else BeaconCrimson))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(customValue ?: if (isHealthy) "Healthy" else "Error", style = MaterialTheme.typography.bodySmall, color = TextPrimary)
         }
     }
 }

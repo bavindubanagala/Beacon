@@ -32,42 +32,49 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.beacon.tracker.permissions.*
 import com.beacon.tracker.services.LocationTrackingService
 import com.beacon.tracker.ui.TrackerViewModel
 import com.beacon.tracker.ui.theme.BeaconTrackerTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var permissionManager: PermissionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Ensure service is started
-        val serviceIntent = Intent(this, LocationTrackingService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
-
         setContent {
             val viewModel: TrackerViewModel = viewModel()
             val isDarkMode by viewModel.isDarkMode
 
             BeaconTrackerTheme(darkTheme = isDarkMode) {
-                MainContent(viewModel)
+                MainContent(viewModel, permissionManager)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        permissionManager.refreshPermissions()
     }
 }
 
 @Composable
-fun MainContent(viewModel: TrackerViewModel) {
+fun MainContent(viewModel: TrackerViewModel, permissionManager: PermissionManager) {
     val isPaired by viewModel.isPaired
+    val permissionState by permissionManager.permissionState.collectAsStateWithLifecycle()
+
     StatusUpdateReceiver(viewModel)
-    PermissionRequest()
+    PermissionRequestFlow(permissionManager, permissionState)
 
     if (isPaired) {
-        StatusScreen(viewModel)
+        StatusScreen(viewModel, permissionState.isFullyGranted)
     } else {
         PairingScreen(viewModel)
     }
@@ -98,79 +105,76 @@ fun StatusUpdateReceiver(viewModel: TrackerViewModel) {
 }
 
 @Composable
-fun PermissionRequest() {
+fun PermissionRequestFlow(permissionManager: PermissionManager, permissionState: PermissionState) {
     val context = LocalContext.current
-    var showSettingsDialog by remember { mutableStateOf(false) }
-
-    val foregroundPermissions = arrayOf(
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_COARSE_LOCATION
-    )
-
-    val backgroundLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            val serviceIntent = Intent(context, LocationTrackingService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
-        }
-    }
+    var showBackgroundRationale by remember { mutableStateOf(false) }
+    var showBatteryRationale by remember { mutableStateOf(false) }
+    var showSettingsRationale by remember { mutableStateOf(false) }
 
     val foregroundLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
-        val allForegroundGranted = result.values.all { it }
-        if (allForegroundGranted) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                backgroundLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            } else {
-                val serviceIntent = Intent(context, LocationTrackingService::class.java)
-                context.startService(serviceIntent)
-            }
-        } else {
-            showSettingsDialog = true
-        }
+        permissionManager.refreshPermissions()
     }
 
-    if (showSettingsDialog) {
-        AlertDialog(
-            onDismissRequest = { showSettingsDialog = false },
-            title = { Text("Permissions Required") },
-            text = { Text("Beacon needs location access to track this device. Please enable location permissions in Settings.") },
-            confirmButton = {
-                Button(onClick = {
-                    showSettingsDialog = false
-                    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = android.net.Uri.fromParts("package", context.packageName, null)
-                    }
-                    context.startActivity(intent)
-                }) {
-                    Text("Open Settings")
-                }
+    val notificationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionManager.refreshPermissions()
+    }
+
+    val backgroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionManager.refreshPermissions()
+    }
+
+    if (showBackgroundRationale) {
+        BackgroundLocationRationaleDialog(
+            onConfirm = {
+                showBackgroundRationale = false
+                backgroundLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             },
-            dismissButton = {
-                TextButton(onClick = { showSettingsDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { showBackgroundRationale = false }
         )
     }
 
-    LaunchedEffect(Unit) {
-        val fineGranted = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val backgroundGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
-        } else true
+    if (showBatteryRationale) {
+        BatteryOptimizationDialog(
+            onConfirm = {
+                showBatteryRationale = false
+                permissionManager.requestIgnoreBatteryOptimizations()
+            },
+            onDismiss = { showBatteryRationale = false }
+        )
+    }
 
-        if (!fineGranted) {
-            foregroundLauncher.launch(foregroundPermissions)
-        } else if (!backgroundGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            backgroundLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    if (showSettingsRationale) {
+        SettingsRedirectDialog(
+            onConfirm = {
+                showSettingsRationale = false
+                permissionManager.openAppSettings()
+            },
+            onDismiss = { showSettingsRationale = false }
+        )
+    }
+
+    LaunchedEffect(permissionState) {
+        if (!permissionState.hasForegroundLocation) {
+            foregroundLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !permissionState.hasNotificationPermission) {
+            notificationLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !permissionState.hasBackgroundLocation) {
+            showBackgroundRationale = true
+        } else if (!permissionState.isBatteryOptimizationIgnored) {
+            showBatteryRationale = true
         } else {
+            // All granted, start service
             val serviceIntent = Intent(context, LocationTrackingService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
@@ -389,7 +393,7 @@ fun SosButton(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatusScreen(viewModel: TrackerViewModel) {
+fun StatusScreen(viewModel: TrackerViewModel, isFullyGranted: Boolean) {
     val deviceId by viewModel.deviceId
     val isUpdating by viewModel.isUpdating
     val statusMessage by viewModel.statusMessage
@@ -421,10 +425,10 @@ fun StatusScreen(viewModel: TrackerViewModel) {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = if (isSosActive) "Emergency SOS Active" else "Tracking Active",
+                    text = if (isSosActive) "Emergency SOS Active" else (if (isFullyGranted) "Tracking Active" else "Permissions Required"),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isSosActive) MaterialTheme.colorScheme.error else Color(0xFF4CAF50)
+                    color = if (isSosActive) MaterialTheme.colorScheme.error else (if (isFullyGranted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error)
                 )
                 Text(
                     text = "BEACON TRACKER SERVICE",
@@ -432,6 +436,20 @@ fun StatusScreen(viewModel: TrackerViewModel) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontFamily = FontFamily.Monospace
                 )
+            }
+            
+            if (!isFullyGranted) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Text(
+                        text = "Some permissions or battery exemptions are missing. Background tracking may be unreliable.",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
             }
             
             Card(

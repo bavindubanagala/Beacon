@@ -29,6 +29,10 @@ class DeviceAuthManager(private val context: Context) {
         return deviceId
     }
 
+    fun saveDeviceId(deviceId: String) {
+        encryptedPrefs.edit().putString(SharedPrefsKeys.DEVICE_ID, deviceId).apply()
+    }
+
     fun getDeviceSecret(): String {
         // getString returns String? — coerce to non-null with ?: ""
         var secret = encryptedPrefs.getString(SharedPrefsKeys.DEVICE_SECRET, "") ?: ""

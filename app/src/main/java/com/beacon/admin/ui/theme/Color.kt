@@ -2,20 +2,34 @@ package com.beacon.admin.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary/Accent (Live tracking, primary actions)
-val BeaconCyan = Color(0xFF00D9E8)
-// Secondary Accent (Interval tracking mode)
-val BeaconViolet = Color(0xFF8B7FFF)
-// Inactive/Offline/Neutral
-val BeaconGray = Color(0xFF4A525E)
+// Primary Branding & Live Tracking Mode (🟢)
+val BeaconCyan = Color(0xFF00F0FF)
 
-// Dark Mode Surfaces
-val DarkBackground = Color(0xFF0A0D12)
-val DarkSurface = Color(0xFF12161D)
-val DarkBorder = Color(0xFF1E242D)
+// Secondary Accent & Interval Tracking Mode (🔵)
+val BeaconViolet = Color(0xFF8A2BE2)
 
-// Severity Colors
-val SeverityCritical = Color(0xFFE57373) // Red
-val SeverityWarning = Color(0xFFFBC02D)  // Amber/Yellow
-val SeverityResolved = Color(0xFF4CAF50) // Green
-val SeverityInfo = Color(0xFF2196F3)     // Blue
+// Standby Mode & Warning State (🟡)
+val BeaconAmber = Color(0xFFFFB800)
+
+// Disconnected / Offline Telemetry State (🩶)
+val NeutralSlate = Color(0xFF6C757D)
+
+// Critical Emergency SOS State (🔴 - Reserved Exclusively for SOS)
+val BeaconCrimson = Color(0xFFFF2A5F)
+
+// Dark Command Background Surfaces
+val ObsidianBase = Color(0xFF0B0E14)
+val GlassSurface = Color(0xFF161B22)
+val GlassSurfaceBorder = Color(0xFF262C36)
+
+// Text & Content Colors
+val TextPrimary = Color(0xFFF0F4F8)
+val TextSecondary = Color(0xFF94A3B8)
+val TextMuted = Color(0xFF64748B)
+
+// Operational Telemetry Status Tokens
+val StatusLiveColor = Color(0xFF00C853)      // Green (🟢)
+val StatusIntervalColor = Color(0xFF2979FF)  // Blue (🔵)
+val StatusStandbyColor = Color(0xFFFFD600)   // Yellow (🟡)
+val StatusOfflineColor = Color(0xFFFF1744)   // Red (🔴)
+val StatusSosColor = Color(0xFFFF1744)       // Red (🔴)

@@ -1,179 +1,324 @@
 package com.beacon.admin.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.beacon.admin.ui.components.GlassCard
+import com.beacon.admin.ui.theme.*
+import com.beacon.admin.ui.utils.formatRelativeSyncTime
+import com.beacon.admin.ui.viewmodels.AlertsUiState
+import com.beacon.admin.ui.viewmodels.AlertsViewModel
+import com.beacon.admin.ui.viewmodels.GeofenceEventUiModel
 import com.beacon.shared.models.Alert
-import com.beacon.admin.repository.AlertRepository
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.NotificationsNone
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
+import com.beacon.shared.models.GeofenceEventType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository: AlertRepository) {
+fun AlertsScreen(
+    onEventClick: (GeofenceEventUiModel) -> Unit = {},
+    viewModel: AlertsViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val tabTitles = listOf("Security Alerts", "System Alerts")
 
-    val currentUserId = authManager.getCurrentUser()?.uid ?: ""
-    val alerts = remember { mutableStateOf<List<Alert>>(emptyList()) }
-    val isLoading = remember { mutableStateOf(true) }
-    val isClearing = remember { mutableStateOf(false) }
-    val errorMessage = remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
-    
-    // Filter Chips States
-    val filters = listOf("All", "Unread", "Geofence", "Battery", "Offline")
-    var selectedFilter by remember { mutableStateOf("All") }
-
-    fun loadAlerts() {
-        if (currentUserId.isEmpty()) return
-        isLoading.value = true
-        scope.launch {
-            val result = alertRepository.getActiveAlerts(currentUserId)
-            if (result.isSuccess) {
-                alerts.value = result.getOrDefault(emptyList())
-            } else {
-                errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to load alerts"
+    Scaffold(
+        containerColor = ObsidianBase,
+        topBar = {
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Security & Spatial Alerts",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = ObsidianBase),
+                    actions = {
+                        IconButton(onClick = { viewModel.clearFilters() }) {
+                            Icon(Icons.Rounded.FilterListOff, contentDescription = "Clear Filters", tint = TextMuted)
+                        }
+                    }
+                )
+                TabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    containerColor = ObsidianBase,
+                    contentColor = BeaconCyan,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                            color = BeaconCyan
+                        )
+                    },
+                    divider = {}
+                ) {
+                    tabTitles.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            text = { 
+                                Text(
+                                    text = title,
+                                    color = if (selectedTabIndex == index) BeaconCyan else TextMuted,
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
+                        )
+                    }
+                }
             }
-            isLoading.value = false
         }
-    }
-
-    LaunchedEffect(currentUserId) {
-        loadAlerts()
-    }
-
-    Surface(color = MaterialTheme.colorScheme.background) {
-        Column(
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(paddingValues)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Alerts",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+            when (selectedTabIndex) {
+                0 -> GeofenceAlertsTab(
+                    uiState = uiState,
+                    onTypeFilterChange = { viewModel.setEventTypeFilter(it) },
+                    onEventClick = onEventClick
                 )
-                
-                if (alerts.value.isNotEmpty()) {
-                    TextButton(
-                        onClick = {
-                            isClearing.value = true
-                            scope.launch {
-                                val result = alertRepository.clearAllAlerts(currentUserId)
-                                if (result.isSuccess) {
-                                    alerts.value = emptyList()
-                                } else {
-                                    errorMessage.value = "Failed to clear alerts"
-                                }
-                                isClearing.value = false
-                            }
-                        },
-                        enabled = !isClearing.value,
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        if (isClearing.value) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                        } else {
-                            Text("Clear All")
-                        }
-                    }
-                }
+                1 -> SystemAlertsTab(
+                    alerts = uiState.alerts,
+                    onResolve = { viewModel.resolveAlert(it) }
+                )
             }
-            
-            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
 
-            if (errorMessage.value.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            errorMessage.value,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        IconButton(onClick = { errorMessage.value = "" }) {
-                            Icon(androidx.compose.material.icons.Icons.Rounded.Close, null, modifier = Modifier.size(16.dp))
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun GeofenceAlertsTab(
+    uiState: AlertsUiState,
+    onTypeFilterChange: (GeofenceEventType?) -> Unit,
+    onEventClick: (GeofenceEventUiModel) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Filter Bar
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            item {
+                FilterChip(
+                    selected = uiState.eventTypeFilter == null,
+                    onClick = { onTypeFilterChange(null) },
+                    label = { Text("ALL") },
+                    colors = filterChipColors()
+                )
             }
-
-            // Filter Chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                filters.take(3).forEach { filter ->
+            GeofenceEventType.entries.forEach { type ->
+                item {
                     FilterChip(
-                        selected = selectedFilter == filter,
-                        onClick = { selectedFilter = filter },
-                        label = { Text(filter) }
+                        selected = uiState.eventTypeFilter == type,
+                        onClick = { onTypeFilterChange(type) },
+                        label = { Text(type.name.replace("_", " ")) },
+                        colors = filterChipColors()
                     )
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (isLoading.value) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+        if (uiState.geofenceEvents.isEmpty()) {
+            EmptyState(message = "No security events found matching filters.")
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiState.geofenceEvents) { model ->
+                    GeofenceEventItem(
+                        model = model,
+                        onClick = { onEventClick(model) }
+                    )
                 }
-            } else {
-                if (alerts.value.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                androidx.compose.material.icons.Icons.Rounded.NotificationsNone,
-                                null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                            )
-                            Spacer(Modifier.height(16.dp))
-                            Text(
-                                "No active alerts 🎉",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            TextButton(onClick = { loadAlerts() }) {
-                                Text("Refresh")
-                            }
-                        }
-                    }
-                } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxSize()) {
-                        items(alerts.value) { alert ->
-                            AlertCard(alert)
-                        }
-                    }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SystemAlertsTab(
+    alerts: List<Alert>,
+    onResolve: (String) -> Unit
+) {
+    if (alerts.isEmpty()) {
+        EmptyState(message = "No system alerts reported.")
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(alerts) { alert ->
+                AlertCard(
+                    alert = alert,
+                    onResolve = { onResolve(alert.id) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun GeofenceEventItem(
+    model: GeofenceEventUiModel,
+    onClick: () -> Unit
+) {
+    val event = model.event
+    val (icon, color, title) = when (event.eventType) {
+        GeofenceEventType.ENTER -> Triple(Icons.Rounded.Login, Color(0xFF4CAF50), "ENTERED ZONE")
+        GeofenceEventType.EXIT -> Triple(Icons.Rounded.Logout, Color(0xFFF44336), "EXITED ZONE")
+        GeofenceEventType.CROSS_A_TO_B, GeofenceEventType.CROSS_B_TO_A -> 
+            Triple(Icons.Rounded.CompareArrows, BeaconCyan, "CROSSED TRIPWIRE")
+    }
+
+    GlassCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = color,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = formatRelativeSyncTime(event.timestamp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextMuted
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${model.deviceName} → ${event.geofenceName}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${String.format("%.5f", event.latitude)}, ${String.format("%.5f", event.longitude)}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextMuted
+                )
+            }
+            IconButton(onClick = onClick) {
+                Icon(
+                    imageVector = Icons.Rounded.Map,
+                    contentDescription = "View on Map",
+                    tint = BeaconCyan,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Rounded.NotificationsNone,
+                contentDescription = null,
+                tint = TextMuted,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextMuted
+            )
+        }
+    }
+}
+
+@Composable
+fun AlertCard(
+    alert: Alert,
+    onResolve: () -> Unit
+) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = alert.alert_type,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (alert.is_read) TextMuted else BeaconCrimson,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = alert.message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = formatRelativeSyncTime(alert.created_at),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextMuted
+                )
+            }
+            if (!alert.is_read) {
+                TextButton(onClick = onResolve) {
+                    Text("Resolve", color = BeaconCyan)
                 }
             }
         }
@@ -182,72 +327,9 @@ fun AlertsScreen(authManager: com.beacon.admin.auth.AuthManager, alertRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlertCard(alert: Alert) {
-    val formattedTime = remember(alert.created_at) {
-        val time = alert.created_at
-        SimpleDateFormat("HH:mm:ss · MMM dd", Locale.getDefault()).format(Date(time))
-    }
-
-    val severityColor = when (alert.alert_severity) {
-        "CRITICAL" -> MaterialTheme.colorScheme.error
-        "WARNING" -> Color(0xFFFBC02D)
-        else -> MaterialTheme.colorScheme.primary
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.small,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(Modifier.height(IntrinsicSize.Min)) {
-            // Left accent bar
-            Box(
-                Modifier
-                    .fillMaxHeight()
-                    .width(4.dp)
-                    .background(severityColor)
-            )
-
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = alert.alert_type.uppercase(),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = severityColor,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                        )
-                        Text(
-                            text = "DEVICE: ${alert.device_id.take(8).uppercase()}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                        )
-                    }
-                    
-                    Badge(
-                        containerColor = severityColor.copy(alpha = 0.1f),
-                        contentColor = severityColor
-                    ) {
-                        Text(
-                            alert.alert_severity, 
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = formattedTime,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                )
-            }
-        }
-    }
-}
+private fun filterChipColors() = FilterChipDefaults.filterChipColors(
+    containerColor = ObsidianBase,
+    labelColor = TextMuted,
+    selectedContainerColor = BeaconCyan,
+    selectedLabelColor = ObsidianBase
+)
