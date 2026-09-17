@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     
-    
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -28,7 +27,6 @@
         android:theme="@style/Theme.Beacon"
         android:usesCleartextTraffic="false"
         tools:targetApi="31">
-
 
         <!-- Main Activity -->
         <activity
@@ -69,16 +67,6 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
-
-        <receiver
-            android:name=".receivers.LocationUpdateReceiver"
-            android:enabled="true"
-            android:exported="false" />
-
-        <receiver
-            android:name=".receivers.NotificationReceiver"
-            android:enabled="true"
-            android:exported="false" />
 
         <!-- FCM Messaging Service -->
         <service
