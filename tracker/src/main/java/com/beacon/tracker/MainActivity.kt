@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beacon.tracker.permissions.*
@@ -174,7 +173,6 @@ fun PermissionRequestFlow(permissionManager: PermissionManager, permissionState:
         } else if (!permissionState.isBatteryOptimizationIgnored) {
             showBatteryRationale = true
         } else {
-            // All granted, start service
             val serviceIntent = Intent(context, LocationTrackingService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
@@ -192,10 +190,9 @@ fun PairingScreen(viewModel: TrackerViewModel) {
     val context = LocalContext.current
     var timeLeft by remember { mutableStateOf(0L) }
     
-    // PERIODIC CHECK for pairing status (Fallback for listener)
     LaunchedEffect(Unit) {
         while (true) {
-            kotlinx.coroutines.delay(10000) // Check every 10 seconds
+            kotlinx.coroutines.delay(10000)
             viewModel.checkPairingStatus()
         }
     }
@@ -215,42 +212,18 @@ fun PairingScreen(viewModel: TrackerViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Welcome to Beacon",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Text("Welcome to Beacon", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "THIS DEVICE IS NOT PAIRED",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontFamily = FontFamily.Monospace
-        )
+        Text("THIS DEVICE IS NOT PAIRED", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = FontFamily.Monospace)
         Spacer(modifier = Modifier.height(48.dp))
         if (pairingCode == null || timeLeft <= 0) {
-            Button(
-                onClick = { viewModel.generatePairingCode() },
-                modifier = Modifier.fillMaxWidth().height(64.dp),
-                shape = MaterialTheme.shapes.medium
-            ) {
+            Button(onClick = { viewModel.generatePairingCode() }, modifier = Modifier.fillMaxWidth().height(64.dp), shape = MaterialTheme.shapes.medium) {
                 Text("Generate Pairing Code")
             }
         } else {
-            Text(
-                "Your Pairing Code:", 
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontFamily = FontFamily.Monospace
-            )
+            Text("Your Pairing Code:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = pairingCode!!,
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 8.sp,
-                fontFamily = FontFamily.Monospace
-            )
+            Text(text = pairingCode!!, style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.Bold, letterSpacing = 8.sp, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(onClick = { viewModel.checkPairingStatus() }) {
                 Icon(Icons.Rounded.Sync, null, modifier = Modifier.size(16.dp))
@@ -260,41 +233,22 @@ fun PairingScreen(viewModel: TrackerViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             val minutes = timeLeft / 60
             val seconds = timeLeft % 60
-            Text(
-                text = String.format("Expires in %02d:%02d", minutes, seconds),
-                style = MaterialTheme.typography.labelMedium,
-                color = if (timeLeft < 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontFamily = FontFamily.Monospace
-            )
+            Text(text = String.format("Expires in %02d:%02d", minutes, seconds), style = MaterialTheme.typography.labelMedium, color = if (timeLeft < 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(32.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(
-                    onClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Pairing Code", pairingCode)
-                        clipboard.setPrimaryClip(clip)
-                    },
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
-                ) {
+                Button(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("Pairing Code", pairingCode)
+                    clipboard.setPrimaryClip(clip)
+                }, modifier = Modifier.weight(1f).height(56.dp), shape = MaterialTheme.shapes.medium, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)) {
                     Text("Copy")
                 }
-                OutlinedButton(
-                    onClick = { viewModel.generatePairingCode() },
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = MaterialTheme.shapes.medium
-                ) {
+                OutlinedButton(onClick = { viewModel.generatePairingCode() }, modifier = Modifier.weight(1f).height(56.dp), shape = MaterialTheme.shapes.medium) {
                     Text("Regenerate")
                 }
             }
-
             Spacer(modifier = Modifier.height(48.dp))
-            
-            TextButton(
-                onClick = { viewModel.resetAndUnpair() },
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
-            ) {
+            TextButton(onClick = { viewModel.resetAndUnpair() }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))) {
                 Text("Reset Device & Delete ID", style = MaterialTheme.typography.labelSmall)
             }
         }
@@ -302,89 +256,25 @@ fun PairingScreen(viewModel: TrackerViewModel) {
 }
 
 @Composable
-fun SosButton(
-    isActive: Boolean,
-    onTrigger: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun SosButton(isActive: Boolean, onTrigger: () -> Unit, modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "sos_waves")
-    
-    val wave1Scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 2.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = "wave1_scale"
-    )
-    
-    val wave1Alpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = "wave1_alpha"
-    )
+    val wave1Scale by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 2.5f, animationSpec = infiniteRepeatable(animation = tween(1500, easing = LinearOutSlowInEasing), repeatMode = RepeatMode.Restart), label = "wave1_scale")
+    val wave1Alpha by infiniteTransition.animateFloat(initialValue = 0.6f, targetValue = 0f, animationSpec = infiniteRepeatable(animation = tween(1500, easing = LinearOutSlowInEasing), repeatMode = RepeatMode.Restart), label = "wave1_alpha")
+    val wave2Scale by infiniteTransition.animateFloat(initialValue = 1f, targetValue = 2.5f, animationSpec = infiniteRepeatable(animation = tween(1500, delayMillis = 500, easing = LinearOutSlowInEasing), repeatMode = RepeatMode.Restart), label = "wave2_scale")
+    val wave2Alpha by infiniteTransition.animateFloat(initialValue = 0.6f, targetValue = 0f, animationSpec = infiniteRepeatable(animation = tween(1500, delayMillis = 500, easing = LinearOutSlowInEasing), repeatMode = RepeatMode.Restart), label = "wave2_alpha")
 
-    val wave2Scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 2.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, delayMillis = 500, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = "wave2_scale"
-    )
-    
-    val wave2Alpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, delayMillis = 500, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = "wave2_alpha"
-    )
-
-    Box(
-        modifier = modifier.size(200.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = modifier.size(200.dp), contentAlignment = Alignment.Center) {
         if (isActive) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                drawCircle(
-                    color = Color.Red.copy(alpha = wave1Alpha),
-                    radius = (size.minDimension / 4) * wave1Scale
-                )
-                drawCircle(
-                    color = Color.Red.copy(alpha = wave2Alpha),
-                    radius = (size.minDimension / 4) * wave2Scale
-                )
+                drawCircle(color = Color.Red.copy(alpha = wave1Alpha), radius = (size.minDimension / 4) * wave1Scale)
+                drawCircle(color = Color.Red.copy(alpha = wave2Alpha), radius = (size.minDimension / 4) * wave2Scale)
             }
         }
-
-        Surface(
-            onClick = onTrigger,
-            modifier = Modifier.size(120.dp),
-            shape = CircleShape,
-            color = if (isActive) Color.Red else MaterialTheme.colorScheme.errorContainer,
-            shadowElevation = if (isActive) 12.dp else 4.dp
-        ) {
+        Surface(onClick = onTrigger, modifier = Modifier.size(120.dp), shape = CircleShape, color = if (isActive) Color.Red else MaterialTheme.colorScheme.errorContainer, shadowElevation = if (isActive) 12.dp else 4.dp) {
             Box(contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "SOS",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Black,
-                        color = if (isActive) Color.White else MaterialTheme.colorScheme.onErrorContainer
-                    )
-                    if (isActive) {
-                        Text(
-                            text = "ACTIVE",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
+                    Text(text = "SOS", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = if (isActive) Color.White else MaterialTheme.colorScheme.onErrorContainer)
+                    if (isActive) Text(text = "ACTIVE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.8f))
                 }
             }
         }
@@ -400,140 +290,42 @@ fun StatusScreen(viewModel: TrackerViewModel, isFullyGranted: Boolean) {
     val isDarkMode by viewModel.isDarkMode
     val isSosActive by viewModel.isSosActive
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Beacon Tracker", style = MaterialTheme.typography.titleMedium) },
-                actions = {
-                    IconButton(onClick = { viewModel.toggleDarkMode(!isDarkMode) }) {
-                        Icon(
-                            imageVector = if (isDarkMode) Icons.Rounded.WbSunny else Icons.Rounded.Bedtime,
-                            contentDescription = "Toggle Theme"
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically)
-        ) {
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(title = { Text("Beacon Tracker", style = MaterialTheme.typography.titleMedium) }, actions = {
+            IconButton(onClick = { viewModel.toggleDarkMode(!isDarkMode) }) {
+                Icon(imageVector = if (isDarkMode) Icons.Rounded.WbSunny else Icons.Rounded.Bedtime, contentDescription = "Toggle Theme")
+            }
+        })
+    }) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = if (isSosActive) "Emergency SOS Active" else (if (isFullyGranted) "Tracking Active" else "Permissions Required"),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isSosActive) MaterialTheme.colorScheme.error else (if (isFullyGranted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error)
-                )
-                Text(
-                    text = "BEACON TRACKER SERVICE",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = FontFamily.Monospace
-                )
+                Text(text = if (isSosActive) "Emergency SOS Active" else (if (isFullyGranted) "Tracking Active" else "Permissions Required"), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = if (isSosActive) MaterialTheme.colorScheme.error else (if (isFullyGranted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error))
+                Text(text = "BEACON TRACKER SERVICE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = FontFamily.Monospace)
             }
-            
             if (!isFullyGranted) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                ) {
-                    Text(
-                        text = "Some permissions or battery exemptions are missing. Background tracking may be unreliable.",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                    Text(text = "Some permissions or battery exemptions are missing. Background tracking may be unreliable.", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
                 }
             }
-            
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
                 Column(Modifier.padding(16.dp)) {
-                    Text(
-                        text = "STATUS: ${statusMessage.uppercase()}",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Text(text = "STATUS: ${statusMessage.uppercase()}", style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "ID: $deviceId",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(text = "ID: $deviceId", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-
-            // Cool SOS Button
             var showSosConfirm by remember { mutableStateOf(false) }
-            SosButton(
-                isActive = isSosActive,
-                onTrigger = {
-                    if (!isSosActive) {
-                        showSosConfirm = true
-                    }
-                }
-            )
-
+            SosButton(isActive = isSosActive, onTrigger = { if (!isSosActive) showSosConfirm = true })
             if (showSosConfirm) {
-                AlertDialog(
-                    onDismissRequest = { showSosConfirm = false },
-                    title = { Text("Trigger Emergency SOS?") },
-                    text = { Text("This will immediately alert your admin and broadcast your live location.") },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                showSosConfirm = false
-                                viewModel.triggerSos()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                        ) {
-                            Text("Confirm SOS")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showSosConfirm = false }) {
-                            Text("Cancel")
-                        }
-                    }
-                )
+                AlertDialog(onDismissRequest = { showSosConfirm = false }, title = { Text("Trigger Emergency SOS?") }, text = { Text("This will immediately alert your admin and broadcast your live location.") }, confirmButton = {
+                    Button(onClick = { showSosConfirm = false; viewModel.triggerSos() }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Confirm SOS") }
+                }, dismissButton = { TextButton(onClick = { showSosConfirm = false }) { Text("Cancel") } })
             }
-
-            Button(
-                onClick = { viewModel.forceUpdate() },
-                enabled = !isUpdating,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                if (isUpdating) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Rounded.Refresh, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Force Sync Location")
-                }
+            Button(onClick = { viewModel.forceUpdate() }, enabled = !isUpdating, modifier = Modifier.fillMaxWidth().height(56.dp), shape = MaterialTheme.shapes.medium) {
+                if (isUpdating) CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp) else { Icon(Icons.Rounded.Refresh, null); Spacer(Modifier.width(8.dp)); Text("Force Sync Location") }
             }
-
-            TextButton(onClick = { viewModel.generatePairingCode() }) {
-                Text("Device Re-pair / Logout", style = MaterialTheme.typography.bodySmall)
-            }
-
-            TextButton(
-                onClick = { viewModel.resetAndUnpair() },
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
-            ) {
-                Text("UNPAIR & DELETE ALL DATA", style = MaterialTheme.typography.labelSmall)
-            }
+            TextButton(onClick = { viewModel.generatePairingCode() }) { Text("Device Re-pair / Logout", style = MaterialTheme.typography.bodySmall) }
+            TextButton(onClick = { viewModel.resetAndUnpair() }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))) { Text("UNPAIR & DELETE ALL DATA", style = MaterialTheme.typography.labelSmall) }
         }
     }
 }
