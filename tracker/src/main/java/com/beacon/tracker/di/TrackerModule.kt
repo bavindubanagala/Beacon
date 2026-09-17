@@ -1,10 +1,7 @@
 package com.beacon.tracker.di
 
 import android.content.Context
-import androidx.room.Room
 import com.beacon.tracker.auth.DeviceAuthManager
-import com.beacon.tracker.db.BeaconTrackerDatabase
-import com.beacon.tracker.db.OfflineBufferDao
 import com.beacon.tracker.repository.FirebaseTrackerRepository
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
@@ -42,21 +39,5 @@ object TrackerModule {
     @Singleton
     fun provideCoroutineScope(): CoroutineScope {
         return CoroutineScope(Dispatchers.IO + SupervisorJob())
-    }
-
-    @Provides
-    @Singleton
-    fun provideBeaconTrackerDatabase(@ApplicationContext context: Context): BeaconTrackerDatabase {
-        return Room.databaseBuilder(
-            context,
-            BeaconTrackerDatabase::class.java,
-            "beacon_tracker_offline_db"
-        ).build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideOfflineBufferDao(db: BeaconTrackerDatabase): OfflineBufferDao {
-        return db.offlineBufferDao()
     }
 }

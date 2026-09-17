@@ -10,7 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
-import com.beacon.shared.models.DeviceStatusLight
+import com.beacon.shared.models.DeviceStatus
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -28,7 +28,7 @@ class LocationTrackingService : Service() {
     lateinit var batteryOptimizationManager: BatteryOptimizationManager
 
     private lateinit var locationCallback: LocationCallback
-    private var currentStatus: DeviceStatusLight = DeviceStatusLight.GREEN_LIVE
+    private var currentStatus: DeviceStatus = DeviceStatus.GREEN_LIVE
 
     override fun onCreate() {
         super.onCreate()
@@ -45,7 +45,7 @@ class LocationTrackingService : Service() {
                     val statusName = intent.getStringExtra(EXTRA_TRACKING_MODE)
                     if (statusName != null) {
                         try {
-                            currentStatus = DeviceStatusLight.valueOf(statusName)
+                            currentStatus = DeviceStatus.valueOf(statusName)
                             restartLocationUpdates()
                         } catch (e: Exception) {
                             // Fallback to existing currentStatus

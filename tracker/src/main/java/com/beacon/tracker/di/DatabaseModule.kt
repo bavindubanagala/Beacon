@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.beacon.tracker.data.BeaconDatabase
 import com.beacon.tracker.data.LocationDao
+import com.beacon.tracker.db.OfflineBufferDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,5 +29,11 @@ object DatabaseModule {
     @Provides
     fun provideLocationDao(database: BeaconDatabase): LocationDao {
         return database.locationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideOfflineBufferDao(database: BeaconDatabase): OfflineBufferDao {
+        return database.offlineBufferDao()
     }
 }

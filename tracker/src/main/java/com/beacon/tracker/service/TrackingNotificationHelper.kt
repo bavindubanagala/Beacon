@@ -10,7 +10,6 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.beacon.shared.constants.NotificationDefaults
 import com.beacon.tracker.MainActivity
-import com.beacon.tracker.receivers.NotificationReceiver
 
 class TrackingNotificationHelper(private val context: Context) {
 
@@ -39,14 +38,6 @@ class TrackingNotificationHelper(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val stopIntent = Intent(context, NotificationReceiver::class.java).apply {
-            action = "ACTION_STOP_TRACKING"
-        }
-        val stopPendingIntent = PendingIntent.getBroadcast(
-            context, 1, stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
         return NotificationCompat.Builder(context, NotificationDefaults.TRACKING_NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Beacon Location Tracking Active")
             .setContentText("Mode: ${trackingMode.uppercase()}")
@@ -55,11 +46,6 @@ class TrackingNotificationHelper(private val context: Context) {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setContentIntent(mainPendingIntent)
-            .addAction(
-                android.R.drawable.ic_menu_close_clear_cancel,
-                "Stop Tracking",
-                stopPendingIntent
-            )
             .build()
     }
 }

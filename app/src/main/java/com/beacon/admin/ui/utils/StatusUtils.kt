@@ -1,16 +1,17 @@
 package com.beacon.admin.ui.utils
 
 import androidx.compose.ui.graphics.Color
-import com.beacon.shared.models.DeviceStatusLight
+import com.beacon.shared.models.DeviceStatus
 import java.util.concurrent.TimeUnit
 
-fun getStatusUiConfig(status: DeviceStatusLight): Pair<Color, String> {
+fun getStatusUiConfig(status: DeviceStatus): Pair<Color, String> {
     return when (status) {
-        DeviceStatusLight.GREEN_LIVE -> Color(0xFF00E676) to "Real-Time Live"
-        DeviceStatusLight.BLUE_INTERVAL -> Color(0xFF00B0FF) to "Interval Tracking"
-        DeviceStatusLight.YELLOW_IDLE -> Color(0xFFFFD600) to "Idle & Reachable"
-        DeviceStatusLight.RED_OFFLINE -> Color(0xFFFF5252) to "Offline / Unreachable"
-        DeviceStatusLight.GRAY_UNPAIRED -> Color(0xFF8E8E93) to "Unpaired"
+        DeviceStatus.GREEN_LIVE -> Color(0xFF00E676) to "Real-Time Live"
+        DeviceStatus.BLUE_INTERVAL -> Color(0xFF00B0FF) to "Interval Tracking"
+        DeviceStatus.YELLOW_IDLE -> Color(0xFFFFD600) to "Idle & Reachable"
+        DeviceStatus.RED_OFFLINE -> Color(0xFFFF5252) to "Offline / Unreachable"
+        DeviceStatus.GRAY_UNPAIRED -> Color(0xFF8E8E93) to "Unpaired"
+        else -> Color(0xFF8E8E93) to "Unknown"
     }
 }
 

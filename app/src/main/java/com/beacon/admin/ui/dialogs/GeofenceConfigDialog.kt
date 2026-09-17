@@ -20,7 +20,7 @@ import com.beacon.shared.models.*
 fun GeofenceConfigDialog(
     geofence: GeofenceZone,
     availableDevices: List<Device>,
-    availableGroups: List<Group>,
+    availableGroups: List<DeviceGroup>,
     onDismiss: () -> Unit,
     onSave: (GeofenceZone) -> Unit,
     onDelete: (String) -> Unit = {}
@@ -157,9 +157,9 @@ fun GeofenceConfigDialog(
                 items(availableGroups) { group ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
-                            checked = assignedGroupIds.contains(group.groupId),
+                            checked = assignedGroupIds.contains(group.id),
                             onCheckedChange = { checked ->
-                                assignedGroupIds = if (checked) assignedGroupIds + group.groupId else assignedGroupIds - group.groupId
+                                assignedGroupIds = if (checked) assignedGroupIds + group.id else assignedGroupIds - group.id
                             },
                             colors = CheckboxDefaults.colors(checkedColor = BeaconCyan)
                         )

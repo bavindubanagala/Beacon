@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
-import com.beacon.shared.models.DeviceStatusLight
+import com.beacon.shared.models.DeviceStatus
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -21,7 +21,7 @@ class BatteryOptimizationManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    fun calculateOptimalConfig(targetStatus: DeviceStatusLight): LocationConfig {
+    fun calculateOptimalConfig(targetStatus: DeviceStatus): LocationConfig {
         val batteryPct = getBatteryPercentage()
         val isCharging = isDeviceCharging()
 
@@ -35,30 +35,35 @@ class BatteryOptimizationManager @Inject constructor(
         }
 
         return when (targetStatus) {
-            DeviceStatusLight.GREEN_LIVE -> LocationConfig(
+            DeviceStatus.GREEN_LIVE -> LocationConfig(
                 priority = Priority.PRIORITY_HIGH_ACCURACY,
                 intervalMillis = 5000L, // 5 seconds
                 minUpdateIntervalMillis = 2000L // 2 seconds
             )
-            DeviceStatusLight.BLUE_INTERVAL -> LocationConfig(
+            DeviceStatus.BLUE_INTERVAL -> LocationConfig(
                 priority = Priority.PRIORITY_BALANCED_POWER_ACCURACY,
                 intervalMillis = 60000L, // 1 minute
                 minUpdateIntervalMillis = 30000L // 30 seconds
             )
-            DeviceStatusLight.YELLOW_IDLE -> LocationConfig(
+            DeviceStatus.YELLOW_IDLE -> LocationConfig(
                 priority = Priority.PRIORITY_PASSIVE,
                 intervalMillis = 3600000L, // 1 hour
                 minUpdateIntervalMillis = 1800000L // 30 minutes
             )
-            DeviceStatusLight.RED_OFFLINE -> LocationConfig(
+            DeviceStatus.RED_OFFLINE -> LocationConfig(
                 priority = Priority.PRIORITY_PASSIVE,
                 intervalMillis = Long.MAX_VALUE,
                 minUpdateIntervalMillis = Long.MAX_VALUE
             )
-            DeviceStatusLight.GRAY_UNPAIRED -> LocationConfig(
+            DeviceStatus.GRAY_UNPAIRED -> LocationConfig(
                 priority = Priority.PRIORITY_PASSIVE,
                 intervalMillis = Long.MAX_VALUE,
                 minUpdateIntervalMillis = Long.MAX_VALUE
+            )
+            else -> LocationConfig(
+                priority = Priority.PRIORITY_PASSIVE,
+                intervalMillis = 3600000L,
+                minUpdateIntervalMillis = 1800000L
             )
         }
     }

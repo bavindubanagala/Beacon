@@ -3,7 +3,7 @@ package com.beacon.shared.mapper
 import android.util.Log
 import com.beacon.shared.models.Alert
 import com.beacon.shared.models.Device
-import com.beacon.shared.models.Group
+import com.beacon.shared.models.DeviceGroup
 import com.google.firebase.firestore.DocumentSnapshot
 
 // ALERT
@@ -73,9 +73,9 @@ fun DocumentSnapshot.toDevice(): Device {
     )
 }
 
-fun DocumentSnapshot.toGroup(): Group {
-    return Group(
-        groupId = id,
+fun DocumentSnapshot.toGroup(): DeviceGroup {
+    return DeviceGroup(
+        id = id,
         name = getString("name") ?: "",
         deviceIds = (get("device_ids") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
     )

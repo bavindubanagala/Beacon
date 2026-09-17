@@ -1,7 +1,7 @@
 package com.beacon.data.repository
 
 import com.beacon.shared.mapper.toGroup
-import com.beacon.shared.models.Group
+import com.beacon.shared.models.DeviceGroup
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -13,7 +13,7 @@ class GroupRepository @Inject constructor(
 ) {
     private val collection = firestore.collection("groups")
 
-    suspend fun getAllGroups(): Result<List<Group>> {
+    suspend fun getAllGroups(): Result<List<DeviceGroup>> {
         return try {
             val snapshot = collection.get().await()
             val groups = snapshot.documents.mapNotNull { it.toGroup() }

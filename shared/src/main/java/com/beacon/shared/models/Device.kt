@@ -1,12 +1,6 @@
 package com.beacon.shared.models
 
-enum class DeviceStatusLight {
-    GREEN_LIVE,
-    BLUE_INTERVAL,
-    YELLOW_IDLE,
-    RED_OFFLINE,
-    GRAY_UNPAIRED
-}
+
 
 data class Device(
     val deviceId: String = "",
@@ -39,23 +33,23 @@ data class Device(
     val accuracy: Float = 0f,
     val lastSeenTimestamp: Long = 0L
 ) {
-    val statusLight: DeviceStatusLight
+    val statusLight: DeviceStatus
         get() {
             if (!is_paired || status.equals("unpaired", ignoreCase = true)) {
-                return DeviceStatusLight.GRAY_UNPAIRED
+                return DeviceStatus.GRAY_UNPAIRED
             }
 
             val now = System.currentTimeMillis()
             val fifteenMinutesMs = 15 * 60 * 1000L
             if (now - lastSeenTimestamp > fifteenMinutesMs) {
-                return DeviceStatusLight.RED_OFFLINE
+                return DeviceStatus.RED_OFFLINE
             }
 
             return when (trackingMode.uppercase()) {
-                "LIVE", "REALTIME" -> DeviceStatusLight.GREEN_LIVE
-                "INTERVAL" -> DeviceStatusLight.BLUE_INTERVAL
-                "OFF", "STANDBY" -> DeviceStatusLight.YELLOW_IDLE
-                else -> DeviceStatusLight.YELLOW_IDLE
+                "LIVE", "REALTIME" -> DeviceStatus.GREEN_LIVE
+                "INTERVAL" -> DeviceStatus.BLUE_INTERVAL
+                "OFF", "STANDBY" -> DeviceStatus.YELLOW_IDLE
+                else -> DeviceStatus.YELLOW_IDLE
             }
         }
 }

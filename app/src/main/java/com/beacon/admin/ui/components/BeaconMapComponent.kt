@@ -39,7 +39,7 @@ import com.beacon.admin.ui.theme.GlassSurface
 import com.beacon.admin.ui.theme.GlassSurfaceBorder
 import com.beacon.admin.ui.theme.TextPrimary
 import com.beacon.admin.ui.utils.getStatusUiConfig
-import com.beacon.shared.models.DeviceStatusLight
+import com.beacon.shared.models.DeviceStatus
 import com.beacon.shared.models.GeofenceType
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -55,7 +55,7 @@ data class MapMarkerState(
     val title: String,
     val latitude: Double,
     val longitude: Double,
-    val status: DeviceStatusLight,
+    val status: DeviceStatus,
     val accuracy: Float = 0f
 )
 
@@ -353,7 +353,7 @@ fun BeaconMapComponent(
 
                 // 3. Add Pulse Overlays (so they are under markers)
                 markers.filterNot { it.latitude == 0.0 && it.longitude == 0.0 }.forEach { markerData ->
-                    if (markerData.status == DeviceStatusLight.GREEN_LIVE || markerData.status == DeviceStatusLight.BLUE_INTERVAL) {
+                    if (markerData.status == DeviceStatus.GREEN_LIVE || markerData.status == DeviceStatus.BLUE_INTERVAL) {
                         val (statusColor, _) = getStatusUiConfig(markerData.status)
                         val pulseOverlay = PulseOverlay(
                             GeoPoint(markerData.latitude, markerData.longitude),
@@ -399,7 +399,7 @@ fun BeaconMapComponent(
                             true
                         }
 
-                        if (markerData.status == DeviceStatusLight.RED_OFFLINE || markerData.status == DeviceStatusLight.GRAY_UNPAIRED) {
+                        if (markerData.status == DeviceStatus.RED_OFFLINE || markerData.status == DeviceStatus.GRAY_UNPAIRED) {
                             alpha = 0.6f
                         }
                     }

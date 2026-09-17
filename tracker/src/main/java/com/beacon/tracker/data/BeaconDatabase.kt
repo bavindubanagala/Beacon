@@ -4,10 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.beacon.tracker.db.OfflineLocationEntity
+import com.beacon.tracker.db.OfflineGeofenceEventEntity
+import com.beacon.tracker.db.OfflineBufferDao
 
-@Database(entities = [LocationEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [LocationEntity::class, OfflineLocationEntity::class, OfflineGeofenceEventEntity::class],
+    version = 1,
+    exportSchema = false
+)
 abstract class BeaconDatabase : RoomDatabase() {
     abstract fun locationDao(): LocationDao
+    abstract fun offlineBufferDao(): OfflineBufferDao
 
     companion object {
         @Volatile

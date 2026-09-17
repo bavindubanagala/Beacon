@@ -8,7 +8,7 @@ import com.beacon.data.repository.DeviceRepository
 import com.beacon.data.auth.AuthManager
 import com.beacon.admin.ui.components.MapMarkerState
 import com.beacon.admin.ui.components.GeofenceZoneState
-import com.beacon.shared.models.DeviceStatusLight
+import com.beacon.shared.models.DeviceStatus
 import com.beacon.shared.repository.FirebaseGeofenceRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,7 +31,7 @@ import javax.inject.Inject
 data class MapPinState(
     val id: String,
     val deviceName: String,
-    val status: DeviceStatusLight,
+    val status: DeviceStatus,
     val latitude: Double,
     val longitude: Double,
     val lastPing: String,
@@ -64,7 +64,7 @@ sealed interface MapUiState {
         val selectedGroups: Set<String> = emptySet(),
         val selectedDeviceIds: Set<String> = emptySet(),
         val allDevicesForFilter: List<Device> = emptyList(),
-        val allGroups: List<com.beacon.shared.models.Group> = emptyList()
+        val allGroups: List<com.beacon.shared.models.DeviceGroup> = emptyList()
     ) : MapUiState
 
     data class Error(
@@ -158,7 +158,7 @@ class MapViewModel @Inject constructor(
         val dPointA = flows[6] as org.osmdroid.util.GeoPoint?
         val dPointB = flows[7] as org.osmdroid.util.GeoPoint?
         val dRadius = flows[8] as Double
-        val groupsData = flows[9] as List<com.beacon.shared.models.Group>
+        val groupsData = flows[9] as List<com.beacon.shared.models.DeviceGroup>
 
         val groups = devicesList.mapNotNull { it.groupId }.distinct().sorted()
         

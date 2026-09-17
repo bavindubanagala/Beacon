@@ -63,7 +63,7 @@ data class DeviceDetailsUiState(
     val showUnpairDialog: Boolean = false,
     val isUnpairing: Boolean = false,
     val isSavingGeofence: Boolean = false,
-    val availableGroups: List<com.beacon.shared.models.Group> = emptyList(),
+    val availableGroups: List<com.beacon.shared.models.DeviceGroup> = emptyList(),
     val initialLat: Double? = null,
     val initialLng: Double? = null,
     val isSendingCommand: Boolean = false,
@@ -142,7 +142,7 @@ class DeviceDetailsViewModel @Inject constructor(
     ) { flows ->
         val device = flows[0] as Device?
         val fences = flows[1] as List<com.beacon.shared.models.GeofenceZone>
-        val groups = flows[2] as List<com.beacon.shared.models.Group>
+        val groups = flows[2] as List<com.beacon.shared.models.DeviceGroup>
         val history = flows[3] as List<Location>
         val pIndex = flows[4] as Int
         val playing = flows[5] as Boolean

@@ -43,7 +43,7 @@ import com.beacon.admin.ui.utils.getStatusUiConfig
 import com.beacon.admin.ui.viewmodels.MapPinState
 import com.beacon.admin.ui.viewmodels.MapUiState
 import com.beacon.admin.ui.viewmodels.MapViewModel
-import com.beacon.shared.models.DeviceStatusLight
+import com.beacon.shared.models.DeviceStatus
 import org.osmdroid.util.GeoPoint
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -168,7 +168,7 @@ private fun MapContent(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatusHaloBadge(status = DeviceStatusLight.GREEN_LIVE, size = 6.dp)
+                    StatusHaloBadge(status = DeviceStatus.GREEN_LIVE, size = 6.dp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("${state.totalActiveCount} Devices Active", style = MaterialTheme.typography.labelSmall)
                 }

@@ -130,9 +130,9 @@ fun DeviceDetailsScreen(
                                 title = device.name,
                                 latitude = device.latitude,
                                 longitude = device.longitude,
-                                status = if (device.hasActiveSos) com.beacon.shared.models.DeviceStatusLight.RED_OFFLINE 
-                                         else if (device.isOnline) com.beacon.shared.models.DeviceStatusLight.GREEN_LIVE
-                                         else com.beacon.shared.models.DeviceStatusLight.YELLOW_IDLE,
+                                status = if (device.hasActiveSos) com.beacon.shared.models.DeviceStatus.RED_OFFLINE 
+                                         else if (device.isOnline) com.beacon.shared.models.DeviceStatus.GREEN_LIVE
+                                         else com.beacon.shared.models.DeviceStatus.YELLOW_IDLE,
                                 accuracy = device.accuracy
                             )
                         ),

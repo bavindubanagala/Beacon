@@ -17,11 +17,11 @@ import com.beacon.admin.ui.theme.StatusStandbyColor
 import com.beacon.admin.ui.theme.StatusSosColor
 
 import com.beacon.admin.ui.utils.getStatusUiConfig
-import com.beacon.shared.models.DeviceStatusLight
+import com.beacon.shared.models.DeviceStatus
 
 @Composable
 fun StatusHaloBadge(
-    status: DeviceStatusLight,
+    status: DeviceStatus,
     modifier: Modifier = Modifier,
     size: Dp = 12.dp
 ) {
