@@ -8,7 +8,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -70,7 +69,7 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                 // 1. Verify valid session prior to listener setup as per security requirements
                 if (FirebaseAuth.getInstance().currentUser == null) {
                     Log.e("PairDebug", "FirestoreDeviceRepositoryImpl: callbackFlow triggered without active Firebase user")
-                    close(FirebaseFirestoreException("Unauthenticated session detected", FirebaseFirestoreException.Code.UNAUTHENTICATED))
+                    trySend(emptyList())
                     return@callbackFlow
                 }
 
@@ -82,10 +81,8 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                         )
                     )
                     .addSnapshotListener { snapshot, error ->
-                        // 2. Defensive handling: close Flow with exception instead of swallowing
                         if (error != null) {
                             Log.e("PairDebug", "FirestoreDeviceRepositoryImpl: Snapshot error in devices flow", error)
-                            close(error)
                             return@addSnapshotListener
                         }
 
@@ -106,10 +103,10 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
     }
 
     override fun getDevicesStream(ownerId: String): Flow<List<Device>> = callbackFlow {
-        // 1. Verify valid session prior to listener setup
-        if (FirebaseAuth.getInstance().currentUser == null) {
-            Log.e("PairDebug", "FirestoreDeviceRepositoryImpl: getDevicesStream called without valid session")
-            close(FirebaseFirestoreException("Unauthenticated access attempt", FirebaseFirestoreException.Code.UNAUTHENTICATED))
+        // 1. Verify valid session and owner before listener setup
+        if (ownerId.isBlank() || FirebaseAuth.getInstance().currentUser == null) {
+            Log.e("PairDebug", "FirestoreDeviceRepositoryImpl: getDevicesStream called without valid owner or session")
+            trySend(emptyList())
             return@callbackFlow
         }
 
@@ -121,10 +118,8 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                 )
             )
             .addSnapshotListener { snapshot, error ->
-                // 2. Defensive handling: close Flow with exception instead of swallowing
                 if (error != null) {
                     Log.e("PairDebug", "FirestoreDeviceRepositoryImpl: Snapshot error in getDevicesStream", error)
-                    close(error)
                     return@addSnapshotListener
                 }
                 val devices = snapshot?.documents?.mapNotNull { it.toDevice() } ?: emptyList()
