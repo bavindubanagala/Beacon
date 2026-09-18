@@ -8,14 +8,10 @@ import com.beacon.shared.models.Device
 import com.beacon.data.repository.DeviceRepository
 import com.beacon.data.auth.AuthManager
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.SetOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import com.beacon.admin.ui.utils.formatRelativeSyncTime
 
@@ -54,7 +50,6 @@ data class DevicesListState(
 class DevicesViewModel @Inject constructor(
     private val deviceRepository: DeviceRepository,
     private val authManager: AuthManager,
-    private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -119,45 +114,29 @@ class DevicesViewModel @Inject constructor(
         _pairResult.value = PairResult.Loading
 
         viewModelScope.launch {
-            try {
-                val currentUser = auth.currentUser
-                if (currentUser == null) {
-                    _pairResult.value = PairResult.Error("Not signed in")
-                    return@launch
-                }
-
-                val querySnapshot = firestore.collection("pairing_codes")
-                    .whereEqualTo("code", code)
-                    .get()
-                    .await()
-
-                if (querySnapshot.isEmpty) {
-                    _pairResult.value = PairResult.Error("Invalid or expired code")
-                    return@launch
-                }
-
-                val doc = querySnapshot.documents.first()
-                val deviceId = doc.getString("deviceId")
-                    ?: run {
-                        _pairResult.value = PairResult.Error("Corrupted pairing record")
-                        return@launch
-                    }
-
-                firestore.collection("devices").document(deviceId)
-                    .set(mapOf(
-                        "ownerId" to currentUser.uid, 
-                        "owner_id" to currentUser.uid,
-                        "is_paired" to true,
-                        "status" to "online"
-                    ), SetOptions.merge())
-                    .await()
-
-                doc.reference.delete().await()
-                _pairResult.value = PairResult.Success(deviceId)
-
-            } catch (e: Exception) {
-                _pairResult.value = PairResult.Error(e.localizedMessage ?: "Pairing failed")
+            val currentUser = auth.currentUser
+            if (currentUser == null) {
+                _pairResult.value = PairResult.Error("Not signed in")
+                return@launch
             }
+
+            val result = deviceRepository.pairDevice(
+                code = code,
+                friendlyName = "",
+                ownerId = currentUser.uid
+            )
+
+            result.fold(
+                onSuccess = {
+                    _pairResult.value = PairResult.Success(code)
+                },
+                onFailure = { exception ->
+                    _pairResult.value = PairResult.Error(
+                        exception.localizedMessage ?: "Pairing failed",
+                        exception
+                    )
+                }
+            )
         }
     }
 
