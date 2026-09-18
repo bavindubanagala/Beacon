@@ -1,10 +1,10 @@
 package com.beacon.admin.repository
 
+import android.util.Log
 import com.beacon.shared.models.RemoteCommand
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -35,9 +35,8 @@ class FirebaseCommandRepository @Inject constructor(
                 .limit(1)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        android.util.Log.e("CommandRepo", "getLatestCommandStatus error", error)
+                        Log.e("CommandRepo", "getLatestCommandStatus error", error)
                         trySend(null)
-                        close()
                         return@addSnapshotListener
                     }
                     val command = snapshot?.documents?.firstOrNull()?.toObject(RemoteCommand::class.java)
