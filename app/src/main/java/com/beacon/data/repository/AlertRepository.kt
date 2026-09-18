@@ -55,7 +55,6 @@ class FirestoreAlertRepositoryImpl @Inject constructor(
                         if (error != null) {
                             Log.e("AlertDebug", "Error fetching devices for alerts filter", error)
                             trySend(emptyList())
-                            close()
                             return@addSnapshotListener
                         }
                         
@@ -76,7 +75,6 @@ class FirestoreAlertRepositoryImpl @Inject constructor(
                                 if (alertsError != null) {
                                     Log.e("AlertDebug", "Error fetching alerts snapshot", alertsError)
                                     trySend(emptyList())
-                                    close()
                                     return@addSnapshotListener
                                 }
                                 
@@ -124,7 +122,6 @@ class FirestoreAlertRepositoryImpl @Inject constructor(
                 if (error != null) {
                     Log.e("AlertDebug", "getAlertsStream error", error)
                     trySend(emptyList())
-                    close()
                     return@addSnapshotListener
                 }
                 
