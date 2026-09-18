@@ -35,6 +35,7 @@ class OfflineSyncManager @Inject constructor(
     private val scope: CoroutineScope
 ) {
     private val TAG = "OfflineSyncManager"
+    private val batchSize = 50
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val syncMutex = Mutex()
 
@@ -66,10 +67,10 @@ class OfflineSyncManager @Inject constructor(
             syncMutex.withLock {
                 try {
                     while (bufferDao.getUnsyncedLocationsCount() > 0) {
-                        syncLocationBatch()
+                        if (!syncLocationBatch()) break
                     }
                     while (bufferDao.getUnsyncedGeofenceEventsCount() > 0) {
-                        syncGeofenceEventBatch()
+                        if (!syncGeofenceEventBatch()) break
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Critical sync failure", e)
@@ -78,9 +79,9 @@ class OfflineSyncManager @Inject constructor(
         }
     }
 
-    private suspend fun syncLocationBatch() {
-        val batchList = bufferDao.getUnsyncedLocations().take(500)
-        if (batchList.isEmpty()) return
+    private suspend fun syncLocationBatch(): Boolean {
+        val batchList = bufferDao.getUnsyncedLocations(batchSize)
+        if (batchList.isEmpty()) return true
 
         Log.d(TAG, "Syncing ${batchList.size} locations")
         val batch = firestore.batch()
@@ -105,22 +106,26 @@ class OfflineSyncManager @Inject constructor(
             batch.set(docRef, locationMap)
         }
 
-        try {
+        val uploadResult = runCatching {
             batch.commit().await()
-            // Ensure deletion is atomic and non-cancellable
-            withContext(NonCancellable) {
-                bufferDao.deleteLocationsByIds(batchList.map { it.id })
-            }
-            Log.d(TAG, "Batch of ${batchList.size} locations synced successfully")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to commit location batch", e)
-            throw e // Reraise to break while loop
         }
+        uploadResult.onFailure { error ->
+            if (error is kotlinx.coroutines.CancellationException) throw error
+            Log.e(TAG, "Failed to commit location batch; retaining buffered records", error)
+        }
+        if (uploadResult.isFailure) return false
+
+        // Delete only after Firestore confirms the entire batch commit.
+        withContext(NonCancellable) {
+            bufferDao.deleteLocationsByIds(batchList.map { it.id })
+        }
+        Log.d(TAG, "Batch of ${batchList.size} locations synced successfully")
+        return true
     }
 
-    private suspend fun syncGeofenceEventBatch() {
-        val batchList = bufferDao.getUnsyncedGeofenceEvents().take(500)
-        if (batchList.isEmpty()) return
+    private suspend fun syncGeofenceEventBatch(): Boolean {
+        val batchList = bufferDao.getUnsyncedGeofenceEvents(batchSize)
+        if (batchList.isEmpty()) return true
 
         Log.d(TAG, "Syncing ${batchList.size} geofence events")
         val batch = firestore.batch()
@@ -141,16 +146,20 @@ class OfflineSyncManager @Inject constructor(
             batch.set(docRef, eventMap)
         }
 
-        try {
+        val uploadResult = runCatching {
             batch.commit().await()
-            withContext(NonCancellable) {
-                bufferDao.deleteGeofenceEventsByIds(batchList.map { it.id })
-            }
-            Log.d(TAG, "Batch of ${batchList.size} geofence events synced successfully")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to commit geofence event batch", e)
-            throw e
         }
+        uploadResult.onFailure { error ->
+            if (error is kotlinx.coroutines.CancellationException) throw error
+            Log.e(TAG, "Failed to commit geofence event batch; retaining buffered records", error)
+        }
+        if (uploadResult.isFailure) return false
+
+        withContext(NonCancellable) {
+            bufferDao.deleteGeofenceEventsByIds(batchList.map { it.id })
+        }
+        Log.d(TAG, "Batch of ${batchList.size} geofence events synced successfully")
+        return true
     }
 
     fun cleanup() {

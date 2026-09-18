@@ -18,7 +18,6 @@
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application
-        android:name=".TrackerApplication"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"

@@ -85,7 +85,10 @@ class LocationTrackingService : Service() {
     private lateinit var locationManager: LocationManager
     private lateinit var db: LocationDatabase
 
-    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val serviceExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e(TAG, "Unhandled tracking service coroutine failure", throwable)
+    }
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO + serviceExceptionHandler)
     private val handler = Handler(Looper.getMainLooper())
 
     private var trackingIntervalSeconds: Long = TrackingDefaults.DEFAULT_INTERVAL_SECONDS.toLong()
@@ -97,6 +100,8 @@ class LocationTrackingService : Service() {
     private var isServiceDestroyed: Boolean = false
     
     private var activeGenerationId = 0
+    private var lastRemoteCommandKey: String? = null
+    private var lastRemoteCommandAt: Long = 0L
 
     private var locationRunnable: Runnable? = null
     private var currentLocationCallback: LocationCallback? = null
@@ -203,7 +208,8 @@ class LocationTrackingService : Service() {
                 val paired = snapshot?.getBoolean("is_paired") ?: false
                 isDeviceAuthorized = paired
                 
-                val cmdMode = snapshot?.getString("command_mode") ?: snapshot?.getString("commandMode")
+                val cmdMode = (snapshot?.getString("command_mode") ?: snapshot?.getString("commandMode"))
+                    ?.trim()?.lowercase()
                 val cmdInterval = snapshot?.getLong("interval_seconds") ?: snapshot?.getLong("intervalSeconds") ?: 900L
                 val cmdAutoRevert = snapshot?.getLong("auto_revert_seconds") ?: snapshot?.getLong("autoRevertSeconds") ?: 1800L
                 val cmdEmergency = snapshot?.getBoolean("is_emergency_mode") ?: snapshot?.getBoolean("isEmergencyMode") ?: false
@@ -216,8 +222,23 @@ class LocationTrackingService : Service() {
                 speedLimitKmH = (alertThresholds?.get("speedLimitKmH") as? Long)?.toInt() ?: 0
                 sosFallbackPhone = snapshot?.getString("sosFallbackPhone") ?: ""
                 
-                if (cmdMode != null) {
-                    processRemoteCommand(cmdMode, cmdInterval.toInt(), cmdAutoRevert.toInt(), cmdEmergency)
+                if (cmdMode != null && cmdMode in setOf("live", "interval", "off") &&
+                    cmdInterval in 15..86_400 && cmdAutoRevert in 0..86_400
+                ) {
+                    val commandKey = "$cmdMode:$cmdInterval:$cmdAutoRevert:$cmdEmergency"
+                    val commandTimestamp = snapshot?.getLong("command_timestamp")
+                        ?: snapshot?.getLong("commandTimestamp") ?: 0L
+                    val duplicate = commandKey == lastRemoteCommandKey &&
+                        (commandTimestamp == 0L || commandTimestamp <= lastRemoteCommandAt)
+                    if (duplicate) {
+                        Log.d(TAG, "Ignoring duplicate remote command")
+                    } else {
+                        lastRemoteCommandKey = commandKey
+                        lastRemoteCommandAt = commandTimestamp
+                        processRemoteCommand(cmdMode, cmdInterval.toInt(), cmdAutoRevert.toInt(), cmdEmergency)
+                    }
+                } else if (cmdMode != null) {
+                    Log.w(TAG, "Ignoring malformed remote command")
                 }
 
                 if (isEmergency) {
@@ -257,7 +278,7 @@ class LocationTrackingService : Service() {
     }
 
     private fun startLocationUpdates() {
-        serviceScope.launch {
+        serviceScope.launch(SupervisorJob() + serviceExceptionHandler) {
             locationEngine.getLocationUpdates(policyManager.locationConfigFlow)
                 .collect { location ->
                     locationSyncManager.dispatchLocation(location, deviceAuthManager.getDeviceId())
@@ -341,6 +362,12 @@ class LocationTrackingService : Service() {
     private var isEmergency: Boolean = false
 
     private fun processRemoteCommand(mode: String, interval: Int, autoRevert: Int, emergency: Boolean) {
+        if (mode !in setOf("live", "interval", "off") ||
+            interval !in 15..86_400 || autoRevert !in 0..86_400
+        ) {
+            Log.w(TAG, "Ignoring invalid command parameters")
+            return
+        }
         if (trackingMode == mode && trackingIntervalSeconds == interval.toLong() && isEmergency == emergency) return
         
         policyManager.setRemoteCommandMode(mode)
@@ -568,10 +595,16 @@ class LocationTrackingService : Service() {
         catch (e: SecurityException) { isRequestingLocation = false }
     }
 
-    private fun removeLocationCallback() {
-        currentLocationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
-        currentLocationCallback = null
+    private fun removeLocationUpdatesSafely() {
+        currentLocationCallback?.let { callback ->
+            fusedLocationClient.removeLocationUpdates(callback)
+            currentLocationCallback = null
+        }
         isRequestingLocation = false
+    }
+
+    private fun removeLocationCallback() {
+        removeLocationUpdatesSafely()
     }
 
     private fun sendStatusUpdate(message: String) {
@@ -700,9 +733,15 @@ class LocationTrackingService : Service() {
         policyManager.cleanup()
         syncManager.cleanup()
         stopLocationLoop()
+        removeLocationUpdatesSafely()
         unregisterReceiversSafely()
         serviceScope.cancel()
         super.onDestroy()
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        removeLocationUpdatesSafely()
+        return super.onUnbind(intent)
     }
 
     override fun onBind(intent: Intent?): IBinder? {

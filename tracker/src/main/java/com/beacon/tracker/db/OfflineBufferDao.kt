@@ -10,11 +10,11 @@ interface OfflineBufferDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGeofenceEvent(event: OfflineGeofenceEventEntity)
 
-    @Query("SELECT * FROM offline_locations ORDER BY timestamp ASC")
-    suspend fun getUnsyncedLocations(): List<OfflineLocationEntity>
+    @Query("SELECT * FROM offline_locations ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getUnsyncedLocations(limit: Int): List<OfflineLocationEntity>
 
-    @Query("SELECT * FROM offline_geofence_events ORDER BY timestamp ASC")
-    suspend fun getUnsyncedGeofenceEvents(): List<OfflineGeofenceEventEntity>
+    @Query("SELECT * FROM offline_geofence_events ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getUnsyncedGeofenceEvents(limit: Int): List<OfflineGeofenceEventEntity>
 
     @Query("DELETE FROM offline_locations WHERE id IN (:ids)")
     suspend fun deleteLocationsByIds(ids: List<String>)

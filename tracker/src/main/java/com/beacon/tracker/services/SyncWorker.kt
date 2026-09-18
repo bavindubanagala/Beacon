@@ -9,13 +9,22 @@ import com.beacon.tracker.auth.DeviceAuthManager
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.beacon.shared.models.Location as BeaconLocation
+import com.google.firebase.FirebaseNetworkException
+import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 
 class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): ListenableWorker.Result {
         val db = LocationDatabase.getDatabase(applicationContext)
         val authManager = DeviceAuthManager(applicationContext)
+        if (authManager.getDeviceId().isBlank() || authManager.getDeviceSecret().isBlank()) {
+            Log.e("SyncWorker", "Cannot sync locations without device authentication credentials")
+            return Result.failure()
+        }
+
         val repository = FirebaseTrackerRepository(
             FirebaseFirestore.getInstance(),
             FirebaseDatabase.getInstance("https://gen-lang-client-0281237877-default-rtdb.asia-southeast1.firebasedatabase.app/"),
@@ -43,18 +52,33 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             )
 
             try {
-                val success = repository.uploadLocationToHistory(beaconLoc).isSuccess
-                if (success) {
+                val uploadResult = repository.uploadLocationToHistory(beaconLoc)
+                if (uploadResult.isSuccess) {
                     db.locationDao().delete(loc)
-                } else {
+                } else if (uploadResult.exceptionOrNull()?.isTransientSyncFailure() == true) {
                     return Result.retry()
+                } else {
+                    Log.e("SyncWorker", "Unrecoverable location upload failure", uploadResult.exceptionOrNull())
+                    return Result.failure()
                 }
             } catch (e: Exception) {
-                return Result.retry()
+                if (e is CancellationException) throw e
+                return if (e.isTransientSyncFailure()) {
+                    Result.retry()
+                } else {
+                    Log.e("SyncWorker", "Unrecoverable sync failure", e)
+                    Result.failure()
+                }
             }
         }
 
         return Result.success()
+    }
+
+    private fun Throwable.isTransientSyncFailure(): Boolean {
+        return this is IOException ||
+            this is TimeoutCancellationException ||
+            this is FirebaseNetworkException
     }
 
     companion object {

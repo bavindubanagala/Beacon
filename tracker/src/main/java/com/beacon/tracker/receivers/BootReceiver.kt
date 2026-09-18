@@ -20,9 +20,14 @@ class BootReceiver : BroadcastReceiver() {
     lateinit var deviceAuthManager: DeviceAuthManager
 
     override fun onReceive(context: Context, intent: Intent?) {
-        Log.d(tag, "System event detected: ${intent?.action}")
+        val action = intent?.action
+        if (action == null) {
+            Log.w(tag, "Ignoring broadcast without an action")
+            return
+        }
+        Log.d(tag, "System event detected: $action")
 
-        if (intent?.action in listOf(
+        if (action in listOf(
                 Intent.ACTION_BOOT_COMPLETED,
                 Intent.ACTION_MY_PACKAGE_REPLACED,
                 "com.htc.intent.action.QUICKBOOT_POWERON"
@@ -47,6 +52,8 @@ class BootReceiver : BroadcastReceiver() {
             ServiceWatchdogWorker.schedule(context)
             
             Log.d(tag, "Service Watchdog recovery tasks orchestrated")
+        } else {
+            Log.w(tag, "Ignoring unsupported broadcast action: $action")
         }
     }
 }
