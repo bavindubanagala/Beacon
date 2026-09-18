@@ -1,5 +1,6 @@
 package com.beacon.shared.repository
 
+import android.util.Log
 import com.beacon.shared.constants.FirestoreCollections
 import com.beacon.shared.models.GeofenceEvent
 import com.beacon.shared.models.GeofenceZone
@@ -7,7 +8,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -32,9 +32,8 @@ class FirebaseGeofenceRepository @Inject constructor(
                 .whereArrayContains("assignedDeviceIds", deviceId)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        android.util.Log.e("GeofenceRepo", "getGeofencesForDevice error", error)
+                        Log.e("GeofenceRepo", "getGeofencesForDevice error", error)
                         trySend(emptyList())
-                        close()
                         return@addSnapshotListener
                     }
                     val zones = snapshot?.documents?.mapNotNull { it.toObject(GeofenceZone::class.java)?.copy(id = it.id) } ?: emptyList()
@@ -52,9 +51,8 @@ class FirebaseGeofenceRepository @Inject constructor(
                 .whereArrayContains("assignedGroupIds", groupId)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        android.util.Log.e("GeofenceRepo", "getGeofencesForGroup error", error)
+                        Log.e("GeofenceRepo", "getGeofencesForGroup error", error)
                         trySend(emptyList())
-                        close()
                         return@addSnapshotListener
                     }
                     val zones = snapshot?.documents?.mapNotNull { it.toObject(GeofenceZone::class.java)?.copy(id = it.id) } ?: emptyList()
@@ -107,9 +105,8 @@ class FirebaseGeofenceRepository @Inject constructor(
                 .limit(50)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        android.util.Log.e("GeofenceRepo", "getGeofenceEventsForDevice error", error)
+                        Log.e("GeofenceRepo", "getGeofenceEventsForDevice error", error)
                         trySend(emptyList())
-                        close()
                         return@addSnapshotListener
                     }
                     val events = snapshot?.documents?.mapNotNull { it.toObject(GeofenceEvent::class.java)?.copy(id = it.id) } ?: emptyList()
@@ -128,9 +125,8 @@ class FirebaseGeofenceRepository @Inject constructor(
                 .limit(100)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        android.util.Log.e("GeofenceRepo", "getAllGeofenceEvents error", error)
+                        Log.e("GeofenceRepo", "getAllGeofenceEvents error", error)
                         trySend(emptyList())
-                        close()
                         return@addSnapshotListener
                     }
                     val events = snapshot?.documents?.mapNotNull { it.toObject(GeofenceEvent::class.java)?.copy(id = it.id) } ?: emptyList()
