@@ -166,9 +166,9 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                 return@withContext Result.failure(IllegalStateException("User not authenticated."))
             }
 
-            Log.d("PairDebug", "FirestoreDeviceRepositoryImpl: Starting pairing transaction for code $code and ownerId $ownerId")
+            Log.d("PairDebug", "Starting atomic pairing transaction for code $code and ownerId$ownerId")
 
-            // Query Firestore for matching pairing code document
+            // 1. Query for the document reference matching the code
             val querySnapshot = firestore.collection("pairing_codes")
                 .whereEqualTo("code", code)
                 .get()
@@ -178,13 +178,20 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                 return@withContext Result.failure(IllegalArgumentException("Invalid or expired pairing code."))
             }
 
-            val codeDoc = querySnapshot.documents.first()
-            val deviceId = codeDoc.getString("deviceId")
-                ?: return@withContext Result.failure(IllegalStateException("Invalid device metadata."))
-            val trackerAuthUid = codeDoc.getString("trackerAuthUid")
+            val codeDocRef = querySnapshot.documents.first().reference
 
-            // Run batch to claim device under current ownerId
-            firestore.runBatch { batch ->
+            // 2. Execute atomic transaction
+            firestore.runTransaction { transaction ->
+                // Re-read code document inside transaction to guarantee atomic claim
+                val codeSnapshot = transaction.get(codeDocRef)
+                if (!codeSnapshot.exists()) {
+                    throw IllegalStateException("Pairing code has already been claimed or deleted.")
+                }
+
+                val deviceId = codeSnapshot.getString("deviceId")
+                    ?: throw IllegalStateException("Invalid device metadata in pairing code.")
+                val trackerAuthUid = codeSnapshot.getString("trackerAuthUid")
+
                 val deviceRef = collection.document(deviceId)
                 val updates = mapOf(
                     "is_paired" to true,
@@ -198,16 +205,16 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                     "status" to "online",
                     "pairedAt" to com.google.firebase.Timestamp.now()
                 )
-                batch.set(deviceRef, updates, SetOptions.merge())
 
-                // Delete pairing code after use
-                batch.delete(codeDoc.reference)
+                // Atomic writes: claim device and delete pairing code
+                transaction.set(deviceRef, updates, SetOptions.merge())
+                transaction.delete(codeDocRef)
             }.await()
 
-            Log.d("PairDebug", "FirestoreDeviceRepositoryImpl: Successfully paired device $deviceId to $ownerId")
+            Log.d("PairDebug", "Successfully paired device to $ownerId")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("PairDebug", "FirestoreDeviceRepositoryImpl: Error during pairing transaction", e)
+            Log.e("PairDebug", "Error during atomic pairing transaction", e)
             Result.failure(e)
         }
     }
