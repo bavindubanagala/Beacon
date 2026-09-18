@@ -193,7 +193,6 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                     "deviceId" to deviceId,
                     "device_id" to deviceId,
                     "ownerId" to ownerId,
-                    "owner_id" to ownerId,
                     "trackerAuthUid" to trackerAuthUid,
                     "deviceName" to friendlyName.ifBlank { "New Device" },
                     "device_name" to friendlyName.ifBlank { "New Device" },
