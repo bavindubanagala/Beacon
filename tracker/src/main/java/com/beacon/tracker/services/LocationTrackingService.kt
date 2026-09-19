@@ -11,7 +11,6 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Handler
-import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -89,7 +88,6 @@ class LocationTrackingService : Service() {
         Log.e(TAG, "Unhandled tracking service coroutine failure", throwable)
     }
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO + serviceExceptionHandler)
-    private val handler = Handler(Looper.getMainLooper())
 
     private var trackingIntervalSeconds: Long = TrackingDefaults.DEFAULT_INTERVAL_SECONDS.toLong()
     private var locationAccuracy: String = "high"
@@ -102,9 +100,6 @@ class LocationTrackingService : Service() {
     private var activeGenerationId = 0
     private var lastRemoteCommandKey: String? = null
     private var lastRemoteCommandAt: Long = 0L
-
-    private var locationRunnable: Runnable? = null
-    private var currentLocationCallback: LocationCallback? = null
 
     private var lastBatteryLevel: Int = 0
     private var lastSignalStrength: Int = 0
@@ -146,15 +141,15 @@ class LocationTrackingService : Service() {
                         enterIdleState()
                     } else {
                         if (isTrackingPaused) {
-                            stopLocationLoop()
+                            // No-op: locationEngine flow respects paused state
                         } else {
-                            startLocationLoop()
+                            // No-op: locationEngine flow respects paused state
                         }
                     }
                 }
                 ACTION_FORCE_UPDATE -> {
                     Log.d(TAG, "Force update requested via receiver")
-                    requestSingleLocationUpdate()
+                    requestForceLocationUpdate()
                 }
             }
         }
@@ -258,10 +253,9 @@ class LocationTrackingService : Service() {
                 }
 
                 if (paired && trackingMode != "off") {
-                    startLocationLoop()
-                    observeLocationPolicy()
+                    // Location updates are handled by locationEngine flow
                 } else {
-                    stopLocationLoop()
+                    enterIdleState()
                 }
             }
 
@@ -279,11 +273,18 @@ class LocationTrackingService : Service() {
 
     private fun startLocationUpdates() {
         serviceScope.launch(SupervisorJob() + serviceExceptionHandler) {
-            locationEngine.getLocationUpdates(policyManager.locationConfigFlow)
-                .collect { location ->
-                    locationSyncManager.dispatchLocation(location, deviceAuthManager.getDeviceId())
-                    updateTrackingNotification(location)
-                }
+            try {
+                locationEngine.getLocationUpdates(policyManager.locationConfigFlow)
+                    .collect { location ->
+                        if (isServiceDestroyed || !isDeviceAuthorized || isTrackingPaused) return@collect
+                        locationSyncManager.dispatchLocation(location, deviceAuthManager.getDeviceId())
+                        updateTrackingNotification(location)
+                    }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Location updates collection failed", e)
+            }
         }
     }
 
@@ -303,58 +304,6 @@ class LocationTrackingService : Service() {
         
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NotificationDefaults.TRACKING_NOTIFICATION_ID, notification)
-    }
-
-    private fun observeLocationPolicy() {
-        serviceScope.launch {
-            policyManager.locationConfigFlow.collect { config ->
-                if (trackingMode == "live") {
-                    reconfigureLocationUpdates(config)
-                }
-            }
-        }
-    }
-
-    private suspend fun reconfigureLocationUpdates(config: LocationRequestConfig) {
-        if (!isDeviceAuthorized || isTrackingPaused || isServiceDestroyed) return
-        
-        Log.d(TAG, "Reconfiguring Location Updates: $config")
-        
-        // Wait for removal to complete to ensure zero overlapping ticks
-        currentLocationCallback?.let { 
-            fusedLocationClient.removeLocationUpdates(it).await()
-        }
-        currentLocationCallback = null
-        
-        val generation = ++activeGenerationId
-        val priority = config.priority
-        val interval = config.intervalMillis
-        
-        val locationRequest = LocationRequest.Builder(priority, interval)
-            .setMinUpdateIntervalMillis(interval / 2)
-            .setMaxUpdateDelayMillis(interval * 2)
-            .setMinUpdateDistanceMeters(config.minUpdateDistanceMeters)
-            .build()
-
-        val callback = object : LocationCallback() {
-            private val myGeneration = generation
-
-            override fun onLocationResult(result: LocationResult) {
-                super.onLocationResult(result)
-                if (myGeneration != activeGenerationId) {
-                    Log.d(TAG, "Discarding stale location result (Gen $myGeneration vs Active $activeGenerationId)")
-                    return
-                }
-                val location = result.lastLocation
-                if (location != null) handleLocationUpdate(location)
-            }
-        }
-        currentLocationCallback = callback
-        try {
-            fusedLocationClient.requestLocationUpdates(locationRequest, callback, Looper.getMainLooper()).await()
-        } catch (e: SecurityException) {
-            Log.e(TAG, "SecurityException during reconfigure", e)
-        }
     }
 
     private var trackingMode: String = "interval"
@@ -393,21 +342,18 @@ class LocationTrackingService : Service() {
             "interval" -> {
                 // Schedule WorkManager for periodic updates
                 scheduleIntervalTracking(interval)
-                // Stop high-frequency loop and foreground service
-                stopLocationLoop()
+                // Stop foreground service
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 Log.d(TAG, "Switched to INTERVAL mode: Service stopped, Worker scheduled")
             }
             "live" -> {
-                // Cancel WorkManager and restart high-frequency foreground service
+                // Cancel WorkManager and keep foreground service running
                 cancelIntervalTracking()
-                startLocationLoop()
                 Log.d(TAG, "Switched to LIVE mode: Worker cancelled, Continuous tracking active")
             }
             "off" -> {
                 cancelIntervalTracking()
-                stopLocationLoop()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 Log.d(TAG, "Switched to OFF mode: All tracking terminated")
@@ -466,7 +412,7 @@ class LocationTrackingService : Service() {
             when (intent.action) {
                 ACTION_FORCE_UPDATE -> {
                     Log.d(TAG, "Force update requested via startService")
-                    requestSingleLocationUpdate()
+                    requestForceLocationUpdate()
                 }
                 ACTION_UPDATE_TRACKING_STATE -> {
                     isTrackingPaused = intent.getBooleanExtra(EXTRA_TRACKING_PAUSED, isTrackingPaused)
@@ -475,11 +421,9 @@ class LocationTrackingService : Service() {
                     val remoteMode = intent.getStringExtra("trackingMode")
                     if (remoteMode != null) {
                         Log.d(TAG, "Mode change requested via FCM: $remoteMode")
-                        // Map the remote mode to our internal command logic
-                        // In a real app, you'd parse interval/emergency here too if payload provided them
                         processRemoteCommand(
                             mode = remoteMode.lowercase(),
-                            interval = 900, // Fallback defaults
+                            interval = 900,
                             autoRevert = 1800,
                             emergency = false
                         )
@@ -487,66 +431,28 @@ class LocationTrackingService : Service() {
                 }
             }
             
-            // Legacy handling for non-action based updates if any
             if (intent.action == null) {
                 isTrackingPaused = intent.getBooleanExtra(EXTRA_TRACKING_PAUSED, isTrackingPaused)
                 isDeviceAuthorized = intent.getBooleanExtra(EXTRA_DEVICE_AUTHORIZED, isDeviceAuthorized)
             }
         }
 
-        if (!isDeviceAuthorized) enterIdleState() else if (!isTrackingPaused) startLocationLoop()
+        if (!isDeviceAuthorized) enterIdleState()
         return START_STICKY
-    }
-
-    private fun startLocationLoop() {
-        if (isServiceDestroyed || !isDeviceAuthorized || isTrackingPaused) return
-        if (locationRunnable != null) return
-
-        locationRunnable = object : Runnable {
-            override fun run() {
-                if (isServiceDestroyed) return
-                if (!isDeviceAuthorized) { enterIdleState(); return }
-                if (isTrackingPaused) { handler.postDelayed(this, trackingIntervalSeconds * 1000L); return }
-                if (trackingMode == "live" && System.currentTimeMillis() > liveModeExpiryTime) {
-                    processRemoteCommand("interval", 900, 1800, false)
-                    return
-                }
-                if (isBatterySavingEnabled && trackingMode == "interval" && !isEmergency) {
-                    val timeSinceMotion = System.currentTimeMillis() - lastMotionTime
-                    isResting = timeSinceMotion > (10 * 60 * 1000L)
-                    policyManager.setStationary(isResting)
-                }
-                val effectiveIntervalSeconds = if (isBatterySavingEnabled && trackingMode == "interval" && !isEmergency && isResting) {
-                    stationaryIntervalMinutes * 60L
-                } else {
-                    trackingIntervalSeconds
-                }
-                requestSingleLocationUpdate()
-                handler.postDelayed(this, effectiveIntervalSeconds * 1000L)
-            }
-        }
-        handler.post(locationRunnable!!)
-    }
-
-    private fun stopLocationLoop() {
-        locationRunnable?.let { handler.removeCallbacks(it) }
-        locationRunnable = null
-        removeLocationCallback()
     }
 
     private fun enterIdleState() {
         isDeviceAuthorized = false
         isTrackingPaused = false
-        stopLocationLoop()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     @SuppressLint("MissingPermission")
-    private fun requestSingleLocationUpdate() {
+    private fun requestForceLocationUpdate() {
         if (isRequestingLocation || !hasLocationPermission()) return
         isRequestingLocation = true
-        removeLocationCallback()
 
-        // Use high-priority one-shot fix for FCM/Manual pings
         val currentTask = fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
             null
@@ -557,54 +463,12 @@ class LocationTrackingService : Service() {
             if (location != null) {
                 handleLocationUpdate(location)
             } else {
-                // Fallback to standard request if one-shot fails
-                requestStandardLocationUpdate()
+                Log.w(TAG, "Force location update returned null")
             }
         }.addOnFailureListener {
             isRequestingLocation = false
-            requestStandardLocationUpdate()
+            Log.e(TAG, "Force location update failed", it)
         }
-    }
-
-    private fun requestStandardLocationUpdate() {
-        if (isRequestingLocation || !hasLocationPermission()) return
-        isRequestingLocation = true
-
-        val priority = when (locationAccuracy.lowercase()) {
-            "high" -> Priority.PRIORITY_HIGH_ACCURACY
-            "medium" -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
-            "low" -> Priority.PRIORITY_LOW_POWER
-            else -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
-        }
-
-        val locationRequest = LocationRequest.Builder(priority, 10000L)
-            .setMinUpdateIntervalMillis(5000L)
-            .setMaxUpdateDelayMillis(15000L)
-            .build()
-
-        val callback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                super.onLocationResult(result)
-                val location = result.lastLocation
-                removeLocationCallback()
-                if (location != null) handleLocationUpdate(location) else sendStatusUpdate("GPS Failed: No Signal")
-            }
-        }
-        currentLocationCallback = callback
-        try { fusedLocationClient.requestLocationUpdates(locationRequest, callback, Looper.getMainLooper()) }
-        catch (e: SecurityException) { isRequestingLocation = false }
-    }
-
-    private fun removeLocationUpdatesSafely() {
-        currentLocationCallback?.let { callback ->
-            fusedLocationClient.removeLocationUpdates(callback)
-            currentLocationCallback = null
-        }
-        isRequestingLocation = false
-    }
-
-    private fun removeLocationCallback() {
-        removeLocationUpdatesSafely()
     }
 
     private fun sendStatusUpdate(message: String) {
@@ -732,15 +596,12 @@ class LocationTrackingService : Service() {
         fenceListener?.remove()
         policyManager.cleanup()
         syncManager.cleanup()
-        stopLocationLoop()
-        removeLocationUpdatesSafely()
         unregisterReceiversSafely()
         serviceScope.cancel()
         super.onDestroy()
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        removeLocationUpdatesSafely()
         return super.onUnbind(intent)
     }
 
