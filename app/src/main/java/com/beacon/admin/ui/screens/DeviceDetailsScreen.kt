@@ -41,7 +41,8 @@ fun DeviceDetailsScreen(
 ) {
     val context = LocalContext.current
     val devicesState by viewModel.devicesState.collectAsStateWithLifecycle()
-    val device = devicesState.devices.find { it.id == deviceId }
+    val device = (devicesState as? com.beacon.admin.ui.devices.DevicesListState.Success)
+        ?.devices?.find { it.id == deviceId }
 
     var showActionSheet by remember { mutableStateOf(false) }
 
@@ -89,7 +90,7 @@ fun DeviceDetailsScreen(
             )
         }
     ) { paddingValues ->
-        if (device == null) {
+        if (devicesState is com.beacon.admin.ui.devices.DevicesListState.Loading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -97,6 +98,14 @@ fun DeviceDetailsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = BeaconCyan)
+            }
+        } else if (devicesState is com.beacon.admin.ui.devices.DevicesListState.Error) {
+            Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                Text((devicesState as com.beacon.admin.ui.devices.DevicesListState.Error).message, color = BeaconCrimson)
+            }
+        } else if (device == null) {
+            Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                Text("Device not found", color = TextMuted)
             }
         } else {
             Column(

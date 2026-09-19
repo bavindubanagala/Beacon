@@ -2,6 +2,7 @@ package com.beacon.admin.repository
 
 import android.util.Log
 import com.beacon.shared.models.RemoteCommand
+import com.beacon.admin.data.auth.AuthSessionCleanupRegistry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -42,7 +43,11 @@ class FirebaseCommandRepository @Inject constructor(
                     val command = snapshot?.documents?.firstOrNull()?.toObject(RemoteCommand::class.java)
                     trySend(command)
                 }
-            awaitClose { subscription.remove() }
+            val unregister = AuthSessionCleanupRegistry.register { subscription.remove() }
+            awaitClose {
+                unregister()
+                subscription.remove()
+            }
         }
     }
 }

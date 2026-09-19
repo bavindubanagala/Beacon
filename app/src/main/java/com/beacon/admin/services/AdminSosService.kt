@@ -8,12 +8,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
+import com.beacon.admin.data.auth.AuthSessionCleanupRegistry
 
 class AdminSosService : Service() {
 
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var sosListenerRegistration: ListenerRegistration? = null
+    private var unregisterCleanup: (() -> Unit)? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startMonitoring()
@@ -59,11 +61,14 @@ class AdminSosService : Service() {
                     // Handle incoming SOS events
                 }
             }
+        unregisterCleanup = AuthSessionCleanupRegistry.register { stopMonitoring() }
     }
 
     private fun stopMonitoring() {
         sosListenerRegistration?.remove()
         sosListenerRegistration = null
+        unregisterCleanup?.invoke()
+        unregisterCleanup = null
         Log.d(TAG, "SOS monitoring listener removed.")
     }
 

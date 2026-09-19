@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
+import com.beacon.admin.data.auth.AuthSessionCleanupRegistry
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -14,6 +15,7 @@ class GeofenceEventObserver @Inject constructor() {
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var geofenceListenerRegistration: ListenerRegistration? = null
+    private var unregisterCleanup: (() -> Unit)? = null
 
     fun startObserving() {
         // 1. Authentication Guarding
@@ -52,11 +54,14 @@ class GeofenceEventObserver @Inject constructor() {
                     // Process incoming geofence event snapshots
                 }
             }
+        unregisterCleanup = AuthSessionCleanupRegistry.register { stopObserving() }
     }
 
     fun stopObserving() {
         geofenceListenerRegistration?.remove()
         geofenceListenerRegistration = null
+        unregisterCleanup?.invoke()
+        unregisterCleanup = null
         Log.d(TAG, "Geofence event observer listener safely detached.")
     }
 

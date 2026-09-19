@@ -7,9 +7,11 @@ import androidx.security.crypto.MasterKey
 import com.beacon.shared.constants.SharedPrefsKeys
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,6 +21,15 @@ class AuthManager @Inject constructor(
     private val context: Context,
     private val firebaseAuth: FirebaseAuth
 ) {
+    private companion object {
+        const val CACHED_USER_ID = "cached_admin_user_id"
+    }
+    sealed interface AuthState {
+        data class Authenticated(val userId: String, val isOffline: Boolean = false) : AuthState
+        data object Unauthenticated : AuthState
+        data object SessionExpired : AuthState
+    }
+
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
@@ -34,10 +45,30 @@ class AuthManager @Inject constructor(
     val currentUserId: String?
         get() = firebaseAuth.currentUser?.uid
 
-    val authState: Flow<FirebaseUser?> = callbackFlow {
+    val authStateFlow: Flow<AuthState> = callbackFlow {
+        val cachedUserId = encryptedPrefs.getString(CACHED_USER_ID, null)
+        firebaseAuth.currentUser?.let { trySend(AuthState.Authenticated(it.uid)) }
+            ?: cachedUserId?.let { trySend(AuthState.Authenticated(it, isOffline = true)) }
         val listener = FirebaseAuth.AuthStateListener { auth ->
-            trySend(auth.currentUser)
+            val user = auth.currentUser
+            if (user != null) {
+                encryptedPrefs.edit().putString(CACHED_USER_ID, user.uid).apply()
+                trySend(AuthState.Authenticated(user.uid))
+            } else {
+                val cachedId = encryptedPrefs.getString(CACHED_USER_ID, null)
+                if (cachedId != null) {
+                    trySend(AuthState.Authenticated(cachedId, isOffline = true))
+                } else {
+                    trySend(AuthState.Unauthenticated)
+                }
+            }
         }
+        firebaseAuth.addAuthStateListener(listener)
+        awaitClose { firebaseAuth.removeAuthStateListener(listener) }
+    }.distinctUntilChanged()
+
+    val authState: Flow<FirebaseUser?> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { trySend(it.currentUser) }
         firebaseAuth.addAuthStateListener(listener)
         awaitClose { firebaseAuth.removeAuthStateListener(listener) }
     }
@@ -53,6 +84,9 @@ class AuthManager @Inject constructor(
             val newUid = authResult.user?.uid
             Log.d("PairDebug", "AuthManager: Authenticated anonymously with UID: $newUid")
             newUid
+        } catch (e: FirebaseAuthInvalidUserException) {
+            Log.w("PairDebug", "Auth session expired", e)
+            null
         } catch (e: Exception) {
             Log.e("PairDebug", "AuthManager: Anonymous authentication failed", e)
             null
@@ -63,7 +97,10 @@ class AuthManager @Inject constructor(
         return try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             result.user?.let {
-                encryptedPrefs.edit().putString(SharedPrefsKeys.ADMIN_EMAIL, email).apply()
+                encryptedPrefs.edit()
+                    .putString(SharedPrefsKeys.ADMIN_EMAIL, email)
+                    .putString(CACHED_USER_ID, it.uid)
+                    .apply()
                 Result.success(it)
             } ?: Result.failure(Exception("Failed to create user account"))
         } catch (e: Exception) {
@@ -75,7 +112,10 @@ class AuthManager @Inject constructor(
         return try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             result.user?.let {
-                encryptedPrefs.edit().putString(SharedPrefsKeys.ADMIN_EMAIL, email).apply()
+                encryptedPrefs.edit()
+                    .putString(SharedPrefsKeys.ADMIN_EMAIL, email)
+                    .putString(CACHED_USER_ID, it.uid)
+                    .apply()
                 Result.success(it)
             } ?: Result.failure(Exception("Failed to sign in"))
         } catch (e: Exception) {
@@ -84,6 +124,7 @@ class AuthManager @Inject constructor(
     }
 
     fun signOut() {
+        AuthSessionCleanupRegistry.clear()
         firebaseAuth.signOut()
         encryptedPrefs.edit().clear().apply()
     }

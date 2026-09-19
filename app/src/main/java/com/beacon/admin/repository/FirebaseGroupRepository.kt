@@ -1,6 +1,7 @@
 package com.beacon.admin.repository
 
 import com.beacon.shared.models.DeviceGroup
+import com.beacon.admin.data.auth.AuthSessionCleanupRegistry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
@@ -34,7 +35,11 @@ class FirebaseGroupRepository @Inject constructor(
                 } ?: emptyList()
                 trySend(groups)
             }
-            awaitClose { subscription.remove() }
+            val unregister = AuthSessionCleanupRegistry.register { subscription.remove() }
+            awaitClose {
+                unregister()
+                subscription.remove()
+            }
         }
     }
 

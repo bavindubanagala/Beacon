@@ -39,11 +39,12 @@ data class DeviceUiModel(
     val signalFormatted: String
 )
 
-data class DevicesListState(
-    val devices: List<DeviceUiModel> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
+sealed interface DevicesListState {
+    data object Loading : DevicesListState
+    data class Success(val devices: List<DeviceUiModel>) : DevicesListState
+    data object Empty : DevicesListState
+    data class Error(val message: String) : DevicesListState
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -55,10 +56,18 @@ class DevicesViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DevicesUiState())
-    val uiState: StateFlow<DevicesUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<DevicesUiState> = _uiState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        DevicesUiState()
+    )
     
     private val _pairResult = MutableStateFlow<PairResult>(PairResult.Idle)
-    val pairResult: StateFlow<PairResult> = _pairResult.asStateFlow()
+    val pairResult: StateFlow<PairResult> = _pairResult.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        PairResult.Idle
+    )
 
     init {
         val filter = savedStateHandle.get<String>("filter")
@@ -74,10 +83,9 @@ class DevicesViewModel @Inject constructor(
         emit(Unit)
     }.flatMapLatest {
         deviceRepository.devices.map { deviceList ->
-            DevicesListState(
-                devices = deviceList.map { device ->
-                    val speedKmh = device.speed * 3.6f
-                    DeviceUiModel(
+        val devices = deviceList.map { device ->
+                val speedKmh = device.speed * 3.6f
+                DeviceUiModel(
                         id = device.deviceId,
                         name = device.deviceName,
                         isOnline = device.status.lowercase() in listOf("online", "live"),
@@ -93,13 +101,12 @@ class DevicesViewModel @Inject constructor(
                         speedFormatted = String.format("%.1f km/h", speedKmh),
                         signalFormatted = "${device.signalStrength} dBm"
                     )
-                },
-                isLoading = false
-            )
+                }
+            if (devices.isEmpty()) DevicesListState.Empty else DevicesListState.Success(devices)
         }.catch { e ->
-            emit(DevicesListState(error = e.localizedMessage, isLoading = false))
+            emit(DevicesListState.Error(e.localizedMessage ?: "Unable to load devices"))
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DevicesListState(isLoading = true))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DevicesListState.Loading)
 
     fun onSearchQueryChanged(query: String) {
         // Handled by UI filtering in the screen

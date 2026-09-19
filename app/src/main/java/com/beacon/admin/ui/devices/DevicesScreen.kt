@@ -59,8 +59,9 @@ fun DevicesScreen(
         }
     }
 
-    val filteredDevices = remember(devicesState, searchQuery, selectedFilter) {
-        devicesState.devices.filter { device ->
+    val devices = (devicesState as? DevicesListState.Success)?.devices.orEmpty()
+    val filteredDevices = remember(devices, searchQuery, selectedFilter) {
+        devices.filter { device ->
             val matchesSearch = device.name.contains(searchQuery, ignoreCase = true) ||
                     device.id.contains(searchQuery, ignoreCase = true)
             val matchesFilter = when (selectedFilter) {
@@ -152,7 +153,7 @@ fun DevicesScreen(
 
             // Device List
             when {
-                devicesState.isLoading -> {
+                devicesState is DevicesListState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -161,20 +162,30 @@ fun DevicesScreen(
                     }
                 }
 
-                filteredDevices.isEmpty() -> {
+                devicesState is DevicesListState.Error -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text((devicesState as DevicesListState.Error).message, color = BeaconCrimson)
+                    }
+                }
+
+                devicesState is DevicesListState.Empty -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (searchQuery.isNotBlank()) "No devices match filter" else "No devices registered",
+                            text = "No devices registered",
                             color = TextMuted,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
 
-                else -> {
+                devicesState is DevicesListState.Success -> if (filteredDevices.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No devices match filter", color = TextMuted)
+                    }
+                } else {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(bottom = 80.dp)

@@ -13,7 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -51,7 +51,11 @@ class HistoryViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
-    val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<HistoryUiState> = _uiState.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        HistoryUiState()
+    )
     
     val availableDevices: StateFlow<List<Device>> = deviceRepository.devices
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
