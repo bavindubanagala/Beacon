@@ -1,27 +1,58 @@
 package com.beacon.tracker.ui
 
 import android.app.Application
+import android.content.Intent
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.beacon.shared.models.PairingCode
 import com.beacon.tracker.auth.DeviceAuthManager
+import com.beacon.tracker.data.LocationEntity
+import com.beacon.tracker.data.LocationRepository
 import com.beacon.tracker.services.LocationTrackingService
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import android.content.Intent
-import android.util.Log
+import javax.inject.Inject
 
-class TrackerViewModel(application: Application) : AndroidViewModel(application) {
+sealed interface TrackerUiState {
+    data object Loading : TrackerUiState
+    data class Success(val location: LocationEntity) : TrackerUiState
+    data class Error(val message: String) : TrackerUiState
+}
+
+@HiltViewModel
+class TrackerViewModel @Inject constructor(
+    application: Application,
+    repository: LocationRepository
+) : AndroidViewModel(application) {
     private val deviceAuthManager = DeviceAuthManager(application)
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    
+
+    val uiState: StateFlow<TrackerUiState> = repository.getLatestLocation()
+        .map <LocationEntity, TrackerUiState> { location ->
+            TrackerUiState.Success(location)
+        }
+        .catch { e ->
+            emit(TrackerUiState.Error(e.localizedMessage ?: "Unknown error occurred"))
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = TrackerUiState.Loading
+        )
+
     private val _deviceId = mutableStateOf(deviceAuthManager.getDeviceId())
     val deviceId: State<String> = _deviceId
 
@@ -43,10 +74,10 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     private val _isDarkMode = mutableStateOf(deviceAuthManager.isDarkMode())
     val isDarkMode: State<Boolean> = _isDarkMode
 
-    private var pairingListener: ListenerRegistration? = null
-
     private val _isSosActive = mutableStateOf(false)
     val isSosActive: State<Boolean> = _isSosActive
+
+    private var pairingListener: ListenerRegistration? = null
 
     init {
         ensureAnonymousAuth()
@@ -76,8 +107,10 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     val paired = snapshot.getBoolean("is_paired") ?: false
                     _isPaired.value = paired
                     deviceAuthManager.setPaired(paired)
-                    
-                    val sos = snapshot.getBoolean("isEmergencyMode") ?: snapshot.getBoolean("is_emergency_mode") ?: false
+
+                    val sos = snapshot.getBoolean("isEmergencyMode")
+                        ?: snapshot.getBoolean("is_emergency_mode")
+                        ?: false
                     _isSosActive.value = sos
                 }
             }
@@ -86,14 +119,11 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     fun generatePairingCode() {
         val code = (100000..999999).random().toString()
         val deviceId = _deviceId.value
-        val ttlMs = 15 * 60 * 1000L // 15 minutes
-        val expiresAt = System.currentTimeMillis() + ttlMs
-        
+        val expiresAt = System.currentTimeMillis() + 15 * 60 * 1000L
+
         viewModelScope.launch {
             try {
                 _statusMessage.value = "Generating code..."
-
-                // 0. Ensure we have an anonymous identity first
                 if (auth.currentUser == null) {
                     try {
                         auth.signInAnonymously().await()
@@ -102,8 +132,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                         return@launch
                     }
                 }
-                
-                // 1. Reset paired status locally and in Firestore
+
                 _isPaired.value = false
                 try {
                     val deviceUpdates = mapOf(
@@ -117,7 +146,6 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     Log.e("TrackerViewModel", "Failed to reset device doc", e)
                 }
 
-                // 2. Create pairing code with expiresAt and tracker UID
                 val pairingData = mapOf(
                     "code" to code,
                     "deviceId" to deviceId,
@@ -126,7 +154,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     "expiresAt" to expiresAt
                 )
                 db.collection("pairing_codes").document(code).set(pairingData).await()
-                
+
                 _pairingCode.value = code
                 _pairingExpiresAt.value = expiresAt
                 _statusMessage.value = "Code generated: $code"
@@ -138,23 +166,34 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
 
     fun forceUpdate() {
         if (_isUpdating.value) return
-        
+
         viewModelScope.launch {
             _isUpdating.value = true
             _statusMessage.value = "Searching for GPS..."
-            
-            // Send broadcast to Service
-            val intent = Intent(LocationTrackingService.ACTION_FORCE_UPDATE)
-            getApplication<Application>().sendBroadcast(intent)
-            
-            // The service will take some time. 
-            // We'll reset the button after a timeout or success signal
+            getApplication<Application>().sendBroadcast(
+                Intent(LocationTrackingService.ACTION_FORCE_UPDATE)
+            )
             delay(8000)
             if (_statusMessage.value == "Searching for GPS...") {
                 _statusMessage.value = "GPS Timeout - Are you indoors?"
             }
             _isUpdating.value = false
         }
+    }
+
+    fun toggleTracking(enabled: Boolean) {
+        val intent = Intent(LocationTrackingService.ACTION_UPDATE_TRACKING_STATE)
+            .putExtra(LocationTrackingService.EXTRA_TRACKING_PAUSED, !enabled)
+        getApplication<Application>().sendBroadcast(intent)
+        _statusMessage.value = if (enabled) "Tracking started" else "Tracking stopped"
+    }
+
+    fun startTracking() {
+        toggleTracking(true)
+    }
+
+    fun stopTracking() {
+        toggleTracking(false)
     }
 
     fun updateStatus(message: String) {
@@ -173,20 +212,20 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         val deviceId = _deviceId.value
         viewModelScope.launch {
             try {
+                val timestamp = System.currentTimeMillis()
                 val updates = mapOf(
                     "sosActive" to true,
-                    "sosTimestamp" to System.currentTimeMillis(),
+                    "sosTimestamp" to timestamp,
                     "commandMode" to "live",
                     "command_mode" to "live",
                     "is_emergency_mode" to true,
                     "isEmergencyMode" to true,
-                    "command_timestamp" to System.currentTimeMillis(),
-                    "commandTimestamp" to System.currentTimeMillis()
+                    "command_timestamp" to timestamp,
+                    "commandTimestamp" to timestamp
                 )
                 db.collection("devices").document(deviceId).update(updates).await()
                 _statusMessage.value = "SOS Triggered!"
-                
-                // Trigger SOS Alert to Firestore
+
                 val alert = com.beacon.shared.models.Alert(
                     id = java.util.UUID.randomUUID().toString(),
                     alert_type = "SOS_ACTIVE",
@@ -194,10 +233,10 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     device_name = "Tracker Device",
                     alert_severity = "CRITICAL",
                     message = "SOS EMERGENCY ACTIVATED",
-                    created_at = System.currentTimeMillis()
+                    created_at = timestamp
                 )
-                db.collection("devices").document(deviceId).collection("alerts").document(alert.id).set(alert).await()
-
+                db.collection("devices").document(deviceId)
+                    .collection("alerts").document(alert.id).set(alert).await()
             } catch (e: Exception) {
                 _statusMessage.value = "SOS Failed: ${e.message}"
             }
@@ -209,10 +248,8 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 _statusMessage.value = "Unpairing..."
-                // 1. Delete from Firestore (Removes from Admin)
                 db.collection("devices").document(id).delete().await()
-                
-                // 2. Clean up any existing pairing codes for this device
+
                 val codes = db.collection("pairing_codes")
                     .whereEqualTo("deviceId", id)
                     .get()
@@ -221,7 +258,6 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     doc.reference.delete().await()
                 }
 
-                // 3. Reset local state
                 deviceAuthManager.clearAuth()
                 _deviceId.value = deviceAuthManager.getDeviceId()
                 _isPaired.value = false
@@ -250,7 +286,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     }
 
     override fun onCleared() {
-        super.onCleared()
         pairingListener?.remove()
+        super.onCleared()
     }
 }

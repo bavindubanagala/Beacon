@@ -24,6 +24,10 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.Beacon">
 
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false" />
+
         <service
             android:name=".services.AdminSosService"
             android:enabled="true"

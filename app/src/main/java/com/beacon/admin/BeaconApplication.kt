@@ -1,17 +1,22 @@
 package com.beacon.admin
 
 import android.app.Application
-import com.beacon.admin.services.GeofenceEventObserver
+import io.sentry.android.core.SentryAndroid
 import dagger.hilt.android.HiltAndroidApp
-import javax.inject.Inject
 
 @HiltAndroidApp
 class BeaconApplication : Application() {
-
-    @Inject lateinit var geofenceEventObserver: GeofenceEventObserver
-
     override fun onCreate() {
         super.onCreate()
-        geofenceEventObserver.startObserving()
+        
+        // Safely initialize Sentry or guard against missing DSN configuration
+        try {
+            SentryAndroid.init(this) { options ->
+                // Optional: set fallback or programmatically configure DSN if needed
+            }
+        } catch (e: Exception) {
+            // Log initialization failure gracefully without crashing the app startup
+            e.printStackTrace()
+        }
     }
 }

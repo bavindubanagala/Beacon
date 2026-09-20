@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beacon.tracker.permissions.*
 import com.beacon.tracker.services.LocationTrackingService
+import com.beacon.tracker.ui.TrackerScreen
 import com.beacon.tracker.ui.TrackerViewModel
 import com.beacon.tracker.ui.theme.BeaconTrackerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -314,6 +315,12 @@ fun StatusScreen(viewModel: TrackerViewModel, isFullyGranted: Boolean) {
                     Text(text = "ID: $deviceId", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            TrackerScreen(
+                viewModel = viewModel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+            )
             var showSosConfirm by remember { mutableStateOf(false) }
             SosButton(isActive = isSosActive, onTrigger = { if (!isSosActive) showSosConfirm = true })
             if (showSosConfirm) {

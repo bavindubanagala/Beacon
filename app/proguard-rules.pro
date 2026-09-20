@@ -30,3 +30,11 @@
 
 # OSMDroid
 -keep class org.osmdroid.** { *; }
+
+# Strip Android log calls from release builds
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+    public static *** w(...);
+}

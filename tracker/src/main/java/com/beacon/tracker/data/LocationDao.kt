@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LocationDao {
@@ -21,4 +22,7 @@ interface LocationDao {
     
     @Query("SELECT COUNT(*) FROM location_logs WHERE isSynced = 0")
     suspend fun getUnsyncedCount(): Int
+
+    @Query("SELECT * FROM location_logs ORDER BY timestamp DESC LIMIT 1")
+    fun getLatestLocation(): Flow<LocationEntity>
 }

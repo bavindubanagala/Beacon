@@ -4,6 +4,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
+    id "com.google.android.libraries.mapsplatform.secrets-gradle-plugin"
+}
+
+secrets {
+    propertiesFileName = "local.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
 }
 
 android {
@@ -62,6 +69,8 @@ dependencies {
 
     // Firebase BOM
     implementation platform(libs.firebase.bom)
+    implementation 'io.sentry:sentry-android:7.14.0'
+    implementation 'com.jakewharton.timber:timber:5.0.1'
     implementation "com.google.firebase:firebase-auth"
     implementation "com.google.firebase:firebase-firestore"
     implementation "com.google.firebase:firebase-database"
