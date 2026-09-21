@@ -2,9 +2,8 @@ package com.beacon.tracker.di
 
 import android.content.Context
 import androidx.room.Room
-import com.beacon.tracker.data.BeaconDatabase
 import com.beacon.tracker.data.LocationDao
-import com.beacon.tracker.db.OfflineBufferDao
+import com.beacon.tracker.db.TrackerDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,22 +17,21 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideBeaconDatabase(@ApplicationContext context: Context): BeaconDatabase {
+    fun provideTrackerDatabase(
+        @ApplicationContext context: Context
+    ): TrackerDatabase {
         return Room.databaseBuilder(
             context,
-            BeaconDatabase::class.java,
-            "beacon_tracker_db"
-        ).build()
-    }
-
-    @Provides
-    fun provideLocationDao(database: BeaconDatabase): LocationDao {
-        return database.locationDao()
+            TrackerDatabase::class.java,
+            "tracker_db"
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
     @Singleton
-    fun provideOfflineBufferDao(database: BeaconDatabase): OfflineBufferDao {
-        return database.offlineBufferDao()
+    fun provideLocationDao(database: TrackerDatabase): LocationDao {
+        return database.locationDao()
     }
 }

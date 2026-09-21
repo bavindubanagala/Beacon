@@ -7,7 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.beacon.shared.constants.FirestoreCollections
 import com.beacon.tracker.auth.DeviceAuthManager
-import com.beacon.tracker.services.LocationTrackingService
+import com.beacon.tracker.service.LocationTrackingService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -34,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beacon.tracker.permissions.*
-import com.beacon.tracker.services.LocationTrackingService
+import com.beacon.tracker.service.LocationTrackingService
 import com.beacon.tracker.ui.TrackerScreen
 import com.beacon.tracker.ui.TrackerViewModel
 import com.beacon.tracker.ui.theme.BeaconTrackerTheme
@@ -93,11 +94,12 @@ fun StatusUpdateReceiver(viewModel: TrackerViewModel) {
             }
         }
         val filter = IntentFilter(LocationTrackingService.ACTION_STATUS_UPDATE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            context.registerReceiver(receiver, filter)
-        }
+        ContextCompat.registerReceiver(
+            context,
+            receiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         onDispose {
             context.unregisterReceiver(receiver)
         }

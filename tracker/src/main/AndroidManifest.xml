@@ -18,6 +18,7 @@
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application
+        android:name=".TrackerApp"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
@@ -40,7 +41,7 @@
 
         <!-- Foreground Service -->
         <service
-            android:name=".services.LocationTrackingService"
+            android:name=".service.LocationTrackingService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location" />
@@ -57,7 +58,7 @@
 
         <!-- Receivers -->
         <receiver
-            android:name=".receivers.BootReceiver"
+            android:name=".receiver.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -66,6 +67,11 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".receiver.GeofenceBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false" />
 
         <!-- FCM Messaging Service -->
         <service

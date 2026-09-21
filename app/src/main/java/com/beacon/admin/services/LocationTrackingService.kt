@@ -9,12 +9,15 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.beacon.admin.network.TelemetrySocketEngine
 import com.beacon.shared.models.DeviceStatus
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -27,13 +30,22 @@ class LocationTrackingService : Service() {
     @Inject
     lateinit var batteryOptimizationManager: BatteryOptimizationManager
 
+    @Inject
+    lateinit var telemetrySocketEngine: TelemetrySocketEngine
+
     private lateinit var locationCallback: LocationCallback
     private var currentStatus: DeviceStatus = DeviceStatus.GREEN_LIVE
+    private val gson = Gson()
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification())
+        
+        // Connect to telemetry server
+        // Using a placeholder URL as per current architecture requirements
+        telemetrySocketEngine.connect("wss://telemetry.beacon-alert.com/admin")
+        
         setupLocationUpdates()
     }
 
@@ -66,7 +78,14 @@ class LocationTrackingService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 for (location in result.locations) {
-                    // Location payload handling (routed to TelemetrySocketEngine in production)
+                    val payload = mapOf(
+                        "type" to "admin_telemetry",
+                        "latitude" to location.latitude,
+                        "longitude" to location.longitude,
+                        "accuracy" to location.accuracy,
+                        "timestamp" to System.currentTimeMillis()
+                    )
+                    telemetrySocketEngine.sendTelemetry(gson.toJson(payload))
                 }
             }
         }
@@ -78,7 +97,7 @@ class LocationTrackingService : Service() {
                 Looper.getMainLooper()
             )
         } catch (e: SecurityException) {
-            // Permission checks handled prior to launching service
+            Log.e("LocationService", "Permission denied for location updates", e)
         }
     }
 
@@ -117,6 +136,7 @@ class LocationTrackingService : Service() {
         if (::locationCallback.isInitialized) {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
+        telemetrySocketEngine.disconnect()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

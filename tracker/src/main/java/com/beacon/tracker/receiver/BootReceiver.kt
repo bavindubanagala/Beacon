@@ -1,4 +1,4 @@
-package com.beacon.tracker.receivers
+package com.beacon.tracker.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -7,7 +7,7 @@ import android.util.Log
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.beacon.tracker.auth.DeviceAuthManager
-import com.beacon.tracker.services.LocationTrackingService
+import com.beacon.tracker.service.LocationTrackingService
 import com.beacon.tracker.worker.ServiceWatchdogWorker
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

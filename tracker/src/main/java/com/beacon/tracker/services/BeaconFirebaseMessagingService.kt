@@ -3,6 +3,7 @@ package com.beacon.tracker.services
 import android.content.Intent
 import android.util.Log
 import com.beacon.tracker.auth.DeviceAuthManager
+import com.beacon.tracker.service.LocationTrackingService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage

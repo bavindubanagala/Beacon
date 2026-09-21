@@ -14,7 +14,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.beacon.tracker.auth.DeviceAuthManager
-import com.beacon.tracker.services.LocationTrackingService
+import com.beacon.tracker.service.LocationTrackingService
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
