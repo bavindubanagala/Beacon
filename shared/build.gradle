@@ -28,9 +28,9 @@ dependencies {
     implementation libs.kotlinx.coroutines.core
 
     implementation platform(libs.firebase.bom)
-    implementation "com.google.firebase:firebase-firestore"
-    implementation "com.google.firebase:firebase-database"
-    implementation "com.google.firebase:firebase-auth"
+    implementation libs.firebase.auth
+    implementation libs.firebase.firestore
+    implementation libs.firebase.database
     
     // Hilt
     implementation libs.hilt.android

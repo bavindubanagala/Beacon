@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -55,10 +56,10 @@ dependencies {
     
     // Firebase BOM
     implementation platform(libs.firebase.bom)
-    implementation "com.google.firebase:firebase-database"
-    implementation "com.google.firebase:firebase-firestore"
-    implementation "com.google.firebase:firebase-auth"
-    implementation "com.google.firebase:firebase-messaging"
+    implementation libs.firebase.database
+    implementation libs.firebase.firestore
+    implementation libs.firebase.auth
+    implementation libs.firebase.messaging
     implementation "com.google.android.material:material:1.11.0"
     // Security Crypto (STABLE)
     implementation "androidx.security:security-crypto:1.1.0-alpha06"

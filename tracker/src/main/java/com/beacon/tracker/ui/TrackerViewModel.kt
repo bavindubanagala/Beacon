@@ -12,7 +12,6 @@ import com.beacon.tracker.data.LocationEntity
 import com.beacon.tracker.data.LocationRepository
 import com.beacon.tracker.repository.FirebaseTrackerRepository
 import com.beacon.tracker.service.LocationTrackingService
-import com.beacon.tracker.ui.TrackerUiState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -26,11 +25,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed interface TrackerUiState {
-    data object Loading : TrackerUiState
-    data class Success(val location: LocationEntity) : TrackerUiState
-    data class Error(val message: String) : TrackerUiState
-}
 
 @HiltViewModel
 class TrackerViewModel @Inject constructor(
@@ -43,7 +37,7 @@ class TrackerViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     val uiState: StateFlow<TrackerUiState> = locationRepository.getLatestLocation()
-        .map<LocationEntity, TrackerUiState> { location ->
+        .map<LocationEntity?, TrackerUiState> { location ->
             TrackerUiState.Success(location)
         }
         .catch { e ->

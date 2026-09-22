@@ -71,11 +71,11 @@ dependencies {
     implementation platform(libs.firebase.bom)
     implementation 'io.sentry:sentry-android:7.14.0'
     implementation 'com.jakewharton.timber:timber:5.0.1'
-    implementation "com.google.firebase:firebase-auth"
-    implementation "com.google.firebase:firebase-firestore"
-    implementation "com.google.firebase:firebase-database"
-    implementation "com.google.firebase:firebase-messaging"
-    implementation "com.google.firebase:firebase-analytics"
+    implementation libs.firebase.auth
+    implementation libs.firebase.firestore
+    implementation libs.firebase.database
+    implementation libs.firebase.messaging
+    implementation libs.firebase.analytics
 
     // Google Maps + Location
     implementation "com.google.android.gms:play-services-location:21.3.0"

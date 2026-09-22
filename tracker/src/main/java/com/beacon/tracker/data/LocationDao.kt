@@ -27,5 +27,5 @@ interface LocationDao {
     suspend fun getUnsyncedLocationsCount(): Int
 
     @Query("SELECT * FROM location_logs ORDER BY timestamp DESC LIMIT 1")
-    fun getLatestLocation(): Flow<LocationEntity>
+    fun getLatestLocation(): Flow<LocationEntity?>
 }

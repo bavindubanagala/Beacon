@@ -8,7 +8,7 @@ import javax.inject.Singleton
 class LocationRepository @Inject constructor(
     private val locationDao: LocationDao
 ) {
-    fun getLatestLocation(): Flow<LocationEntity> {
+    fun getLatestLocation(): Flow<LocationEntity?> {
         return locationDao.getLatestLocation()
     }
 }
