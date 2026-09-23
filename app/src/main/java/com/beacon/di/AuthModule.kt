@@ -16,12 +16,6 @@ object AuthModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth {
-        return FirebaseAuth.getInstance()
-    }
-
-    @Provides
-    @Singleton
     fun provideAuthManager(
         @ApplicationContext context: Context,
         firebaseAuth: FirebaseAuth
