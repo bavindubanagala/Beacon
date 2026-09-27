@@ -129,6 +129,7 @@ fun BeaconMapComponent(
     onRecenter: (() -> Unit)? = null
 ) {
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+    var lastCenteredOn by remember { mutableStateOf<GeoPoint?>(null) }
     
     val infiniteTransition = rememberInfiniteTransition(label = "MapPulse")
     val pulseProgress by infiniteTransition.animateFloat(
@@ -423,11 +424,16 @@ fun BeaconMapComponent(
                     mapView.overlays.add(marker)
                 }
 
-                centerOn?.let {
+                if (centerOn != null &&
+                    (lastCenteredOn == null ||
+                        centerOn.latitude != lastCenteredOn!!.latitude ||
+                        centerOn.longitude != lastCenteredOn!!.longitude)
+                ) {
+                    lastCenteredOn = centerOn
                     if (targetZoom != null) {
-                        mapView.controller.animateTo(it, targetZoom, 1000L)
+                        mapView.controller.animateTo(centerOn, targetZoom, 1000L)
                     } else {
-                        mapView.controller.animateTo(it)
+                        mapView.controller.animateTo(centerOn)
                     }
                 }
 
@@ -438,9 +444,6 @@ fun BeaconMapComponent(
         if (onRecenter != null && !isCreationMode) {
             Surface(
                 onClick = {
-                    centerOn?.let {
-                        mapViewRef?.controller?.animateTo(it, 18.0, 1000L)
-                    }
                     onRecenter()
                 },
                 modifier = Modifier

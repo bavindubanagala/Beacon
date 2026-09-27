@@ -2,6 +2,7 @@ package com.example.beaconadmin.data
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 
 class AuthRepository(
@@ -20,10 +21,16 @@ class AuthRepository(
         }
     }
 
-    suspend fun signUp(email: String, pass: String): Result<FirebaseUser> {
+    suspend fun signUp(email: String, pass: String, displayName: String = ""): Result<FirebaseUser> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, pass).await()
             val user = result.user ?: throw Exception("User is null after account creation.")
+            if (displayName.isNotBlank()) {
+                val profileUpdates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(displayName)
+                    .build()
+                user.updateProfile(profileUpdates).await()
+            }
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)

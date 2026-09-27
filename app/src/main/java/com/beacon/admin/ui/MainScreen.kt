@@ -28,6 +28,8 @@ import com.beacon.admin.ui.devices.DevicesScreen
 import com.beacon.admin.ui.geofence.GeofenceSosScreen
 import com.beacon.admin.ui.screens.DeviceDetailsScreen
 import com.beacon.admin.ui.theme.*
+import com.example.beaconadmin.ui.auth.AuthScreen
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MainScreen(
@@ -39,6 +41,9 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val unreadAlertCount by mainViewModel.unreadGeofenceAlertCount.collectAsStateWithLifecycle()
+
+    val currentUser = remember { FirebaseAuth.getInstance().currentUser }
+    val startDestination = if (currentUser != null) AdminTab.HOME.route else "auth"
 
     val tabs = listOf(
         AdminTab.MAP,
@@ -59,78 +64,89 @@ fun MainScreen(
     Scaffold(
         containerColor = ObsidianBase,
         bottomBar = {
-            NavigationBar(
-                containerColor = GlassSurface,
-                tonalElevation = 0.dp
-            ) {
-                tabs.forEach { tab ->
-                    val isSelected = currentDestination?.hierarchy?.any { 
-                        it.route == tab.route || 
-                        (tab == AdminTab.DEVICES && it.route?.startsWith("devices") == true) ||
-                        (tab == AdminTab.NOTIFICATIONS && it.route?.startsWith("history") == true) ||
-                        (tab == AdminTab.DEVICES && it.route?.startsWith("device_details") == true)
-                    } == true
+            if (currentDestination?.route != "auth") {
+                NavigationBar(
+                    containerColor = GlassSurface,
+                    tonalElevation = 0.dp
+                ) {
+                    tabs.forEach { tab ->
+                        val isSelected = currentDestination?.hierarchy?.any { 
+                            it.route == tab.route || 
+                            (tab == AdminTab.DEVICES && it.route?.startsWith("devices") == true) ||
+                            (tab == AdminTab.NOTIFICATIONS && it.route?.startsWith("history") == true) ||
+                            (tab == AdminTab.DEVICES && it.route?.startsWith("device_details") == true)
+                        } == true
 
-                    NavigationBarItem(
-                        selected = isSelected,
-                        onClick = {
-                            if (tab == AdminTab.NOTIFICATIONS) {
-                                mainViewModel.markAlertsAsRead()
-                            }
-
-                            val startDest = navController.graph.findStartDestination()
-                            val isStartDest = tab.route == startDest.route
-
-                            navController.navigate(tab.route) {
-                                popUpTo(startDest.id) {
-                                    saveState = true
+                        NavigationBarItem(
+                            selected = isSelected,
+                            onClick = {
+                                if (tab == AdminTab.NOTIFICATIONS) {
+                                    mainViewModel.markAlertsAsRead()
                                 }
-                                launchSingleTop = true
-                                if (!isStartDest) {
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        icon = {
-                            BadgedBox(
-                                badge = {
-                                    if (tab == AdminTab.NOTIFICATIONS && unreadAlertCount > 0) {
-                                        Badge(containerColor = BeaconCrimson) {
-                                            Text(unreadAlertCount.toString())
-                                        }
+
+                                val startDest = navController.graph.findStartDestination()
+                                val isStartDest = tab.route == startDest.route
+
+                                navController.navigate(tab.route) {
+                                    popUpTo(startDest.id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    if (!isStartDest) {
+                                        restoreState = true
                                     }
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = when (tab) {
-                                        AdminTab.MAP -> Icons.Rounded.Map
-                                        AdminTab.DEVICES -> Icons.Rounded.Devices
-                                        AdminTab.HOME -> Icons.Rounded.Home
-                                        AdminTab.NOTIFICATIONS -> Icons.Rounded.Notifications
-                                        AdminTab.SETTINGS -> Icons.Rounded.Settings
-                                    },
-                                    contentDescription = tab.title
-                                )
-                            }
-                        },
-                        label = { Text(tab.title) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = BeaconCyan,
-                            selectedTextColor = BeaconCyan,
-                            unselectedIconColor = TextMuted,
-                            unselectedTextColor = TextMuted,
-                            indicatorColor = GlassSurfaceBorder
+                            },
+                            icon = {
+                                BadgedBox(
+                                    badge = {
+                                        if (tab == AdminTab.NOTIFICATIONS && unreadAlertCount > 0) {
+                                            Badge(containerColor = BeaconCrimson) {
+                                                Text(unreadAlertCount.toString())
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = when (tab) {
+                                            AdminTab.MAP -> Icons.Rounded.Map
+                                            AdminTab.DEVICES -> Icons.Rounded.Devices
+                                            AdminTab.HOME -> Icons.Rounded.Home
+                                            AdminTab.NOTIFICATIONS -> Icons.Rounded.Notifications
+                                            AdminTab.SETTINGS -> Icons.Rounded.Settings
+                                        },
+                                        contentDescription = tab.title
+                                    )
+                                }
+                            },
+                            label = { Text(tab.title) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = BeaconCyan,
+                                selectedTextColor = BeaconCyan,
+                                unselectedIconColor = TextMuted,
+                                unselectedTextColor = TextMuted,
+                                indicatorColor = GlassSurfaceBorder
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = AdminTab.HOME.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable("auth") {
+                AuthScreen(
+                    onAuthSuccess = {
+                        navController.navigate(AdminTab.HOME.route) {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    }
+                )
+            }
             composable(AdminTab.HOME.route) { 
                 HomeScreen(
                     onNavigateToDevices = { filter ->
@@ -190,7 +206,14 @@ fun MainScreen(
                 HistoryScreen() 
             }
             composable(AdminTab.SETTINGS.route) { 
-                SettingsScreen(onSignedOut = onNavigateToAuth)
+                SettingsScreen(
+                    onSignedOut = {
+                        onNavigateToAuth()
+                        navController.navigate("auth") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }

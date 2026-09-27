@@ -11,8 +11,9 @@ import com.beacon.admin.ui.theme.*
 fun AddDeviceDialog(
     isLoading: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (code: String, name: String) -> Unit
 ) {
+    var deviceNameText by remember { mutableStateOf("") }
     var codeText by remember { mutableStateOf("") }
     val isValid = codeText.trim().isNotBlank() && !isLoading
 
@@ -21,7 +22,24 @@ fun AddDeviceDialog(
         containerColor = ObsidianBase,
         title = { Text("Pair New Device", color = TextPrimary) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = deviceNameText,
+                    onValueChange = { deviceNameText = it },
+                    label = { Text("Custom Device Name") },
+                    singleLine = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = BeaconCyan,
+                        unfocusedBorderColor = GlassSurfaceBorder,
+                        focusedLabelColor = BeaconCyan,
+                        unfocusedLabelColor = TextMuted,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    )
+                )
+
                 OutlinedTextField(
                     value = codeText,
                     onValueChange = { codeText = it },
@@ -38,6 +56,7 @@ fun AddDeviceDialog(
                         unfocusedTextColor = TextPrimary
                     )
                 )
+
                 if (isLoading) {
                     LinearProgressIndicator(
                         modifier = Modifier.fillMaxWidth(),
@@ -50,7 +69,7 @@ fun AddDeviceDialog(
             Button(
                 onClick = {
                     if (isValid) {
-                        onConfirm(codeText.trim().uppercase())
+                        onConfirm(codeText.trim().uppercase(), deviceNameText.trim())
                     }
                 },
                 enabled = isValid,

@@ -36,10 +36,10 @@ class LocationWorker @AssistedInject constructor(
         }
 
         return try {
-            // 2. Obtain single-shot high-accuracy fix
+            // 2. Obtain single-shot balanced-accuracy fix
             val cts = CancellationTokenSource()
             val location: Location? = fusedLocationClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
                 cts.token
             ).await()
 

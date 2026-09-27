@@ -16,13 +16,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.UUID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 
@@ -140,15 +143,27 @@ class TrackerViewModel @Inject constructor(
     fun forceUpdate() {
         if (_isUpdating.value) return
 
+        val requestId = UUID.randomUUID().toString()
+
         viewModelScope.launch {
             _isUpdating.value = true
             _statusMessage.value = "Searching for GPS..."
-            getApplication<Application>().sendBroadcast(
-                Intent(LocationTrackingService.ACTION_FORCE_UPDATE)
-            )
-            delay(8000)
-            if (_statusMessage.value == "Searching for GPS...") {
-                _statusMessage.value = "GPS Timeout - Are you indoors?"
+            
+            val context = getApplication<Application>()
+            val intent = Intent(context, com.beacon.tracker.service.LocationTrackingService::class.java).apply {
+                action = com.beacon.tracker.service.LocationTrackingService.ACTION_FORCE_UPDATE
+                putExtra("requestId", requestId)
+            }
+            context.startService(intent)
+
+            val result = withTimeoutOrNull(8000L) {
+                com.beacon.tracker.service.ManualSyncBus.results.first { it.requestId == requestId }
+            }
+
+            _statusMessage.value = when {
+                result == null -> "GPS Timeout - Are you indoors?"
+                result.success -> "Location synced"
+                else -> result.message
             }
             _isUpdating.value = false
         }

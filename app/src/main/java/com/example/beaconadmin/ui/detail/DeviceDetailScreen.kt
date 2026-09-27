@@ -25,13 +25,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun DeviceDetailScreen(
     deviceId: String,
-    deviceName: String,
-    viewModel: DeviceDetailViewModel,
-    onUnpairSuccess: () -> Unit
+    deviceName: String = "Device $deviceId",
+    viewModel: DeviceDetailViewModel = viewModel(),
+    onUnpairSuccess: () -> Unit = {}
 ) {
     val unpairState by viewModel.unpairState.collectAsState()
     var showDialog by remember { mutableStateOf(false) }

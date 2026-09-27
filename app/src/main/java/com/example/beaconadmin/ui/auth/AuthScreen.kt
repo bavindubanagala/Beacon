@@ -24,15 +24,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun AuthScreen(
-    viewModel: AuthViewModel,
+    viewModel: AuthViewModel = viewModel(),
     onAuthSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var displayName by remember { mutableStateOf("") }
     var isSignUp by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
@@ -54,6 +56,18 @@ fun AuthScreen(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        if (isSignUp) {
+            OutlinedTextField(
+                value = displayName,
+                onValueChange = { displayName = it },
+                label = { Text("Full Name / Display Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         OutlinedTextField(
             value = email,
@@ -101,7 +115,7 @@ fun AuthScreen(
             Button(
                 onClick = {
                     if (isSignUp) {
-                        viewModel.signUp(email, password)
+                        viewModel.signUp(email, password, displayName)
                     } else {
                         viewModel.signIn(email, password)
                     }

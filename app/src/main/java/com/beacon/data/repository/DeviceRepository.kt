@@ -39,7 +39,7 @@ interface DeviceRepository {
     suspend fun removeDevice(deviceId: String): Result<Unit>
     suspend fun renameDevice(deviceId: String, newName: String): Result<Unit>
     suspend fun cleanupInactiveDevices(ownerId: String): Result<Int>
-    suspend fun requestManualPing(deviceId: String): Result<Unit>
+    suspend fun requestManualPing(deviceId: String): Result<Long>
     suspend fun updateAlertThresholds(
         deviceId: String,
         lowBatteryThreshold: Int,
@@ -303,14 +303,16 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun requestManualPing(deviceId: String): Result<Unit> {
+    override suspend fun requestManualPing(deviceId: String): Result<Long> {
         return try {
+            val requestTimestamp = System.currentTimeMillis()
             val updates = mapOf(
                 "pingRequested" to true,
-                "commandTimestamp" to System.currentTimeMillis()
+                "forceSyncRequestedAt" to requestTimestamp,
+                "commandTimestamp" to requestTimestamp
             )
             collection.document(deviceId).update(updates).await()
-            Result.success(Unit)
+            Result.success(requestTimestamp)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.beacon.admin.ui.components.SyncProgressDialog
 import com.beacon.admin.ui.theme.*
 import com.beacon.admin.ui.viewmodels.DeviceGroupsViewModel
 import com.beacon.shared.models.Device
@@ -38,6 +39,7 @@ fun DevicesScreen(
     val context = LocalContext.current
     val devicesState by devicesViewModel.devicesState.collectAsStateWithLifecycle()
     val pairResult by devicesViewModel.pairResult.collectAsStateWithLifecycle()
+    val telemetrySyncState by devicesViewModel.telemetrySyncState.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
@@ -194,6 +196,9 @@ fun DevicesScreen(
                             DeviceCard(
                                 device = device,
                                 onClick = { onDeviceClick(device.id) },
+                                onManualSyncClick = {
+                                    devicesViewModel.triggerFullTelemetrySync(device.id)
+                                },
                                 onMoreActionsClick = { selectedDeviceForQuickActions = device }
                             )
                         }
@@ -202,9 +207,17 @@ fun DevicesScreen(
             }
         }
 
+        // Telemetry Sync Progress Modal Dialog
+        if (telemetrySyncState.isVisible) {
+            SyncProgressDialog(
+                state = telemetrySyncState,
+                onDismiss = { devicesViewModel.dismissSyncDialog() }
+            )
+        }
+
         // Pair Device Dialog
         if (showPairDialog) {
-            PairDeviceDialog(
+            AddDeviceDialog(
                 isLoading = pairResult is PairResult.Loading,
                 onDismiss = {
                     if (pairResult !is PairResult.Loading) {
@@ -212,8 +225,8 @@ fun DevicesScreen(
                         devicesViewModel.resetPairResult()
                     }
                 },
-                onConfirm = { code ->
-                    devicesViewModel.pairDevice(code)
+                onConfirm = { code, name ->
+                    devicesViewModel.pairDevice(code, name)
                 }
             )
         }
@@ -225,7 +238,8 @@ fun DevicesScreen(
                 onDismiss = { selectedDeviceForQuickActions = null },
                 onPing = { id -> devicesViewModel.sendLocationPing(id) },
                 onUpdateProfile = { id, profile -> devicesViewModel.updateTrackingProfile(id, profile) },
-                onAssignGeofence = { id, gId -> devicesViewModel.assignGeofence(id, gId) }
+                onAssignGeofence = { id, gId -> devicesViewModel.assignGeofence(id, gId) },
+                onUnpairClick = { id -> devicesViewModel.unpairDevice(id) }
             )
         }
     }
@@ -235,6 +249,7 @@ fun DevicesScreen(
 private fun DeviceCard(
     device: DeviceUiModel,
     onClick: () -> Unit,
+    onManualSyncClick: () -> Unit,
     onMoreActionsClick: () -> Unit
 ) {
     Surface(
@@ -274,8 +289,17 @@ private fun DeviceCard(
                     )
                 )
                 Text(
-                    text = "ID: ${device.id} • ${device.lastSeenAgo}",
+                    text = device.lastSeenAgo,
                     style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                )
+            }
+
+            IconButton(onClick = onManualSyncClick) {
+                Icon(
+                    imageVector = Icons.Rounded.Refresh,
+                    contentDescription = "Manual Location Sync",
+                    tint = BeaconCyan,
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
@@ -314,64 +338,11 @@ private fun DeviceCard(
 private fun PairDeviceDialog(
     isLoading: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (code: String, name: String) -> Unit
 ) {
-    var text by remember { mutableStateOf("") }
-    val isValid = text.trim().isNotBlank() && !isLoading
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = ObsidianBase,
-        title = { Text("Pair New Device", color = TextPrimary) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text("Device ID or Code") },
-                    singleLine = true,
-                    enabled = !isLoading,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = BeaconCyan,
-                        unfocusedBorderColor = GlassSurfaceBorder,
-                        focusedLabelColor = BeaconCyan,
-                        unfocusedLabelColor = TextMuted,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
-                )
-                if (isLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = BeaconCyan
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (isValid) {
-                        onConfirm(text.trim().uppercase())
-                    }
-                },
-                enabled = isValid,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BeaconCyan,
-                    disabledContainerColor = GlassSurfaceBorder
-                )
-            ) {
-                Text("Pair", color = if (isValid) MaterialTheme.colorScheme.onPrimary else TextMuted)
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                enabled = !isLoading
-            ) {
-                Text("Cancel", color = TextMuted)
-            }
-        }
+    AddDeviceDialog(
+        isLoading = isLoading,
+        onDismiss = onDismiss,
+        onConfirm = onConfirm
     )
 }

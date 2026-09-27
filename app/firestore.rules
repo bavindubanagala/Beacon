@@ -2,26 +2,103 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Default-deny all access across all collections
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDeviceOwner() {
+      return isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.adminUid == request.auth.uid ||
+        resource.data.userId == request.auth.uid
+      );
+    }
+
+    // Default deny for unmatched documents
     match /{document=**} {
       allow read, write: if false;
     }
 
-
-    // Tracking location points
-    match /locations/{locationId} {
-      allow create: if request.auth != null
-        && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if request.auth != null
-        && resource.data.userId == request.auth.uid;
+    // Users Collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
     }
 
-    // Device pairing & remote control
+    // Devices Collection
     match /devices/{deviceId} {
-      allow create: if request.auth != null
-        && request.resource.data.ownerId == request.auth.uid;
-      allow read, update, delete: if request.auth != null
-        && resource.data.ownerId == request.auth.uid;
+      // Device creation requires owner/admin ID matching the authenticated user
+      allow create: if isAuthenticated() && (
+        request.resource.data.ownerId == request.auth.uid ||
+        request.resource.data.adminUid == request.auth.uid
+      );
+
+      // Read and delete require device ownership
+      allow read, delete: if isDeviceOwner();
+
+      // Updates: device owners have full update permissions;
+      // authenticated paired devices can update telemetry and status fields only
+      allow update: if isDeviceOwner() || (
+        isAuthenticated() && (
+          resource.data.is_paired == true || resource.data.paired == true
+        ) && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['latitude', 'longitude', 'location', 'batteryLevel', 'speed', 'signalStrength', 'lastSeen', 'updatedAt', 'isEmergencyMode', 'sosTimestamp', 'status'])
+      );
+
+      // Sub-collections under a device document
+      match /{subcollection=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Telemetry and Location Data Collection
+    match /locations/{locationId} {
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid ||
+        request.resource.data.deviceId != null
+      );
+      allow read, update, delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Pairing Codes and Requests Collections
+    match /pairing_codes/{codeId} {
+      allow read, create, delete: if isAuthenticated();
+      allow update: if isAuthenticated();
+    }
+
+    match /pairings/{pairingId} {
+      allow read, create, delete: if isAuthenticated();
+      allow update: if isAuthenticated();
+    }
+
+    // Remote Commands Collection
+    match /commands/{commandId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Geofences Collection
+    match /geofences/{geofenceId} {
+      allow create: if isAuthenticated() && (
+        request.resource.data.ownerId == request.auth.uid ||
+        request.resource.data.userId == request.auth.uid
+      );
+      allow read, update, delete: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.userId == request.auth.uid
+      );
+    }
+
+    // Alerts and Notifications Collection
+    match /alerts/{alertId} {
+      allow read, write: if isAuthenticated();
     }
   }
 }

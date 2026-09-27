@@ -38,10 +38,10 @@ class AuthViewModel(
         }
     }
 
-    fun signUp(email: String, pass: String) {
+    fun signUp(email: String, pass: String, displayName: String = "") {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            val result = repository.signUp(email, pass)
+            val result = repository.signUp(email, pass, displayName)
             result.fold(
                 onSuccess = { user -> _uiState.value = AuthUiState.Success(user) },
                 onFailure = { error -> _uiState.value = AuthUiState.Error(error.message ?: "Sign up failed.") }

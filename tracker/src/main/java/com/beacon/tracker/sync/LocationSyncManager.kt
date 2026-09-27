@@ -1,9 +1,11 @@
 package com.beacon.tracker.sync
 
+import android.util.Log
 import com.beacon.tracker.data.LocationDao
 import com.beacon.tracker.data.LocationEntity
 import com.beacon.tracker.network.NetworkStatusObserver
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,13 +38,18 @@ class LocationSyncManager @Inject constructor(
     }
 
     suspend fun processLocationUpdate(userId: String, entity: LocationEntity) {
-        if (networkStatusObserver.isCurrentlyOnline()) {
+        val isOnline = networkStatusObserver.isCurrentlyOnline()
+        Log.d("LocationSyncManager", "processLocationUpdate: isOnline=$isOnline")
+        if (isOnline) {
             try {
                 uploadLocationToFirestore(userId, entity)
+                Log.d("LocationSyncManager", "processLocationUpdate: uploadLocationToFirestore succeeded")
             } catch (e: Exception) {
+                Log.e("LocationSyncManager", "processLocationUpdate: uploadLocationToFirestore failed", e)
                 locationDao.insertLocation(entity.copy(isSynced = false))
             }
         } else {
+            Log.w("LocationSyncManager", "processLocationUpdate: device reported offline, queuing locally instead of uploading")
             locationDao.insertLocation(entity.copy(isSynced = false))
         }
     }
@@ -92,14 +99,41 @@ class LocationSyncManager @Inject constructor(
             "longitude" to location.longitude,
             "timestamp" to location.timestamp,
             "speed" to location.speed,
-            "accuracy" to location.accuracy
+            "accuracy" to location.accuracy,
+            "batteryLevel" to location.batteryLevel,
+            "signal_strength" to location.signalStrength
         )
 
+        // 1. Historical subcollection write
         firestore.collection("users")
             .document(userId)
             .collection("locations")
             .document(location.id.toString())
             .set(locationMap)
             .await()
+
+        // 2. Root device document telemetry merge
+        val targetDeviceId = location.deviceId.ifBlank { userId }
+        if (targetDeviceId.isNotBlank()) {
+            val syncedAt = System.currentTimeMillis()
+            val deviceUpdate = hashMapOf(
+                "latitude" to location.latitude,
+                "longitude" to location.longitude,
+                "accuracy" to location.accuracy,
+                "speed" to location.speed,
+                "batteryLevel" to location.batteryLevel,
+                "battery_level" to location.batteryLevel,
+                "signal_strength" to location.signalStrength,
+                "signalStrength" to location.signalStrength,
+                "lastSeenTimestamp" to syncedAt,
+                "last_seen" to syncedAt,
+                "status" to "online"
+            )
+
+            firestore.collection("devices")
+                .document(targetDeviceId)
+                .set(deviceUpdate, SetOptions.merge())
+                .await()
+        }
     }
 }

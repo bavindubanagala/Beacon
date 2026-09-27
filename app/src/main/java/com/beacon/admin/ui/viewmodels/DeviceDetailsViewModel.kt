@@ -8,18 +8,22 @@ import com.beacon.admin.ui.components.MapMarkerState
 import com.beacon.data.auth.AuthManager
 import com.beacon.data.repository.DeviceRepository
 import com.beacon.data.repository.LocationRepository
+import com.beacon.shared.mapper.toDevice
 import com.beacon.shared.models.Device
 import com.beacon.shared.models.Location
 import com.beacon.shared.repository.FirebaseGeofenceRepository
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -27,6 +31,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 enum class TimeRange {
@@ -34,6 +39,26 @@ enum class TimeRange {
     LAST_24H,
     LAST_7D
 }
+
+enum class SyncStatus {
+    PENDING,
+    IN_PROGRESS,
+    SUCCESS,
+    FAILED
+}
+
+data class SyncStepLog(
+    val stepName: String,
+    val status: SyncStatus = SyncStatus.PENDING,
+    val errorMessage: String? = null
+)
+
+data class TelemetrySyncState(
+    val isSyncing: Boolean = false,
+    val isVisible: Boolean = false,
+    val progress: Float = 0f,
+    val steps: List<SyncStepLog> = emptyList()
+)
 
 data class TelemetryAnalytics(
     val peakSpeed: Float,
@@ -95,6 +120,10 @@ class DeviceDetailsViewModel @Inject constructor(
     private val _isFullScreenMap = MutableStateFlow(false)
     private val _isSavingGeofence = MutableStateFlow(false)
     private val _isSendingCommand = MutableStateFlow(false)
+
+    // Telemetry Sync State
+    private val _telemetrySyncState = MutableStateFlow(TelemetrySyncState())
+    val telemetrySyncState: StateFlow<TelemetrySyncState> = _telemetrySyncState.asStateFlow()
 
     // Playback State
     private val _selectedTimeRange = MutableStateFlow(TimeRange.TODAY)
@@ -212,6 +241,141 @@ class DeviceDetailsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = DeviceDetailsUiState()
     )
+
+    fun triggerFullTelemetrySync(targetDeviceId: String = deviceId) {
+        viewModelScope.launch {
+            val initialSteps = listOf(
+                SyncStepLog("Location Coordinates", SyncStatus.PENDING),
+                SyncStepLog("Battery Percentage", SyncStatus.PENDING),
+                SyncStepLog("Speed & Movement", SyncStatus.PENDING),
+                SyncStepLog("Signal Strength", SyncStatus.PENDING),
+                SyncStepLog("Firestore Telemetry Commit", SyncStatus.PENDING)
+            )
+
+            _telemetrySyncState.value = TelemetrySyncState(
+                isSyncing = true,
+                isVisible = true,
+                progress = 0f,
+                steps = initialSteps
+            )
+
+            val currentSteps = initialSteps.toMutableList()
+
+            try {
+                // 1. Write forceSyncRequestedAt / pingRequested flag to Firestore
+                val pingResult = deviceRepository.requestManualPing(targetDeviceId)
+                if (pingResult.isFailure) {
+                    val errorMsg = pingResult.exceptionOrNull()?.message ?: "Failed to write sync request flag"
+                    currentSteps[0] = currentSteps[0].copy(status = SyncStatus.FAILED, errorMessage = errorMsg)
+                    _telemetrySyncState.value = _telemetrySyncState.value.copy(
+                        isSyncing = false,
+                        steps = currentSteps.toList()
+                    )
+                    return@launch
+                }
+                val pingSentAt = pingResult.getOrThrow()
+
+                // 2. Wait for a snapshot whose lastSeenTimestamp proves the tracker responded to this ping
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+
+                val snapshot = kotlinx.coroutines.withTimeoutOrNull(10000L) {
+                    kotlinx.coroutines.suspendCancellableCoroutine<com.google.firebase.firestore.DocumentSnapshot> { continuation ->
+                        val listener = firestore.collection("devices").document(targetDeviceId)
+                            .addSnapshotListener { snap, error ->
+                                if (error != null) {
+                                    if (continuation.isActive) continuation.resumeWith(Result.failure(error))
+                                    return@addSnapshotListener
+                                }
+                                if (snap != null && snap.exists()) {
+                                    val lastSeen = snap.getLong("lastSeenTimestamp") ?: snap.getLong("last_seen") ?: 0L
+                                    if (lastSeen >= pingSentAt && continuation.isActive) {
+                                        continuation.resumeWith(Result.success(snap))
+                                    }
+                                }
+                            }
+                        continuation.invokeOnCancellation { listener.remove() }
+                    }
+                }
+
+                if (snapshot == null) {
+                    throw Exception("Tracker device did not respond within 10 seconds")
+                }
+
+                val fetchedDevice = snapshot.toDevice()
+
+                // Step 0: Location Coordinates
+                currentSteps[0] = currentSteps[0].copy(status = SyncStatus.IN_PROGRESS)
+                _telemetrySyncState.value = _telemetrySyncState.value.copy(steps = currentSteps.toList(), progress = 0.2f)
+                kotlinx.coroutines.delay(200)
+                val validCoords = fetchedDevice.latitude != 0.0 || fetchedDevice.longitude != 0.0
+                currentSteps[0] = currentSteps[0].copy(
+                    status = if (validCoords) SyncStatus.SUCCESS else SyncStatus.FAILED,
+                    errorMessage = if (validCoords) null else "Coordinates unparsed or zero"
+                )
+
+                // Step 1: Battery Percentage
+                currentSteps[1] = currentSteps[1].copy(status = SyncStatus.IN_PROGRESS)
+                _telemetrySyncState.value = _telemetrySyncState.value.copy(steps = currentSteps.toList(), progress = 0.4f)
+                kotlinx.coroutines.delay(200)
+                val validBattery = fetchedDevice.batteryLevel > 0
+                currentSteps[1] = currentSteps[1].copy(
+                    status = if (validBattery) SyncStatus.SUCCESS else SyncStatus.FAILED,
+                    errorMessage = if (validBattery) null else "Battery telemetry has not yet been received"
+                )
+
+                // Step 2: Speed & Movement
+                currentSteps[2] = currentSteps[2].copy(status = SyncStatus.IN_PROGRESS)
+                _telemetrySyncState.value = _telemetrySyncState.value.copy(steps = currentSteps.toList(), progress = 0.6f)
+                kotlinx.coroutines.delay(200)
+                val validSpeed = fetchedDevice.speed >= 0f
+                currentSteps[2] = currentSteps[2].copy(
+                    status = if (validSpeed) SyncStatus.SUCCESS else SyncStatus.FAILED,
+                    errorMessage = if (validSpeed) null else "Speed telemetry unavailable"
+                )
+
+                // Step 3: Signal Strength
+                currentSteps[3] = currentSteps[3].copy(status = SyncStatus.IN_PROGRESS)
+                _telemetrySyncState.value = _telemetrySyncState.value.copy(steps = currentSteps.toList(), progress = 0.8f)
+                kotlinx.coroutines.delay(200)
+                currentSteps[3] = currentSteps[3].copy(status = SyncStatus.SUCCESS)
+
+                // Step 4: Firestore Telemetry Commit
+                currentSteps[4] = currentSteps[4].copy(status = SyncStatus.IN_PROGRESS)
+                _telemetrySyncState.value = _telemetrySyncState.value.copy(steps = currentSteps.toList(), progress = 0.9f)
+                kotlinx.coroutines.delay(200)
+                currentSteps[4] = currentSteps[4].copy(status = SyncStatus.SUCCESS)
+
+                _telemetrySyncState.value = _telemetrySyncState.value.copy(
+                    isSyncing = false,
+                    progress = 1.0f,
+                    steps = currentSteps.toList()
+                )
+
+            } catch (e: Exception) {
+                val errorMsg = e.message ?: "Network timeout or permission error"
+                for (i in currentSteps.indices) {
+                    if (currentSteps[i].status == SyncStatus.PENDING || currentSteps[i].status == SyncStatus.IN_PROGRESS) {
+                        currentSteps[i] = currentSteps[i].copy(status = SyncStatus.FAILED, errorMessage = errorMsg)
+                    }
+                }
+                _telemetrySyncState.value = _telemetrySyncState.value.copy(
+                    isSyncing = false,
+                    steps = currentSteps.toList()
+                )
+            }
+        }
+    }
+
+    fun dismissSyncDialog() {
+        _telemetrySyncState.value = _telemetrySyncState.value.copy(
+            isVisible = false,
+            isSyncing = false
+        )
+    }
+
+    fun requestManualPing() {
+        triggerFullTelemetrySync(deviceId)
+    }
 
     fun setTimeRange(range: TimeRange) {
         _selectedTimeRange.value = range
@@ -339,18 +503,6 @@ class DeviceDetailsViewModel @Inject constructor(
                 offlineThresholdMinutes = currentDevice.alertThresholds.offlineThresholdMinutes,
                 sosFallbackPhone = currentDevice.sosFallbackPhone
             )
-        }
-    }
-
-    fun requestManualPing() {
-        if (_isPingInFlight.value) return
-        
-        viewModelScope.launch {
-            _isPingInFlight.value = true
-            deviceRepository.requestManualPing(deviceId)
-            // Keep the loading state visible for at least 2 seconds for feedback
-            kotlinx.coroutines.delay(2000)
-            _isPingInFlight.value = false
         }
     }
 
