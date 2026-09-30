@@ -26,8 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.beacon.admin.ui.components.SyncProgressDialog
 import com.beacon.admin.ui.theme.*
 import com.beacon.admin.ui.viewmodels.DeviceGroupsViewModel
-import com.beacon.shared.models.Device
-import com.beacon.shared.models.DeviceGroup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +42,6 @@ fun DevicesScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
     var showPairDialog by remember { mutableStateOf(false) }
-    var selectedDeviceForQuickActions by remember { mutableStateOf<DeviceUiModel?>(null) }
 
     LaunchedEffect(pairResult) {
         when (val result = pairResult) {
@@ -198,8 +195,7 @@ fun DevicesScreen(
                                 onClick = { onDeviceClick(device.id) },
                                 onManualSyncClick = {
                                     devicesViewModel.triggerFullTelemetrySync(device.id)
-                                },
-                                onMoreActionsClick = { selectedDeviceForQuickActions = device }
+                                }
                             )
                         }
                     }
@@ -230,18 +226,6 @@ fun DevicesScreen(
                 }
             )
         }
-
-        // Quick Actions Bottom Sheet (Optional overflow)
-        selectedDeviceForQuickActions?.let { device ->
-            DeviceActionBottomSheet(
-                device = com.beacon.shared.models.Device(deviceId = device.id, deviceName = device.name),
-                onDismiss = { selectedDeviceForQuickActions = null },
-                onPing = { id -> devicesViewModel.sendLocationPing(id) },
-                onUpdateProfile = { id, profile -> devicesViewModel.updateTrackingProfile(id, profile) },
-                onAssignGeofence = { id, gId -> devicesViewModel.assignGeofence(id, gId) },
-                onUnpairClick = { id -> devicesViewModel.unpairDevice(id) }
-            )
-        }
     }
 }
 
@@ -249,8 +233,7 @@ fun DevicesScreen(
 private fun DeviceCard(
     device: DeviceUiModel,
     onClick: () -> Unit,
-    onManualSyncClick: () -> Unit,
-    onMoreActionsClick: () -> Unit
+    onManualSyncClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
@@ -292,6 +275,12 @@ private fun DeviceCard(
                     text = device.lastSeenAgo,
                     style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
                 )
+                if (device.modeLabel.isNotBlank()) {
+                    Text(
+                        text = device.modeLabel,
+                        style = MaterialTheme.typography.labelSmall.copy(color = BeaconCyan)
+                    )
+                }
             }
 
             IconButton(onClick = onManualSyncClick) {
@@ -320,14 +309,6 @@ private fun DeviceCard(
                 Text(
                     text = "${device.batteryLevel}%",
                     style = MaterialTheme.typography.labelMedium.copy(color = TextMuted)
-                )
-            }
-
-            IconButton(onClick = onMoreActionsClick) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Quick Actions",
-                    tint = TextMuted
                 )
             }
         }

@@ -47,9 +47,7 @@ interface DeviceRepository {
         shockAlertEnabled: Boolean
     ): Result<Unit>
     suspend fun unpairDevice(deviceId: String): Result<Unit>
-    suspend fun updateTrackingMode(deviceId: String, mode: String): Result<Unit>
-    suspend fun updateScheduledInterval(deviceId: String, millis: Long): Result<Unit>
-    suspend fun updateLiveInterval(deviceId: String, millis: Long): Result<Unit>
+    suspend fun applyTrackingSettings(deviceId: String, mode: String, intervalMillis: Long?): Result<Unit>
 }
 
 @Singleton
@@ -358,21 +356,46 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateTrackingMode(deviceId: String, mode: String): Result<Unit> = runCatching {
-        collection.document(deviceId)
-            .update("trackingMode", mode)
-            .await()
-    }
+    override suspend fun applyTrackingSettings(
+        deviceId: String,
+        mode: String,
+        intervalMillis: Long?
+    ): Result<Unit> {
+        return try {
+            val upperMode = mode.trim().uppercase()
+            if (upperMode != "SCHEDULED" && upperMode != "LIVE" && upperMode != "ONLINE") {
+                return Result.failure(IllegalArgumentException("Unknown tracking mode"))
+            }
 
-    override suspend fun updateScheduledInterval(deviceId: String, millis: Long): Result<Unit> = runCatching {
-        collection.document(deviceId)
-            .update("scheduledIntervalMillis", millis)
-            .await()
-    }
+            // These limits must match TrackingConfig in the Tracker app
+            if (upperMode == "SCHEDULED") {
+                if (intervalMillis == null || intervalMillis !in 15_000L..2_592_000_000L) {
+                    return Result.failure(IllegalArgumentException("Scheduled delay must be between 15 seconds and 30 days"))
+                }
+            } else if (upperMode == "LIVE") {
+                if (intervalMillis == null || intervalMillis !in 5_000L..60_000L) {
+                    return Result.failure(IllegalArgumentException("Live delay must be between 5 and 60 seconds"))
+                }
+            }
 
-    override suspend fun updateLiveInterval(deviceId: String, millis: Long): Result<Unit> = runCatching {
-        collection.document(deviceId)
-            .update("liveIntervalMillis", millis)
-            .await()
+            val updates = when (upperMode) {
+                "SCHEDULED" -> mapOf(
+                    "trackingMode" to upperMode,
+                    "scheduledIntervalMillis" to intervalMillis!!
+                )
+                "LIVE" -> mapOf(
+                    "trackingMode" to upperMode,
+                    "liveIntervalMillis" to intervalMillis!!
+                )
+                else -> mapOf(
+                    "trackingMode" to upperMode
+                )
+            }
+
+            collection.document(deviceId).update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

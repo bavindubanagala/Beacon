@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beacon.data.auth.AuthManager
 import com.beacon.data.repository.AlertRepository
+import com.beacon.admin.ui.utils.tickerFlow
 import com.beacon.data.repository.DeviceRepository
 import com.beacon.shared.models.Alert
 import com.beacon.shared.models.Device
@@ -58,10 +59,10 @@ class HomeViewModel @Inject constructor(
     )
 
     // Derived metrics from real-time data
-    val metrics: StateFlow<DashboardMetrics> = devices.map { deviceList ->
+    val metrics: StateFlow<DashboardMetrics> = combine(devices, tickerFlow(30_000L)) { deviceList, now ->
         DashboardMetrics(
             totalDevices = deviceList.size,
-            onlineDevices = deviceList.count { it.status.lowercase() in listOf("online", "live") },
+            onlineDevices = deviceList.count { it.isOnlineAt(now) },
             activeSos = deviceList.count { it.isEmergencyMode },
             lowBatteryCount = deviceList.count { it.batteryLevel < 20 }
         )

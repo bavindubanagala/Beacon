@@ -5,6 +5,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.beacon.admin.ui.utils.formatRelativeSyncTime
+import com.beacon.admin.ui.utils.normalizeTrackingMode
+import com.beacon.admin.ui.utils.modeDisplayName
+import com.beacon.admin.ui.utils.buildModeLabel
+import com.beacon.admin.ui.utils.tickerFlow
 import com.beacon.admin.ui.viewmodels.SyncStatus
 import com.beacon.admin.ui.viewmodels.SyncStepLog
 import com.beacon.admin.ui.viewmodels.TelemetrySyncState
@@ -43,7 +47,11 @@ data class DeviceUiModel(
     val signalDbm: Int,
     val trackingProfile: String,
     val speedFormatted: String,
-    val signalFormatted: String
+    val signalFormatted: String,
+    val trackingMode: String = "SCHEDULED",
+    val scheduledIntervalMillis: Long = 900_000L,
+    val liveIntervalMillis: Long = 10_000L,
+    val modeLabel: String = ""
 )
 
 sealed interface DevicesListState {
@@ -93,13 +101,14 @@ class DevicesViewModel @Inject constructor(
         authManager.ensureAuthenticated()
         emit(Unit)
     }.flatMapLatest {
-        deviceRepository.devices.map { deviceList ->
+        combine(deviceRepository.devices, tickerFlow(30_000L)) { deviceList, now ->
             val devices = deviceList.map { device ->
                 val speedKmh = device.speed * 3.6f
+                val mode = normalizeTrackingMode(device.trackingMode)
                 DeviceUiModel(
                     id = device.deviceId,
                     name = device.deviceName,
-                    isOnline = device.status.lowercase() in listOf("online", "live"),
+                    isOnline = device.isOnlineAt(now),
                     hasActiveSos = device.isEmergencyMode,
                     batteryLevel = device.batteryLevel,
                     lastSeenAgo = formatRelativeSyncTime(device.lastSeenTimestamp),
@@ -108,9 +117,13 @@ class DevicesViewModel @Inject constructor(
                     accuracy = device.accuracy,
                     speedKmh = speedKmh,
                     signalDbm = device.signalStrength,
-                    trackingProfile = device.trackingMode.replaceFirstChar { it.uppercase() },
+                    trackingProfile = modeDisplayName(mode),
                     speedFormatted = String.format("%.1f km/h", speedKmh),
-                    signalFormatted = "${device.signalStrength} dBm"
+                    signalFormatted = "${device.signalStrength} dBm",
+                    trackingMode = mode,
+                    scheduledIntervalMillis = device.scheduledIntervalMillis,
+                    liveIntervalMillis = device.liveIntervalMillis,
+                    modeLabel = buildModeLabel(mode, device.scheduledIntervalMillis, device.liveIntervalMillis)
                 )
             }
             if (devices.isEmpty()) DevicesListState.Empty else DevicesListState.Success(devices)
@@ -226,7 +239,7 @@ class DevicesViewModel @Inject constructor(
                 }
 
                 if (snapshot == null) {
-                    throw Exception("Tracker device did not respond within 10 seconds")
+                    throw Exception("The Tracker did not respond within 10 seconds. If it was stopped, open the Tracker app once on that device. It also tries to restart itself about every 15 minutes.")
                 }
 
                 val fetchedDevice = snapshot.toDevice()
@@ -300,18 +313,6 @@ class DevicesViewModel @Inject constructor(
             isSyncing = false
         )
     }
-
-    fun sendLocationPing(id: String) {
-        triggerFullTelemetrySync(id)
-    }
-
-    fun updateTrackingProfile(id: String, profile: String) {
-        viewModelScope.launch {
-            // deviceRepository.updateDeviceSettings(...)
-        }
-    }
-
-    fun assignGeofence(id: String, gId: String?) { /* logic */ }
 }
 
 data class DevicesUiState(

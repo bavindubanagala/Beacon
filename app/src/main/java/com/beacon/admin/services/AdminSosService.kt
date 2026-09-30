@@ -1,37 +1,96 @@
 package com.beacon.admin.services
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
+import com.beacon.admin.MainActivity
+import com.beacon.admin.data.auth.AuthSessionCleanupRegistry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
-import com.beacon.admin.data.auth.AuthSessionCleanupRegistry
 
 class AdminSosService : Service() {
 
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var sosListenerRegistration: ListenerRegistration? = null
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
     private var unregisterCleanup: (() -> Unit)? = null
+    private val notifiedDeviceIds = mutableSetOf<String>()
+
+    override fun onCreate() {
+        super.onCreate()
+        setupAuthStateListener()
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startMonitoring()
+        startForegroundServiceNotification()
         return START_STICKY
     }
 
-    private fun startMonitoring() {
-        // 1. Authentication Guarding
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
-            Log.w(TAG, "Cannot start SOS monitoring: No active user authenticated.")
-            stopSelf()
-            return
+    private fun startForegroundServiceNotification() {
+        val channelId = "sos_watch_channel"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "SOS Monitoring",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
         }
 
-        // Avoid duplicate listeners
+        val notification: Notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Beacon SOS monitoring")
+            .setContentText("Watching for SOS alerts from your devices")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setOngoing(true)
+            .build()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceCompat.startForeground(
+                this,
+                2001,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(2001, notification)
+        }
+    }
+
+    private fun setupAuthStateListener() {
+        if (authStateListener != null) return
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val currentUser = firebaseAuth.currentUser
+            if (currentUser != null) {
+                if (sosListenerRegistration == null) {
+                    startMonitoring(currentUser)
+                }
+            } else {
+                stopMonitoring()
+            }
+        }
+        auth.addAuthStateListener(authStateListener!!)
+        auth.currentUser?.let { user ->
+            if (sosListenerRegistration == null) {
+                startMonitoring(user)
+            }
+        }
+    }
+
+    private fun startMonitoring(currentUser: com.google.firebase.auth.FirebaseUser) {
         if (sosListenerRegistration != null) {
             Log.d(TAG, "SOS monitoring is already active.")
             return
@@ -39,14 +98,13 @@ class AdminSosService : Service() {
 
         Log.d(TAG, "Starting SOS monitoring for authenticated user: ${currentUser.uid}")
 
-        // 2. Defensive Error Handling & Listener Attachment
-        sosListenerRegistration = db.collection("sos_alerts")
-            .whereEqualTo("status", "ACTIVE")
+        sosListenerRegistration = db.collection("devices")
+            .whereEqualTo("ownerId", currentUser.uid)
+            .whereEqualTo("isEmergencyMode", true)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
                     Log.e(TAG, "Firestore error during SOS monitoring", error)
                     
-                    // Zombie Stream Prevention on terminal errors (e.g., PERMISSION_DENIED)
                     if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED ||
                         error.code == FirebaseFirestoreException.Code.UNAUTHENTICATED
                     ) {
@@ -56,23 +114,76 @@ class AdminSosService : Service() {
                     return@addSnapshotListener
                 }
 
-                if (snapshots != null && !snapshots.isEmpty) {
-                    Log.i(TAG, "Active SOS alerts detected: ${snapshots.size()}")
-                    // Handle incoming SOS events
+                val currentSnapshotIds = mutableSetOf<String>()
+                if (snapshots != null) {
+                    for (doc in snapshots.documents) {
+                        val deviceId = doc.id
+                        currentSnapshotIds.add(deviceId)
+
+                        if (!notifiedDeviceIds.contains(deviceId)) {
+                            notifiedDeviceIds.add(deviceId)
+                            showSosNotification(doc)
+                        }
+                    }
                 }
+
+                notifiedDeviceIds.retainAll(currentSnapshotIds)
             }
         unregisterCleanup = AuthSessionCleanupRegistry.register { stopMonitoring() }
+    }
+
+    private fun showSosNotification(doc: com.google.firebase.firestore.DocumentSnapshot) {
+        val deviceId = doc.id
+        val deviceName = doc.getString("deviceName") ?: doc.getString("device_name") ?: "A device"
+        val message = "$deviceName needs help"
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            deviceId.hashCode(),
+            intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val channelId = "sos_notification_channel"
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("SOS Emergency")
+            .setContentText(message)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setContentIntent(pendingIntent)
+            .setFullScreenIntent(pendingIntent, true)
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Emergency SOS Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        notificationManager.notify(deviceId.hashCode(), notificationBuilder.build())
     }
 
     private fun stopMonitoring() {
         sosListenerRegistration?.remove()
         sosListenerRegistration = null
+        notifiedDeviceIds.clear()
         unregisterCleanup?.invoke()
         unregisterCleanup = null
         Log.d(TAG, "SOS monitoring listener removed.")
     }
 
     override fun onDestroy() {
+        authStateListener?.let { auth.removeAuthStateListener(it) }
+        authStateListener = null
         stopMonitoring()
         super.onDestroy()
     }

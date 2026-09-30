@@ -35,23 +35,37 @@ data class Device(
     val accuracy: Float = 0f,
     val lastSeenTimestamp: Long = 0L
 ) {
+    // These limits mirror TrackingConfig in the Tracker app
+    fun offlineAfterMillis(): Long {
+        val normalizedMode = trackingMode.trim().uppercase()
+        val base = when (normalizedMode) {
+            "LIVE" -> maxOf(120_000L, 3 * liveIntervalMillis.coerceIn(5_000L, 60_000L))
+            "ONLINE" -> 900_000L
+            else -> 2 * scheduledIntervalMillis.coerceIn(15_000L, 2_592_000_000L) + 300_000L
+        }
+        // With battery saving on, the Tracker may pause to a 5 minute heartbeat
+        return if (batterySavingEnabled) maxOf(base, 900_000L) else base
+    }
+
+    fun isOnlineAt(nowMillis: Long): Boolean {
+        return lastSeenTimestamp > 0 && nowMillis - lastSeenTimestamp <= offlineAfterMillis()
+    }
+
     val statusLight: DeviceStatus
         get() {
             if (!is_paired || status.equals("unpaired", ignoreCase = true)) {
                 return DeviceStatus.GRAY_UNPAIRED
             }
 
-            val now = System.currentTimeMillis()
-            val fifteenMinutesMs = 15 * 60 * 1000L
-            if (now - lastSeenTimestamp > fifteenMinutesMs) {
+            if (!isOnlineAt(System.currentTimeMillis())) {
                 return DeviceStatus.RED_OFFLINE
             }
 
-            return when (trackingMode.uppercase()) {
+            return when (trackingMode.trim().uppercase()) {
                 "LIVE", "REALTIME" -> DeviceStatus.GREEN_LIVE
-                "INTERVAL" -> DeviceStatus.BLUE_INTERVAL
-                "OFF", "STANDBY" -> DeviceStatus.YELLOW_IDLE
-                else -> DeviceStatus.YELLOW_IDLE
+                "SCHEDULED", "INTERVAL" -> DeviceStatus.BLUE_INTERVAL
+                "ONLINE", "OFF", "STANDBY" -> DeviceStatus.YELLOW_IDLE
+                else -> DeviceStatus.BLUE_INTERVAL
             }
         }
 }

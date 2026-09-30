@@ -46,6 +46,7 @@ fun DeviceDetailsScreen(
     val devicesState by viewModel.devicesState.collectAsStateWithLifecycle()
     val telemetrySyncState by detailsViewModel.telemetrySyncState.collectAsStateWithLifecycle()
     val detailsUiState by detailsViewModel.uiState.collectAsStateWithLifecycle()
+    val applyState by detailsViewModel.applyState.collectAsStateWithLifecycle()
     val device = (devicesState as? com.beacon.admin.ui.devices.DevicesListState.Success)
         ?.devices?.find { it.id == deviceId }
 
@@ -321,52 +322,12 @@ fun DeviceDetailsScreen(
                     )
                 )
 
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = GlassSurface,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, GlassSurfaceBorder),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = "Tracking Profile",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary
-                            )
-                        )
-
-                        val profiles = listOf("High Accuracy", "Balanced", "Battery Saver")
-                        var selectedProfile by remember(device.trackingProfile) {
-                            mutableStateOf(profiles.find { it.equals(device.trackingProfile, ignoreCase = true) } ?: profiles[1])
-                        }
-
-                        profiles.forEach { profile ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                RadioButton(
-                                    selected = selectedProfile == profile,
-                                    onClick = {
-                                        selectedProfile = profile
-                                        viewModel.updateTrackingProfile(deviceId, profile)
-                                        detailsViewModel.updateLegacyCommandMode(profile.lowercase().replace(" ", "_"))
-                                        Toast.makeText(context, "Tracking profile set to $profile", Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                                Text(
-                                    text = profile,
-                                    color = TextPrimary,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-                    }
-                }
+                TrackingModeCard(
+                    device = device,
+                    applyState = applyState,
+                    onApply = { mode, ms -> detailsViewModel.applyTrackingSettings(mode, ms) },
+                    onStateHandled = { detailsViewModel.clearApplyState() }
+                )
 
                 // Inline Action Buttons (Rename & Unpair)
                 Row(

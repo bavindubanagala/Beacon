@@ -3,13 +3,14 @@ package com.beacon.admin
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.beacon.admin.services.LocationTrackingService
+import com.beacon.admin.services.AdminSosService
 import com.beacon.admin.ui.MainScreen
 import com.beacon.admin.ui.components.LocationPermissionHandler
 import com.beacon.admin.ui.theme.BeaconAdminTheme
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startSosService()
         
         setContent {
             BeaconAdminTheme {
@@ -29,7 +31,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     LocationPermissionHandler(
                         onPermissionsGranted = {
-                            startLocationService()
+                            
                         },
                         onPermissionsDenied = {
                             // Degraded mode: fallback to manual polling or warning UI
@@ -47,14 +49,16 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
     }
 
-    private fun startLocationService() {
-        val serviceIntent = Intent(this, LocationTrackingService::class.java).apply {
-            action = LocationTrackingService.ACTION_START
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
+    private fun startSosService() {
+        try {
+            val intent = Intent(this, AdminSosService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Failed to start SOS service", e)
         }
     }
 }

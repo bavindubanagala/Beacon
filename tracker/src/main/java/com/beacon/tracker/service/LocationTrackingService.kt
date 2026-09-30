@@ -9,7 +9,11 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.beacon.tracker.R
+import com.beacon.tracker.worker.ServiceWatchdogWorker
+import java.util.concurrent.TimeUnit
 import com.beacon.tracker.auth.DeviceAuthManager
 import com.beacon.tracker.data.LocationEntity
 import com.beacon.tracker.data.TrackingConfig
@@ -56,6 +60,7 @@ class LocationTrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         startForegroundServiceNotification()
+        ServiceWatchdogWorker.schedule(applicationContext)
         ensureAnonymousAuth()
         startDeviceListener()
         trackingPaused = servicePrefs.getBoolean("tracking_paused", false)
@@ -80,7 +85,7 @@ class LocationTrackingService : Service() {
                         ?: 0L
                     if (pingTimestamp > 0 && pingTimestamp > lastProcessedPingTimestamp) {
                         lastProcessedPingTimestamp = pingTimestamp
-                        triggerImmediateSync()
+                        triggerImmediateSync(force = true)
                     }
 
                     val modeString = snapshot.getString("trackingMode")
@@ -111,6 +116,7 @@ class LocationTrackingService : Service() {
     private fun startTrackingLoop() {
         trackingLoopJob?.cancel()
         trackingLoopJob = serviceScope.launch {
+            delay(3000)
             while (isActive) {
                 val config = trackingConfigFlow.value
                 val activeMode = if (trackingPaused) TrackingMode.ONLINE else config.mode
@@ -147,7 +153,7 @@ class LocationTrackingService : Service() {
             }
     }
 
-    private fun triggerImmediateSync(priority: Int = Priority.PRIORITY_BALANCED_POWER_ACCURACY) {
+    private fun triggerImmediateSync(priority: Int = Priority.PRIORITY_BALANCED_POWER_ACCURACY, force: Boolean = false) {
         val cancellationSource = com.google.android.gms.tasks.CancellationTokenSource()
         serviceScope.launch {
             try {
@@ -182,7 +188,7 @@ class LocationTrackingService : Service() {
                     isSynced = false
                 )
 
-                locationSyncManager.processLocationUpdate(uid, entity)
+                locationSyncManager.processLocationUpdate(uid, entity, force)
             } catch (e: Exception) {
                 Log.e("TrackerService", "Error during immediate remote sync", e)
             }
@@ -193,7 +199,7 @@ class LocationTrackingService : Service() {
         intent?.action?.let { action ->
             when (action) {
                 ACTION_FORCE_UPDATE -> {
-                    triggerImmediateSync()
+                    triggerImmediateSync(force = true)
                 }
                 ACTION_UPDATE_TRACKING_STATE -> {
                     trackingPaused = intent.getBooleanExtra(EXTRA_TRACKING_PAUSED, false)
@@ -240,7 +246,6 @@ class LocationTrackingService : Service() {
         }
     }
 
-
     private fun updateForegroundNotification(mode: TrackingMode) {
         val channelId = "location_tracking_channel"
         val contentText = when (mode) {
@@ -286,6 +291,11 @@ class LocationTrackingService : Service() {
         super.onDestroy()
         deviceListenerRegistration?.remove()
         serviceScope.cancel()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        WorkManager.getInstance(applicationContext).enqueue(OneTimeWorkRequestBuilder<ServiceWatchdogWorker>().setInitialDelay(3, TimeUnit.SECONDS).build())
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

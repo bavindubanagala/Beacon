@@ -16,6 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,6 +96,8 @@ data class DeviceDetailsUiState(
     val lastCommandStatus: String? = null
 )
 
+sealed interface ApplyState { data object Idle : ApplyState; data object Applying : ApplyState; data object Success : ApplyState; data class Error(val message: String) : ApplyState }
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DeviceDetailsViewModel @Inject constructor(
@@ -110,6 +113,9 @@ class DeviceDetailsViewModel @Inject constructor(
     private val deviceId: String = checkNotNull(savedStateHandle["deviceId"])
     private val initialLat: Double? = savedStateHandle.get<String>("lat")?.toDoubleOrNull()
     private val initialLng: Double? = savedStateHandle.get<String>("lng")?.toDoubleOrNull()
+
+    private val _applyState = MutableStateFlow<ApplyState>(ApplyState.Idle)
+    val applyState: StateFlow<ApplyState> = _applyState.asStateFlow()
 
     private val _isPingInFlight = MutableStateFlow(false)
     private val _showRenameDialog = MutableStateFlow(false)
@@ -298,7 +304,7 @@ class DeviceDetailsViewModel @Inject constructor(
                 }
 
                 if (snapshot == null) {
-                    throw Exception("Tracker device did not respond within 10 seconds")
+                    throw Exception("The Tracker did not respond within 10 seconds. If it was stopped, open the Tracker app once on that device. It also tries to restart itself about every 15 minutes.")
                 }
 
                 val fetchedDevice = snapshot.toDevice()
@@ -466,44 +472,8 @@ class DeviceDetailsViewModel @Inject constructor(
         )
     }
 
-    fun setTrackingMode(deviceId: String, mode: String) {
-        viewModelScope.launch {
-            deviceRepository.updateTrackingMode(deviceId, mode)
-        }
-    }
-
-    fun setScheduledInterval(deviceId: String, millis: Long) {
-        viewModelScope.launch {
-            deviceRepository.updateScheduledInterval(deviceId, millis)
-        }
-    }
-
-    fun setLiveInterval(deviceId: String, millis: Long) {
-        viewModelScope.launch {
-            deviceRepository.updateLiveInterval(deviceId, millis)
-        }
-    }
-
     fun toggleFullScreenMap() {
         _isFullScreenMap.value = !_isFullScreenMap.value
-    }
-
-    fun updateLegacyCommandMode(mode: String) {
-        val currentDevice = uiState.value.device ?: return
-        viewModelScope.launch {
-            deviceRepository.updateDeviceSettings(
-                deviceId = currentDevice.deviceId,
-                mode = mode,
-                intervalSeconds = currentDevice.intervalSeconds,
-                autoRevertSeconds = currentDevice.autoRevertSeconds,
-                isEmergency = currentDevice.isEmergencyMode,
-                batterySavingEnabled = currentDevice.batterySavingEnabled,
-                stationaryIntervalMinutes = currentDevice.stationaryIntervalMinutes,
-                lowBatteryPercent = currentDevice.alertThresholds.lowBatteryPercent,
-                offlineThresholdMinutes = currentDevice.alertThresholds.offlineThresholdMinutes,
-                sosFallbackPhone = currentDevice.sosFallbackPhone
-            )
-        }
     }
 
     fun updatePingFrequency(seconds: Int) {
@@ -612,6 +582,29 @@ class DeviceDetailsViewModel @Inject constructor(
 
     fun sendRingDeviceCommand() {
         sendCommand(com.beacon.shared.models.RemoteCommand(deviceId = deviceId, commandType = com.beacon.shared.models.CommandType.RING_DEVICE))
+    }
+
+    fun applyTrackingSettings(mode: String, intervalMillis: Long?) {
+        if (_applyState.value is ApplyState.Applying) return
+        _applyState.value = ApplyState.Applying
+        viewModelScope.launch {
+            val result = withTimeoutOrNull(10_000L) {
+                deviceRepository.applyTrackingSettings(deviceId, mode, intervalMillis)
+            }
+            if (result == null) {
+                _applyState.value = ApplyState.Error("No confirmation from the server. Check the internet connection. The change may still apply when the connection returns.")
+            } else if (result.isSuccess) {
+                _applyState.value = ApplyState.Success
+            } else {
+                val exception = result.exceptionOrNull()
+                val message = exception?.message ?: "Could not apply the change"
+                _applyState.value = ApplyState.Error(message)
+            }
+        }
+    }
+
+    fun clearApplyState() {
+        _applyState.value = ApplyState.Idle
     }
 
     private fun sendCommand(command: com.beacon.shared.models.RemoteCommand) {

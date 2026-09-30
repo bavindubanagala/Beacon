@@ -5,10 +5,8 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.hilt.work.HiltWorker
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -17,7 +15,6 @@ import com.beacon.tracker.service.LocationTrackingService
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
 @HiltWorker
@@ -30,16 +27,15 @@ class ServiceWatchdogWorker @AssistedInject constructor(
 
     companion object {
         private const val TAG = "WatchdogWorker"
-        const val WORK_NAME = "service_watchdog_work"
+        const val WORK_NAME = "service_watchdog_15min"
+        const val OLD_WORK_NAME = "service_watchdog_work"
 
         fun schedule(context: Context) {
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
+            WorkManager.getInstance(context).cancelUniqueWork(OLD_WORK_NAME)
 
             val request = PeriodicWorkRequestBuilder<ServiceWatchdogWorker>(
-                4, TimeUnit.HOURS
-            ).setConstraints(constraints).build()
+                15, TimeUnit.MINUTES
+            ).build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME,
@@ -53,14 +49,10 @@ class ServiceWatchdogWorker @AssistedInject constructor(
         Log.d(TAG, "Starting watchdog check")
 
         val deviceId = deviceAuthManager.getDeviceId()
-        if (deviceId.isEmpty()) return Result.failure()
+        if (deviceId.isEmpty()) return Result.success()
 
         return try {
-            val snapshot = firestore.collection("devices").document(deviceId).get().await()
-            if (!snapshot.exists()) return Result.failure()
-
-            val isPaired = snapshot.getBoolean("is_paired") ?: false
-            if (!isPaired) {
+            if (!deviceAuthManager.isPaired()) {
                 Log.d(TAG, "Device not paired, skipping recovery")
                 return Result.success()
             }
