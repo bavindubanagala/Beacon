@@ -71,6 +71,8 @@ fun DocumentSnapshot.toDevice(): Device {
         groupId = getString("groupId") ?: getString("group_id") ?: "",
         is_paired = getBoolean("is_paired") ?: getBoolean("isPaired") ?: false,
         trackingMode = getString("trackingMode") ?: getString("tracking_mode") ?: "interval",
+        scheduledIntervalMillis = getLong("scheduledIntervalMillis") ?: 900_000L,
+        liveIntervalMillis = getLong("liveIntervalMillis") ?: 10_000L,
         intervalSeconds = getLong("intervalSeconds")?.toInt() ?: getLong("interval_seconds")?.toInt() ?: 900,
         autoRevertSeconds = getLong("autoRevertSeconds")?.toInt() ?: getLong("auto_revert_seconds")?.toInt() ?: 1800,
         isEmergencyMode = getBoolean("isEmergencyMode") ?: getBoolean("is_emergency_mode") ?: false,

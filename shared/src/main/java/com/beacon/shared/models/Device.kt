@@ -16,6 +16,8 @@ data class Device(
     val ownerId: String = "",
     val trackerAuthUid: String? = null,
     val trackingMode: String = "interval",
+    val scheduledIntervalMillis: Long = 900_000L,
+    val liveIntervalMillis: Long = 10_000L,
     val intervalSeconds: Int = 900, // Default 15 mins
     val autoRevertSeconds: Int = 1800, // Default 30 mins, 0 = off
     val isEmergencyMode: Boolean = false,

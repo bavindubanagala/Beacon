@@ -354,7 +354,7 @@ fun DeviceDetailsScreen(
                                     onClick = {
                                         selectedProfile = profile
                                         viewModel.updateTrackingProfile(deviceId, profile)
-                                        detailsViewModel.updateTrackingMode(profile.lowercase().replace(" ", "_"))
+                                        detailsViewModel.updateLegacyCommandMode(profile.lowercase().replace(" ", "_"))
                                         Toast.makeText(context, "Tracking profile set to $profile", Toast.LENGTH_SHORT).show()
                                     }
                                 )

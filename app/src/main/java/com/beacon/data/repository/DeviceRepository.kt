@@ -47,6 +47,9 @@ interface DeviceRepository {
         shockAlertEnabled: Boolean
     ): Result<Unit>
     suspend fun unpairDevice(deviceId: String): Result<Unit>
+    suspend fun updateTrackingMode(deviceId: String, mode: String): Result<Unit>
+    suspend fun updateScheduledInterval(deviceId: String, millis: Long): Result<Unit>
+    suspend fun updateLiveInterval(deviceId: String, millis: Long): Result<Unit>
 }
 
 @Singleton
@@ -353,5 +356,23 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun updateTrackingMode(deviceId: String, mode: String): Result<Unit> = runCatching {
+        collection.document(deviceId)
+            .update("trackingMode", mode)
+            .await()
+    }
+
+    override suspend fun updateScheduledInterval(deviceId: String, millis: Long): Result<Unit> = runCatching {
+        collection.document(deviceId)
+            .update("scheduledIntervalMillis", millis)
+            .await()
+    }
+
+    override suspend fun updateLiveInterval(deviceId: String, millis: Long): Result<Unit> = runCatching {
+        collection.document(deviceId)
+            .update("liveIntervalMillis", millis)
+            .await()
     }
 }

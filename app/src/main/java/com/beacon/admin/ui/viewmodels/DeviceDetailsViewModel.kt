@@ -466,11 +466,29 @@ class DeviceDetailsViewModel @Inject constructor(
         )
     }
 
+    fun setTrackingMode(deviceId: String, mode: String) {
+        viewModelScope.launch {
+            deviceRepository.updateTrackingMode(deviceId, mode)
+        }
+    }
+
+    fun setScheduledInterval(deviceId: String, millis: Long) {
+        viewModelScope.launch {
+            deviceRepository.updateScheduledInterval(deviceId, millis)
+        }
+    }
+
+    fun setLiveInterval(deviceId: String, millis: Long) {
+        viewModelScope.launch {
+            deviceRepository.updateLiveInterval(deviceId, millis)
+        }
+    }
+
     fun toggleFullScreenMap() {
         _isFullScreenMap.value = !_isFullScreenMap.value
     }
 
-    fun updateTrackingMode(mode: String) {
+    fun updateLegacyCommandMode(mode: String) {
         val currentDevice = uiState.value.device ?: return
         viewModelScope.launch {
             deviceRepository.updateDeviceSettings(

@@ -170,10 +170,13 @@ class TrackerViewModel @Inject constructor(
     }
 
     fun toggleTracking(enabled: Boolean) {
-        val intent = Intent(LocationTrackingService.ACTION_UPDATE_TRACKING_STATE)
-            .putExtra(LocationTrackingService.EXTRA_TRACKING_PAUSED, !enabled)
-        getApplication<Application>().sendBroadcast(intent)
-        _statusMessage.value = if (enabled) "Tracking started" else "Tracking stopped"
+        val context = getApplication<Application>()
+        val intent = Intent(context, LocationTrackingService::class.java).apply {
+            action = LocationTrackingService.ACTION_UPDATE_TRACKING_STATE
+            putExtra(LocationTrackingService.EXTRA_TRACKING_PAUSED, !enabled)
+        }
+        context.startService(intent)
+        _statusMessage.value = if (enabled) "Tracking resumed" else "Tracking paused"
     }
 
     fun updateStatus(message: String) {

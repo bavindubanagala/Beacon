@@ -30,7 +30,6 @@ class BeaconFirebaseMessagingService : FirebaseMessagingService() {
         Log.d("FCMTracker", "Message received: ${remoteMessage.data}")
         
         val action = remoteMessage.data["action"]
-        val trackingMode = remoteMessage.data["trackingMode"]?.trim()?.lowercase()
         val commandId = remoteMessage.data["commandId"] ?: remoteMessage.messageId
         val commandTimestamp = remoteMessage.data["command_timestamp"]?.toLongOrNull()
             ?: remoteMessage.data["commandTimestamp"]?.toLongOrNull() ?: 0L
@@ -55,16 +54,10 @@ class BeaconFirebaseMessagingService : FirebaseMessagingService() {
                 startService(intent)
             }
             "MODE_CHANGE" -> {
-                Log.d("FCMTracker", "Handling MODE_CHANGE: $trackingMode")
-                if (trackingMode in setOf("live", "interval", "off")) {
-                    val intent = Intent(this, LocationTrackingService::class.java).apply {
-                        this.action = LocationTrackingService.ACTION_UPDATE_TRACKING_STATE
-                        putExtra("trackingMode", trackingMode)
-                    }
-                    startService(intent)
-                } else {
-                    Log.w("FCMTracker", "Ignoring MODE_CHANGE with invalid tracking mode")
-                }
+                // The tracking mode itself is read from Firestore by the service.
+                // This message only makes sure the service is running so it can pick up the change.
+                Log.d("FCMTracker", "Handling MODE_CHANGE: waking tracking service")
+                startService(Intent(this, LocationTrackingService::class.java))
             }
             else -> Log.w("FCMTracker", "Ignoring unsupported or malformed command")
         }

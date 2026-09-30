@@ -12,11 +12,10 @@ import androidx.core.app.NotificationCompat
 import com.beacon.tracker.R
 import com.beacon.tracker.auth.DeviceAuthManager
 import com.beacon.tracker.data.LocationEntity
+import com.beacon.tracker.data.TrackingConfig
+import com.beacon.tracker.data.TrackingMode
 import com.beacon.tracker.sync.LocationSyncManager
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -24,8 +23,12 @@ import com.google.firebase.firestore.ListenerRegistration
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -40,22 +43,26 @@ class LocationTrackingService : Service() {
     lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var locationCallback: LocationCallback
+    @Volatile private var trackingPaused: Boolean = false
+    private val servicePrefs by lazy { getSharedPreferences("beacon_tracker_service", MODE_PRIVATE) }
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var deviceListenerRegistration: ListenerRegistration? = null
     private var lastProcessedPingTimestamp: Long = 0L
 
+    private val trackingConfigFlow = MutableStateFlow(TrackingConfig())
+    private var trackingLoopJob: Job? = null
+
     override fun onCreate() {
         super.onCreate()
         startForegroundServiceNotification()
         ensureAnonymousAuth()
-        setupLocationCallback()
-        requestLocationUpdates()
-        startRemotePingListener()
+        startDeviceListener()
+        trackingPaused = servicePrefs.getBoolean("tracking_paused", false)
+        startTrackingLoop()
     }
 
-    private fun startRemotePingListener() {
+    private fun startDeviceListener() {
         val deviceAuthManager = DeviceAuthManager(applicationContext)
         val deviceId = deviceAuthManager.getDeviceId()
         if (deviceId.isBlank()) return
@@ -63,7 +70,7 @@ class LocationTrackingService : Service() {
         deviceListenerRegistration = firestore.collection("devices").document(deviceId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e("TrackerService", "Remote ping listener error", error)
+                    Log.e("TrackerService", "Device listener error", error)
                     return@addSnapshotListener
                 }
 
@@ -71,43 +78,93 @@ class LocationTrackingService : Service() {
                     val pingTimestamp = snapshot.getLong("forceSyncRequestedAt")
                         ?: snapshot.getLong("pingRequestedAt")
                         ?: 0L
-
-                    Log.d("TrackerService", "Snapshot received, pingTimestamp=$pingTimestamp, lastProcessed=$lastProcessedPingTimestamp")
-
                     if (pingTimestamp > 0 && pingTimestamp > lastProcessedPingTimestamp) {
-                        Log.d("TrackerService", "New ping detected, triggering immediate sync")
                         lastProcessedPingTimestamp = pingTimestamp
                         triggerImmediateSync()
+                    }
+
+                    val modeString = snapshot.getString("trackingMode")
+                    val scheduledInterval = (snapshot.getLong("scheduledIntervalMillis")
+                        ?: TrackingConfig().scheduledIntervalMillis)
+                        .coerceIn(TrackingConfig.MIN_SCHEDULED_INTERVAL_MILLIS, TrackingConfig.MAX_SCHEDULED_INTERVAL_MILLIS)
+                    val liveInterval = (snapshot.getLong("liveIntervalMillis")
+                        ?: TrackingConfig().liveIntervalMillis)
+                        .coerceIn(TrackingConfig.MIN_LIVE_INTERVAL_MILLIS, TrackingConfig.MAX_LIVE_INTERVAL_MILLIS)
+
+                    val updatedConfig = TrackingConfig(
+                        mode = TrackingMode.fromString(modeString),
+                        scheduledIntervalMillis = scheduledInterval,
+                        liveIntervalMillis = liveInterval
+                    )
+
+                    val previousConfig = trackingConfigFlow.value
+                    trackingConfigFlow.value = updatedConfig
+
+                    if (updatedConfig != previousConfig) {
+                        startTrackingLoop()
+                        updateForegroundNotification(updatedConfig.mode)
                     }
                 }
             }
     }
 
-    private fun triggerImmediateSync() {
+    private fun startTrackingLoop() {
+        trackingLoopJob?.cancel()
+        trackingLoopJob = serviceScope.launch {
+            while (isActive) {
+                val config = trackingConfigFlow.value
+                val activeMode = if (trackingPaused) TrackingMode.ONLINE else config.mode
+                when (activeMode) {
+                    TrackingMode.SCHEDULED -> {
+                        triggerImmediateSync(priority = Priority.PRIORITY_BALANCED_POWER_ACCURACY)
+                        delay(config.scheduledIntervalMillis)
+                    }
+                    TrackingMode.LIVE -> {
+                        triggerImmediateSync(priority = Priority.PRIORITY_HIGH_ACCURACY)
+                        delay(config.liveIntervalMillis)
+                    }
+                    TrackingMode.ONLINE -> {
+                        sendHeartbeat()
+                        delay(config.onlineHeartbeatIntervalMillis)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun sendHeartbeat() {
+        val deviceAuthManager = DeviceAuthManager(applicationContext)
+        val deviceId = deviceAuthManager.getDeviceId()
+        if (deviceId.isBlank()) return
+
+        val updates = mapOf(
+            "lastSeenTimestamp" to System.currentTimeMillis()
+        )
+        firestore.collection("devices").document(deviceId)
+            .update(updates)
+            .addOnFailureListener { e ->
+                Log.e("TrackerService", "Failed to send heartbeat", e)
+            }
+    }
+
+    private fun triggerImmediateSync(priority: Int = Priority.PRIORITY_BALANCED_POWER_ACCURACY) {
         val cancellationSource = com.google.android.gms.tasks.CancellationTokenSource()
         serviceScope.launch {
             try {
-                Log.d("TrackerService", "triggerImmediateSync started, requesting current location")
                 val location: android.location.Location? = kotlinx.coroutines.withTimeoutOrNull(7000L) {
                     fusedLocationClient.getCurrentLocation(
-                        Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                        priority,
                         cancellationSource.token
                     ).await()
                 }
 
                 if (location == null) {
-                    Log.w("TrackerService", "triggerImmediateSync: location was null after 7 second timeout, aborting")
                     cancellationSource.cancel()
                     return@launch
                 }
 
-                Log.d("TrackerService", "triggerImmediateSync: got location lat=${location.latitude} lng=${location.longitude}")
-
                 val uid = ensureAuthenticatedAsync()
-                if (uid.isNullOrBlank()) {
-                    Log.w("TrackerService", "triggerImmediateSync: uid is null or blank, aborting")
-                    return@launch
-                }
+                if (uid.isNullOrBlank()) return@launch
 
                 val deviceAuthManager = DeviceAuthManager(applicationContext)
                 val deviceId = deviceAuthManager.getDeviceId()
@@ -125,11 +182,7 @@ class LocationTrackingService : Service() {
                     isSynced = false
                 )
 
-                Log.d("TrackerService", "triggerImmediateSync: calling processLocationUpdate")
                 locationSyncManager.processLocationUpdate(uid, entity)
-                Log.d("TrackerService", "triggerImmediateSync: processLocationUpdate returned")
-            } catch (e: SecurityException) {
-                Log.e("TrackerService", "Location permission missing for immediate sync", e)
             } catch (e: Exception) {
                 Log.e("TrackerService", "Error during immediate remote sync", e)
             }
@@ -143,12 +196,9 @@ class LocationTrackingService : Service() {
                     triggerImmediateSync()
                 }
                 ACTION_UPDATE_TRACKING_STATE -> {
-                    val paused = intent.getBooleanExtra(EXTRA_TRACKING_PAUSED, false)
-                    if (paused) {
-                        fusedLocationClient.removeLocationUpdates(locationCallback)
-                    } else {
-                        requestLocationUpdates()
-                    }
+                    trackingPaused = intent.getBooleanExtra(EXTRA_TRACKING_PAUSED, false)
+                    servicePrefs.edit().putBoolean("tracking_paused", trackingPaused).apply()
+                    startTrackingLoop()
                 }
             }
         }
@@ -190,55 +240,24 @@ class LocationTrackingService : Service() {
         }
     }
 
-    private fun setupLocationCallback() {
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                val location = locationResult.lastLocation ?: return
 
-                serviceScope.launch {
-                    val uid = ensureAuthenticatedAsync()
-                    if (uid.isNullOrBlank()) {
-                        Log.w("TrackerService", "Skipping Firestore sync: User not authenticated")
-                        return@launch
-                    }
-
-                    val deviceAuthManager = DeviceAuthManager(applicationContext)
-                    val deviceId = deviceAuthManager.getDeviceId()
-
-                    val entity = LocationEntity(
-                        userId = uid,
-                        deviceId = deviceId,
-                        latitude = location.latitude,
-                        longitude = location.longitude,
-                        timestamp = location.time,
-                        speed = location.speed,
-                        accuracy = location.accuracy,
-                        batteryLevel = getBatteryLevel(),
-                        signalStrength = 0,
-                        isSynced = false
-                    )
-
-                    locationSyncManager.processLocationUpdate(uid, entity)
-                }
-            }
+    private fun updateForegroundNotification(mode: TrackingMode) {
+        val channelId = "location_tracking_channel"
+        val contentText = when (mode) {
+            TrackingMode.SCHEDULED -> "Checking in periodically..."
+            TrackingMode.LIVE -> "Live tracking active..."
+            TrackingMode.ONLINE -> "Online — not actively tracking"
         }
-    }
 
-    private fun requestLocationUpdates() {
-        val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-            5000L
-        ).setMinUpdateIntervalMillis(2000L).build()
+        val notification: Notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Beacon Location Active")
+            .setContentText(contentText)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setOngoing(true)
+            .build()
 
-        try {
-            fusedLocationClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                mainLooper
-            )
-        } catch (e: SecurityException) {
-            // Missing location permissions fallback
-        }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager?.notify(1001, notification)
     }
 
     private fun startForegroundServiceNotification() {
@@ -266,7 +285,6 @@ class LocationTrackingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         deviceListenerRegistration?.remove()
-        fusedLocationClient.removeLocationUpdates(locationCallback)
         serviceScope.cancel()
     }
 

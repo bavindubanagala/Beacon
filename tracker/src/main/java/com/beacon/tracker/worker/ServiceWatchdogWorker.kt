@@ -10,7 +10,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.beacon.tracker.auth.DeviceAuthManager
@@ -18,7 +17,6 @@ import com.beacon.tracker.service.LocationTrackingService
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
@@ -52,8 +50,8 @@ class ServiceWatchdogWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        Log.d(TAG, "Starting watchdog state reconciliation")
-        
+        Log.d(TAG, "Starting watchdog check")
+
         val deviceId = deviceAuthManager.getDeviceId()
         if (deviceId.isEmpty()) return Result.failure()
 
@@ -62,52 +60,26 @@ class ServiceWatchdogWorker @AssistedInject constructor(
             if (!snapshot.exists()) return Result.failure()
 
             val isPaired = snapshot.getBoolean("is_paired") ?: false
-            val trackingMode = (snapshot.getString("trackingMode") ?: snapshot.getString("tracking_mode") ?: "off").lowercase()
-
             if (!isPaired) {
                 Log.d(TAG, "Device not paired, skipping recovery")
                 return Result.success()
             }
 
-            when (trackingMode) {
-                "live", "realtime" -> {
-                    Log.d(TAG, "Watchdog: Restoring LIVE tracking")
-                    // Use literal action string since ACTION_START is defined in admin package's version of service or missing
-                    val intent = Intent(context, LocationTrackingService::class.java).apply {
-                        action = "ACTION_START_TRACKING" 
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        context.startForegroundService(intent)
-                    } else {
-                        context.startService(intent)
-                    }
+            val intent = Intent(context, LocationTrackingService::class.java)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
                 }
-                "interval" -> {
-                    val workManager = WorkManager.getInstance(context)
-                    val workInfos = workManager.getWorkInfosForUniqueWork("interval_tracking").await()
-                    val isActive = workInfos.any { (it.state == WorkInfo.State.ENQUEUED) || (it.state == WorkInfo.State.RUNNING) }
-                    
-                    if (!isActive) {
-                        Log.d(TAG, "Watchdog: Restoring INTERVAL worker")
-                        val intent = Intent(context, LocationTrackingService::class.java).apply {
-                            action = LocationTrackingService.ACTION_UPDATE_TRACKING_STATE
-                            putExtra("trackingMode", "interval")
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            context.startForegroundService(intent)
-                        } else {
-                            context.startService(intent)
-                        }
-                    }
-                }
+            } catch (e: Exception) {
+                // Android 12+ can refuse to start a foreground service from the background.
+                Log.w(TAG, "Could not start tracking service from background", e)
             }
-
-            firestore.collection("devices").document(deviceId)
-                .update("lastSeenTimestamp", System.currentTimeMillis())
 
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Watchdog reconciliation failed", e)
+            Log.e(TAG, "Watchdog check failed", e)
             Result.retry()
         }
     }
