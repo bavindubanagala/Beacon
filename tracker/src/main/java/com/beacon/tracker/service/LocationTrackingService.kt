@@ -450,6 +450,7 @@ class LocationTrackingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        applyMergedZones()
         intent?.action?.let { action ->
             when (action) {
                 ACTION_FORCE_UPDATE -> {

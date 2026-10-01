@@ -1,5 +1,6 @@
 package com.beacon.admin.ui.dialogs
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.beacon.admin.ui.theme.*
 import com.beacon.shared.models.*
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,8 +42,30 @@ fun GeofenceConfigDialog(
     var revertOnExit by remember { mutableStateOf(geofence.revertOnExit) }
     
     // Temporal
-    var expirationOption by remember { mutableStateOf("Never") }
+    val initialExpiration = if (geofence.activeUntil != null) "Keep" else "Never"
+    var expirationOption by remember { mutableStateOf(initialExpiration) }
     var activeDays by remember { mutableStateOf(geofence.activeDaysOfWeek?.toSet() ?: setOf(1, 2, 3, 4, 5, 6, 7)) }
+
+    val keepLabel = remember(geofence.activeUntil) {
+        if (geofence.activeUntil != null) {
+            val sdf = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
+            val formattedDate = sdf.format(Date(geofence.activeUntil))
+            val isExpired = geofence.activeUntil < System.currentTimeMillis()
+            if (isExpired) "Keep current (expired $formattedDate)" else "Keep current (ends $formattedDate)"
+        } else {
+            ""
+        }
+    }
+
+    val expirationOptions = buildList {
+        if (geofence.activeUntil != null) {
+            add("Keep")
+        }
+        add("Never")
+        add("1 Hour")
+        add("24 Hours")
+        add("7 Days")
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -72,6 +98,7 @@ fun GeofenceConfigDialog(
                                 revertOnExit = revertOnExit,
                                 activeDaysOfWeek = activeDays.toList().sorted(),
                                 activeUntil = when (expirationOption) {
+                                    "Keep" -> geofence.activeUntil
                                     "1 Hour" -> System.currentTimeMillis() + 3600000
                                     "24 Hours" -> System.currentTimeMillis() + 86400000
                                     "7 Days" -> System.currentTimeMillis() + 604800000
@@ -138,10 +165,11 @@ fun GeofenceConfigDialog(
                     item {
                         Column {
                             Text("Directionality", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
+                            Spacer(modifier = Modifier.height(8.dp))
                             Directionality.entries.forEach { dir ->
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { directionality = dir }
                                 ) {
                                     RadioButton(
                                         selected = directionality == dir,
@@ -151,6 +179,12 @@ fun GeofenceConfigDialog(
                                     Text(dir.name, color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
                                 }
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Stand at point A and look toward point B. A_TO_B means crossing from your left side to your right side. B_TO_A is the opposite. BOTH alerts for either direction.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
                         }
                     }
                 }
@@ -161,7 +195,9 @@ fun GeofenceConfigDialog(
                 }
 
                 items(availableGroups) { group ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+                        assignedGroupIds = if (assignedGroupIds.contains(group.id)) assignedGroupIds - group.id else assignedGroupIds + group.id
+                    }) {
                         Checkbox(
                             checked = assignedGroupIds.contains(group.id),
                             onCheckedChange = { checked ->
@@ -169,12 +205,14 @@ fun GeofenceConfigDialog(
                             },
                             colors = CheckboxDefaults.colors(checkedColor = BeaconCyan)
                         )
-                        Text("Group: ${group.name}", color = TextPrimary)
+                        Text("Group: ${group.name}", color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
                     }
                 }
 
                 items(availableDevices) { device ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+                        assignedDeviceIds = if (assignedDeviceIds.contains(device.deviceId)) assignedDeviceIds - device.deviceId else assignedDeviceIds + device.deviceId
+                    }) {
                         Checkbox(
                             checked = assignedDeviceIds.contains(device.deviceId),
                             onCheckedChange = { checked ->
@@ -182,7 +220,7 @@ fun GeofenceConfigDialog(
                             },
                             colors = CheckboxDefaults.colors(checkedColor = BeaconCyan)
                         )
-                        Text("Device: ${device.deviceName}", color = TextPrimary)
+                        Text("Device: ${device.deviceName}", color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
                     }
                 }
 
@@ -190,14 +228,19 @@ fun GeofenceConfigDialog(
                 item {
                     Column {
                         Text("Expiration", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
-                        listOf("Never", "1 Hour", "24 Hours", "7 Days").forEach { opt ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        expirationOptions.forEach { opt ->
+                            val label = if (opt == "Keep") keepLabel else opt
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { expirationOption = opt }
+                            ) {
                                 RadioButton(
                                     selected = expirationOption == opt,
                                     onClick = { expirationOption = opt },
                                     colors = RadioButtonDefaults.colors(selectedColor = BeaconCyan)
                                 )
-                                Text(opt, color = TextPrimary)
+                                Text(label, color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
                             }
                         }
                     }
@@ -206,6 +249,7 @@ fun GeofenceConfigDialog(
                 item {
                     Column {
                         Text("Active Days", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             listOf("M", "T", "W", "T", "F", "S", "S").forEachIndexed { index, day ->
                                 val dayNum = index + 1
@@ -232,13 +276,13 @@ fun GeofenceConfigDialog(
                         Column {
                             Text("Arrival behaviour", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { arrivalLiveEnabled = !arrivalLiveEnabled }) {
                                 Checkbox(
                                     checked = arrivalLiveEnabled,
                                     onCheckedChange = { arrivalLiveEnabled = it },
                                     colors = CheckboxDefaults.colors(checkedColor = BeaconCyan)
                                 )
-                                Text("Switch to Live when a device enters", color = TextPrimary)
+                                Text("Switch to Live when a device enters", color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
                             }
                             if (arrivalLiveEnabled) {
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -258,13 +302,13 @@ fun GeofenceConfigDialog(
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { revertOnExit = !revertOnExit }) {
                                     Checkbox(
                                         checked = revertOnExit,
                                         onCheckedChange = { revertOnExit = it },
                                         colors = CheckboxDefaults.colors(checkedColor = BeaconCyan)
                                     )
-                                    Text("Switch back to the previous mode when it leaves", color = TextPrimary)
+                                    Text("Switch back to the previous mode when it leaves", color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
                                 }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -277,18 +321,53 @@ fun GeofenceConfigDialog(
                     }
                 }
 
-                // Alerts
+                // Alerts (Radial only)
+                if (geofence.type == GeofenceType.RADIAL) {
+                    item {
+                        Column {
+                            Text("Alert Settings", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { alertOnEnter = !alertOnEnter }) {
+                                Checkbox(checked = alertOnEnter, onCheckedChange = { alertOnEnter = it }, colors = CheckboxDefaults.colors(checkedColor = BeaconCyan))
+                                Text("Alert on Enter", color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { alertOnExit = !alertOnExit }) {
+                                Checkbox(checked = alertOnExit, onCheckedChange = { alertOnExit = it }, colors = CheckboxDefaults.colors(checkedColor = BeaconCyan))
+                                Text("Alert on Exit", color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
+                            }
+                        }
+                    }
+                }
+
+                // Alert Frequency (all types)
                 item {
                     Column {
-                        Text("Alert Settings", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = alertOnEnter, onCheckedChange = { alertOnEnter = it }, colors = CheckboxDefaults.colors(checkedColor = BeaconCyan))
-                            Text("Alert on Enter", color = TextPrimary)
+                        Text("Alert frequency", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        val freqOptions = listOf(
+                            AlertFrequency.EVERY_TIME to "Every time",
+                            AlertFrequency.ONCE_PER_DAY to "Once per day",
+                            AlertFrequency.ONCE_EVER to "Once ever"
+                        )
+                        freqOptions.forEach { (freq, label) ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { alertFrequency = freq }
+                            ) {
+                                RadioButton(
+                                    selected = alertFrequency == freq,
+                                    onClick = { alertFrequency = freq },
+                                    colors = RadioButtonDefaults.colors(selectedColor = BeaconCyan)
+                                )
+                                Text(label, color = TextPrimary, modifier = Modifier.padding(start = 8.dp))
+                            }
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = alertOnExit, onCheckedChange = { alertOnExit = it }, colors = CheckboxDefaults.colors(checkedColor = BeaconCyan))
-                            Text("Alert on Exit", color = TextPrimary)
-                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Limits how often alerts are sent. Switching to Live is not affected.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
+                        )
                     }
                 }
 

@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.beacon.tracker.auth.DeviceAuthManager
 import com.beacon.tracker.data.LocationEntity
 import com.beacon.tracker.data.LocationRepository
+import com.beacon.tracker.geofence.TrackerGeofenceManager
 import com.beacon.tracker.repository.FirebaseTrackerRepository
 import com.beacon.tracker.service.LocationTrackingService
 import com.google.firebase.auth.FirebaseAuth
@@ -213,6 +214,7 @@ class TrackerViewModel @Inject constructor(
             // but keeping this for immediate local auth clearing
             try {
                 firestore.collection("devices").document(id).delete()
+                TrackerGeofenceManager(getApplication()).clearAll()
                 deviceAuthManager.clearAuth()
                 _deviceId.value = deviceAuthManager.getDeviceId() ?: ""
                 _isPaired.value = false
