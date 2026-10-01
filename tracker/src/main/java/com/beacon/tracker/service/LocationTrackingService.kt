@@ -4,7 +4,9 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -13,11 +15,14 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.beacon.tracker.R
 import com.beacon.tracker.worker.ServiceWatchdogWorker
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import com.beacon.shared.models.GeofenceZone
 import com.beacon.tracker.auth.DeviceAuthManager
 import com.beacon.tracker.data.LocationEntity
 import com.beacon.tracker.data.TrackingConfig
 import com.beacon.tracker.data.TrackingMode
+import com.beacon.tracker.geofence.TrackerGeofenceManager
 import com.beacon.tracker.sync.LocationSyncManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
@@ -57,6 +62,23 @@ class LocationTrackingService : Service() {
     private val trackingConfigFlow = MutableStateFlow(TrackingConfig())
     private var trackingLoopJob: Job? = null
 
+    private val geofenceManager by lazy { TrackerGeofenceManager(applicationContext) }
+    private var deviceZonesListener: ListenerRegistration? = null
+    private var groupZonesListener: ListenerRegistration? = null
+    private var deviceZones: List<GeofenceZone> = emptyList()
+    private var groupZones: List<GeofenceZone> = emptyList()
+    private var currentGroupId: String? = null
+
+    private var lastFixLat: Double? = null
+    private var lastFixLng: Double? = null
+    private var lastFixTime: Long = 0L
+    private var lastFixAccuracy: Float = 0f
+    private val fixLock = Any()
+
+    private fun applyMergedZones() {
+        geofenceManager.applyZones((deviceZones + groupZones).distinctBy { it.id })
+    }
+
     override fun onCreate() {
         super.onCreate()
         startForegroundServiceNotification()
@@ -72,6 +94,17 @@ class LocationTrackingService : Service() {
         val deviceId = deviceAuthManager.getDeviceId()
         if (deviceId.isBlank()) return
 
+        deviceZonesListener = firestore.collection("geofences")
+            .whereArrayContains("assignedDeviceIds", deviceId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("TrackerService", "Device zones listener error", error)
+                    return@addSnapshotListener
+                }
+                deviceZones = snapshot?.documents?.mapNotNull { it.toObject(GeofenceZone::class.java)?.copy(id = it.id) } ?: emptyList()
+                applyMergedZones()
+            }
+
         deviceListenerRegistration = firestore.collection("devices").document(deviceId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -80,6 +113,27 @@ class LocationTrackingService : Service() {
                 }
 
                 if (snapshot != null && snapshot.exists()) {
+                    val groupId = snapshot.getString("groupId")?.takeIf { it.isNotBlank() }
+                    if (groupId != currentGroupId) {
+                        currentGroupId = groupId
+                        groupZonesListener?.remove()
+                        groupZonesListener = null
+                        groupZones = emptyList()
+                        if (groupId != null) {
+                            groupZonesListener = firestore.collection("geofences")
+                                .whereArrayContains("assignedGroupIds", groupId)
+                                .addSnapshotListener { groupSnap, groupErr ->
+                                    if (groupErr != null) {
+                                        Log.e("TrackerService", "Group zones listener error", groupErr)
+                                        return@addSnapshotListener
+                                    }
+                                    groupZones = groupSnap?.documents?.mapNotNull { it.toObject(GeofenceZone::class.java)?.copy(id = it.id) } ?: emptyList()
+                                    applyMergedZones()
+                                }
+                        } else {
+                            applyMergedZones()
+                        }
+                    }
                     val pingTimestamp = snapshot.getLong("forceSyncRequestedAt")
                         ?: snapshot.getLong("pingRequestedAt")
                         ?: 0L
@@ -96,11 +150,28 @@ class LocationTrackingService : Service() {
                         ?: TrackingConfig().liveIntervalMillis)
                         .coerceIn(TrackingConfig.MIN_LIVE_INTERVAL_MILLIS, TrackingConfig.MAX_LIVE_INTERVAL_MILLIS)
 
+                    val rawLiveRevert = if (snapshot.contains("liveRevertAfterMillis")) {
+                        snapshot.getLong("liveRevertAfterMillis") ?: 1_800_000L
+                    } else {
+                        1_800_000L
+                    }
+                    val liveRevertAfter = if (rawLiveRevert < 0L) 0L else rawLiveRevert
+
+                    val parsedRevertMode = TrackingMode.fromString(snapshot.getString("revertToMode"))
+                    val revertMode = if (parsedRevertMode == TrackingMode.LIVE) TrackingMode.SCHEDULED else parsedRevertMode
+
+                    val trackingChangedAt = snapshot.getLong("trackingChangedAt") ?: 0L
+
                     val updatedConfig = TrackingConfig(
                         mode = TrackingMode.fromString(modeString),
                         scheduledIntervalMillis = scheduledInterval,
-                        liveIntervalMillis = liveInterval
+                        liveIntervalMillis = liveInterval,
+                        liveRevertAfterMillis = liveRevertAfter,
+                        revertToMode = revertMode,
+                        trackingChangedAt = trackingChangedAt
                     )
+
+                    updateLiveDeadline(updatedConfig)
 
                     val previousConfig = trackingConfigFlow.value
                     trackingConfigFlow.value = updatedConfig
@@ -113,25 +184,100 @@ class LocationTrackingService : Service() {
             }
     }
 
+    private fun updateLiveDeadline(config: TrackingConfig) {
+        if (config.mode != TrackingMode.LIVE || config.liveRevertAfterMillis <= 0L) {
+            servicePrefs.edit().putLong("live_deadline_at", 0L).apply()
+            return
+        }
+
+        val storedSeenChangedAt = servicePrefs.getLong("live_seen_changed_at", -1L)
+        val storedDeadlineAt = servicePrefs.getLong("live_deadline_at", 0L)
+
+        if (config.trackingChangedAt != storedSeenChangedAt || storedDeadlineAt == 0L) {
+            val newDeadline = System.currentTimeMillis() + config.liveRevertAfterMillis
+            servicePrefs.edit()
+                .putLong("live_deadline_at", newDeadline)
+                .putLong("live_seen_changed_at", config.trackingChangedAt)
+                .apply()
+        }
+    }
+
+    private fun revertFromLive(config: TrackingConfig) {
+        servicePrefs.edit().putLong("live_deadline_at", 0L).apply()
+
+        val deviceAuthManager = DeviceAuthManager(applicationContext)
+        val deviceId = deviceAuthManager.getDeviceId()
+        if (deviceId.isBlank()) return
+
+        Log.d("TrackerService", "Live timer ended, reverting mode to ${config.revertToMode.name}")
+
+        val now = System.currentTimeMillis()
+        val deviceRef = firestore.collection("devices").document(deviceId)
+        val batch = firestore.batch()
+        batch.update(
+            deviceRef,
+            mapOf(
+                "trackingMode" to config.revertToMode.name,
+                "trackingChangedAt" to now,
+                "revertToMode" to ""
+            )
+        )
+        batch.set(
+            deviceRef.collection("mode_history").document(),
+            mapOf(
+                "mode" to config.revertToMode.name,
+                "intervalMillis" to if (config.revertToMode == TrackingMode.SCHEDULED) config.scheduledIntervalMillis else 0L,
+                "changedBy" to "Auto-revert",
+                "timestamp" to now
+            )
+        )
+        batch.commit()
+            .addOnFailureListener { e ->
+                Log.e("TrackerService", "Failed to revert from live", e)
+            }
+    }
+
+    private fun capDelayWithDeadline(config: TrackingConfig, baseDelayMillis: Long): Long {
+        if (config.mode == TrackingMode.LIVE) {
+            val deadline = servicePrefs.getLong("live_deadline_at", 0L)
+            if (deadline > 0L) {
+                val remaining = deadline - System.currentTimeMillis()
+                val capped = maxOf(1000L, remaining)
+                return minOf(baseDelayMillis, capped)
+            }
+        }
+        return baseDelayMillis
+    }
+
     private fun startTrackingLoop() {
         trackingLoopJob?.cancel()
         trackingLoopJob = serviceScope.launch {
             delay(3000)
             while (isActive) {
                 val config = trackingConfigFlow.value
+
+                if (config.mode == TrackingMode.LIVE) {
+                    val deadline = servicePrefs.getLong("live_deadline_at", 0L)
+                    if (deadline > 0L && System.currentTimeMillis() >= deadline) {
+                        revertFromLive(config)
+                        delay(5000)
+                        continue
+                    }
+                }
+
                 val activeMode = if (trackingPaused) TrackingMode.ONLINE else config.mode
                 when (activeMode) {
                     TrackingMode.SCHEDULED -> {
                         triggerImmediateSync(priority = Priority.PRIORITY_BALANCED_POWER_ACCURACY)
-                        delay(config.scheduledIntervalMillis)
+                        delay(capDelayWithDeadline(config, config.scheduledIntervalMillis))
                     }
                     TrackingMode.LIVE -> {
                         triggerImmediateSync(priority = Priority.PRIORITY_HIGH_ACCURACY)
-                        delay(config.liveIntervalMillis)
+                        delay(capDelayWithDeadline(config, config.liveIntervalMillis))
                     }
                     TrackingMode.ONLINE -> {
                         sendHeartbeat()
-                        delay(config.onlineHeartbeatIntervalMillis)
+                        delay(capDelayWithDeadline(config, config.onlineHeartbeatIntervalMillis))
                     }
                 }
             }
@@ -189,8 +335,116 @@ class LocationTrackingService : Service() {
                 )
 
                 locationSyncManager.processLocationUpdate(uid, entity, force)
+                try {
+                    checkTripwires(deviceId, location)
+                } catch (e: Exception) {
+                    Log.e("TrackerTripwire", "Error checking tripwires", e)
+                }
             } catch (e: Exception) {
                 Log.e("TrackerService", "Error during immediate remote sync", e)
+            }
+        }
+    }
+
+    private suspend fun checkTripwires(deviceId: String, location: Location) {
+        val p0Lat: Double?
+        val p0Lng: Double?
+        val p0Time: Long
+        val p0Acc: Float
+
+        synchronized(fixLock) {
+            p0Lat = lastFixLat
+            p0Lng = lastFixLng
+            p0Time = lastFixTime
+            p0Acc = lastFixAccuracy
+
+            lastFixLat = location.latitude
+            lastFixLng = location.longitude
+            lastFixTime = location.time
+            lastFixAccuracy = location.accuracy
+        }
+
+        if (p0Lat == null || p0Lng == null || p0Time <= 0L) return
+        if (location.time <= p0Time) return
+
+        if (location.time - p0Time > 600_000L) return
+        if (location.accuracy > 50f || p0Acc > 50f) return
+
+        val results = FloatArray(1)
+        Location.distanceBetween(p0Lat, p0Lng, location.latitude, location.longitude, results)
+        if (results[0] < 10f) return
+
+        val tripwires = TrackerGeofenceManager(applicationContext).loadTripwires()
+        if (tripwires.isEmpty()) return
+
+        val now = System.currentTimeMillis()
+        val calendar = Calendar.getInstance()
+        val todayNumber = ((calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7) + 1
+
+        for (tripwire in tripwires) {
+            if (tripwire.activeUntil > 0L && now > tripwire.activeUntil) continue
+            if (tripwire.activeDaysOfWeek.isNotEmpty() && todayNumber !in tripwire.activeDaysOfWeek) continue
+
+            val aLat = tripwire.aLat
+            val aLng = tripwire.aLng
+            val bLat = tripwire.bLat
+            val bLng = tripwire.bLng
+
+            val cosLat = Math.cos(Math.toRadians(aLat))
+            val scaleX = 111320.0 * cosLat
+            val scaleY = 110540.0
+
+            val bx = (bLng - aLng) * scaleX
+            val by = (bLat - aLat) * scaleY
+
+            val p0x = (p0Lng - aLng) * scaleX
+            val p0y = (p0Lat - aLat) * scaleY
+
+            val p1x = (location.longitude - aLng) * scaleX
+            val p1y = (location.latitude - aLat) * scaleY
+
+            val d1 = bx * p0y - by * p0x
+            val d2 = bx * p1y - by * p1x
+
+            if (!((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))) continue
+
+            val denom = d1 - d2
+            if (denom == 0.0) continue
+            val t = d1 / denom
+
+            val xX = p0x + t * (p1x - p0x)
+            val yX = p0y + t * (p1y - p0y)
+
+            val dotABAB = bx * bx + by * by
+            if (dotABAB == 0.0) continue
+
+            val dotXAB = xX * bx + yX * by
+            val u = dotXAB / dotABAB
+
+            if (u !in 0.0..1.0) continue
+
+            val crossingType = if (d1 > 0.0 && d2 < 0.0) "A_TO_B" else "B_TO_A"
+            val dir = tripwire.direction.trim().uppercase()
+            if (dir != "BOTH" && dir != crossingType) continue
+
+            val prefs = applicationContext.getSharedPreferences(TrackerGeofenceManager.PREFS_NAME, Context.MODE_PRIVATE)
+            val cooldownKey = "tripwire_last_${tripwire.id}"
+            val lastEventTime = prefs.getLong(cooldownKey, 0L)
+            if (now - lastEventTime < 60_000L) continue
+
+            val manager = TrackerGeofenceManager(applicationContext)
+            if (manager.shouldSendEvent(tripwire.id, tripwire.alertFrequency, now)) {
+                prefs.edit().putLong(cooldownKey, now).apply()
+                locationSyncManager.processGeofenceEvent(
+                    deviceId = deviceId,
+                    geofenceId = tripwire.id,
+                    geofenceName = tripwire.name,
+                    eventType = crossingType,
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    timestamp = now
+                )
+                Log.d("TrackerTripwire", "Tripwire crossing detected: ${tripwire.name} ($crossingType)")
             }
         }
     }
@@ -290,6 +544,8 @@ class LocationTrackingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         deviceListenerRegistration?.remove()
+        deviceZonesListener?.remove()
+        groupZonesListener?.remove()
         serviceScope.cancel()
     }
 

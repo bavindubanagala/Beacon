@@ -43,6 +43,11 @@ data class GeofenceZone(
     val alertOnExit: Boolean = true,
     val alertFrequency: AlertFrequency = AlertFrequency.EVERY_TIME,
     
+    // Arrival settings
+    val arrivalLiveEnabled: Boolean = false,
+    val arrivalLiveIntervalMillis: Long = 10_000L,
+    val revertOnExit: Boolean = true,
+    
     // Time bounds
     val activeFrom: Long? = null,
     val activeUntil: Long? = null,

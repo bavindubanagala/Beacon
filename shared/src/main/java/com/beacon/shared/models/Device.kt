@@ -18,6 +18,9 @@ data class Device(
     val trackingMode: String = "interval",
     val scheduledIntervalMillis: Long = 900_000L,
     val liveIntervalMillis: Long = 10_000L,
+    val liveRevertAfterMillis: Long = 1_800_000L,
+    val revertToMode: String = "",
+    val trackingChangedAt: Long = 0L,
     val intervalSeconds: Int = 900, // Default 15 mins
     val autoRevertSeconds: Int = 1800, // Default 30 mins, 0 = off
     val isEmergencyMode: Boolean = false,

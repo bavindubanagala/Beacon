@@ -33,6 +33,9 @@ fun GeofenceConfigDialog(
     var alertOnEnter by remember { mutableStateOf(geofence.alertOnEnter) }
     var alertOnExit by remember { mutableStateOf(geofence.alertOnExit) }
     var alertFrequency by remember { mutableStateOf(geofence.alertFrequency) }
+    var arrivalLiveEnabled by remember { mutableStateOf(geofence.arrivalLiveEnabled) }
+    var arrivalLiveSeconds by remember { mutableStateOf((geofence.arrivalLiveIntervalMillis / 1000L).toFloat().coerceIn(5f, 60f)) }
+    var revertOnExit by remember { mutableStateOf(geofence.revertOnExit) }
     
     // Temporal
     var expirationOption by remember { mutableStateOf("Never") }
@@ -64,6 +67,9 @@ fun GeofenceConfigDialog(
                                 alertOnEnter = alertOnEnter,
                                 alertOnExit = alertOnExit,
                                 alertFrequency = alertFrequency,
+                                arrivalLiveEnabled = if (geofence.type == GeofenceType.RADIAL) arrivalLiveEnabled else false,
+                                arrivalLiveIntervalMillis = arrivalLiveSeconds.toInt() * 1000L,
+                                revertOnExit = revertOnExit,
                                 activeDaysOfWeek = activeDays.toList().sorted(),
                                 activeUntil = when (expirationOption) {
                                     "1 Hour" -> System.currentTimeMillis() + 3600000
@@ -216,6 +222,57 @@ fun GeofenceConfigDialog(
                                     )
                                 )
                             }
+                        }
+                    }
+                }
+
+                // Arrival behaviour (Radial only)
+                if (geofence.type == GeofenceType.RADIAL) {
+                    item {
+                        Column {
+                            Text("Arrival behaviour", style = MaterialTheme.typography.titleMedium, color = BeaconCyan)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = arrivalLiveEnabled,
+                                    onCheckedChange = { arrivalLiveEnabled = it },
+                                    colors = CheckboxDefaults.colors(checkedColor = BeaconCyan)
+                                )
+                                Text("Switch to Live when a device enters", color = TextPrimary)
+                            }
+                            if (arrivalLiveEnabled) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Live delay on arrival: ${arrivalLiveSeconds.toInt()} seconds",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextPrimary
+                                )
+                                Slider(
+                                    value = arrivalLiveSeconds,
+                                    onValueChange = { arrivalLiveSeconds = it },
+                                    valueRange = 5f..60f,
+                                    steps = 54,
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = BeaconCyan,
+                                        activeTrackColor = BeaconCyan
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(
+                                        checked = revertOnExit,
+                                        onCheckedChange = { revertOnExit = it },
+                                        colors = CheckboxDefaults.colors(checkedColor = BeaconCyan)
+                                    )
+                                    Text("Switch back to the previous mode when it leaves", color = TextPrimary)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Applies to circle zones only.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
                         }
                     }
                 }

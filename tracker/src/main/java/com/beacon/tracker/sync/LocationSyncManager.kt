@@ -67,28 +67,24 @@ class LocationSyncManager @Inject constructor(
     }
 
     suspend fun processGeofenceEvent(
-        userId: String,
+        deviceId: String,
         geofenceId: String,
-        transitionType: String,
+        geofenceName: String,
+        eventType: String,
+        latitude: Double,
+        longitude: Double,
         timestamp: Long
     ) {
-        val eventData = hashMapOf(
+        val eventData = mapOf(
             "geofenceId" to geofenceId,
-            "transitionType" to transitionType,
+            "geofenceName" to geofenceName,
+            "deviceId" to deviceId,
+            "eventType" to eventType,
+            "latitude" to latitude,
+            "longitude" to longitude,
             "timestamp" to timestamp
         )
-
-        if (networkStatusObserver.isCurrentlyOnline()) {
-            try {
-                firestore.collection("users")
-                    .document(userId)
-                    .collection("geofence_events")
-                    .add(eventData)
-                    .await()
-            } catch (e: Exception) {
-                // Buffer locally as location entity flag or geofence store
-            }
-        }
+        firestore.collection("geofence_events").document().set(eventData).await()
     }
 
     suspend fun syncPendingLocations() {

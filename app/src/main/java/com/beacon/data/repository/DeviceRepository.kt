@@ -4,9 +4,11 @@ import android.util.Log
 import com.beacon.data.auth.AuthManager
 import com.beacon.shared.mapper.toDevice
 import com.beacon.shared.models.Device
+import com.beacon.shared.models.ModeHistoryEntry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Filter
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -47,7 +49,15 @@ interface DeviceRepository {
         shockAlertEnabled: Boolean
     ): Result<Unit>
     suspend fun unpairDevice(deviceId: String): Result<Unit>
-    suspend fun applyTrackingSettings(deviceId: String, mode: String, intervalMillis: Long?): Result<Unit>
+    suspend fun applyTrackingSettings(
+        deviceId: String,
+        mode: String,
+        intervalMillis: Long?,
+        revertAfterMillis: Long?,
+        currentMode: String,
+        currentRevertToMode: String
+    ): Result<Unit>
+    fun getModeHistory(deviceId: String): Flow<List<ModeHistoryEntry>>
 }
 
 @Singleton
@@ -359,7 +369,10 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
     override suspend fun applyTrackingSettings(
         deviceId: String,
         mode: String,
-        intervalMillis: Long?
+        intervalMillis: Long?,
+        revertAfterMillis: Long?,
+        currentMode: String,
+        currentRevertToMode: String
     ): Result<Unit> {
         return try {
             val upperMode = mode.trim().uppercase()
@@ -376,26 +389,94 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                 if (intervalMillis == null || intervalMillis !in 5_000L..60_000L) {
                     return Result.failure(IllegalArgumentException("Live delay must be between 5 and 60 seconds"))
                 }
+                val revertVal = revertAfterMillis ?: 0L
+                if (revertVal != 0L && revertVal !in 60_000L..604_800_000L) {
+                    return Result.failure(IllegalArgumentException("Switch-back time must be between 1 minute and 7 days, or Never"))
+                }
             }
+
+            val trimmedCurrent = currentMode.trim().uppercase()
+            val previousMode = when (trimmedCurrent) {
+                "LIVE" -> "LIVE"
+                "ONLINE" -> "ONLINE"
+                else -> "SCHEDULED"
+            }
+
+            val now = System.currentTimeMillis()
 
             val updates = when (upperMode) {
                 "SCHEDULED" -> mapOf(
                     "trackingMode" to upperMode,
-                    "scheduledIntervalMillis" to intervalMillis!!
+                    "scheduledIntervalMillis" to intervalMillis!!,
+                    "revertToMode" to "",
+                    "trackingChangedAt" to now
                 )
-                "LIVE" -> mapOf(
-                    "trackingMode" to upperMode,
-                    "liveIntervalMillis" to intervalMillis!!
-                )
+                "LIVE" -> {
+                    val targetRevertToMode = if (previousMode == "LIVE") {
+                        val trimmedRevert = currentRevertToMode.trim().uppercase()
+                        if (trimmedRevert == "ONLINE") "ONLINE" else "SCHEDULED"
+                    } else {
+                        previousMode
+                    }
+                    mapOf(
+                        "trackingMode" to upperMode,
+                        "liveIntervalMillis" to intervalMillis!!,
+                        "liveRevertAfterMillis" to (revertAfterMillis ?: 0L),
+                        "revertToMode" to targetRevertToMode,
+                        "trackingChangedAt" to now
+                    )
+                }
                 else -> mapOf(
-                    "trackingMode" to upperMode
+                    "trackingMode" to upperMode,
+                    "revertToMode" to "",
+                    "trackingChangedAt" to now
                 )
             }
 
-            collection.document(deviceId).update(updates).await()
+            val deviceRef = collection.document(deviceId)
+            val batch = firestore.batch()
+            batch.update(deviceRef, updates)
+            batch.set(
+                deviceRef.collection("mode_history").document(),
+                mapOf(
+                    "mode" to upperMode,
+                    "intervalMillis" to (intervalMillis ?: 0L),
+                    "changedBy" to "Admin",
+                    "timestamp" to System.currentTimeMillis()
+                )
+            )
+            batch.commit().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override fun getModeHistory(deviceId: String): Flow<List<ModeHistoryEntry>> = callbackFlow {
+        if (deviceId.isBlank() || FirebaseAuth.getInstance().currentUser == null) {
+            Log.e("DeviceRepo", "getModeHistory called without valid deviceId or session")
+            trySend(emptyList())
+            return@callbackFlow
+        }
+
+        val listenerRegistration = collection.document(deviceId)
+            .collection("mode_history")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(20)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("DeviceRepo", "Snapshot error in getModeHistory", error)
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val entries = snapshot?.documents?.mapNotNull {
+                    it.toObject(ModeHistoryEntry::class.java)?.copy(id = it.id)
+                } ?: emptyList()
+                trySend(entries)
+            }
+
+        awaitClose {
+            listenerRegistration.remove()
         }
     }
 }

@@ -11,6 +11,7 @@ import com.beacon.data.repository.LocationRepository
 import com.beacon.shared.mapper.toDevice
 import com.beacon.shared.models.Device
 import com.beacon.shared.models.Location
+import com.beacon.shared.models.ModeHistoryEntry
 import com.beacon.shared.repository.FirebaseGeofenceRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -113,6 +114,9 @@ class DeviceDetailsViewModel @Inject constructor(
     private val deviceId: String = checkNotNull(savedStateHandle["deviceId"])
     private val initialLat: Double? = savedStateHandle.get<String>("lat")?.toDoubleOrNull()
     private val initialLng: Double? = savedStateHandle.get<String>("lng")?.toDoubleOrNull()
+
+    val modeHistory: StateFlow<List<ModeHistoryEntry>> = deviceRepository.getModeHistory(deviceId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _applyState = MutableStateFlow<ApplyState>(ApplyState.Idle)
     val applyState: StateFlow<ApplyState> = _applyState.asStateFlow()
@@ -584,12 +588,24 @@ class DeviceDetailsViewModel @Inject constructor(
         sendCommand(com.beacon.shared.models.RemoteCommand(deviceId = deviceId, commandType = com.beacon.shared.models.CommandType.RING_DEVICE))
     }
 
-    fun applyTrackingSettings(mode: String, intervalMillis: Long?) {
+    fun applyTrackingSettings(mode: String, intervalMillis: Long?, revertAfterMillis: Long?) {
         if (_applyState.value is ApplyState.Applying) return
         _applyState.value = ApplyState.Applying
+        val currentDevice = uiState.value.device
+        if (currentDevice == null) {
+            _applyState.value = ApplyState.Error("Device not loaded yet")
+            return
+        }
         viewModelScope.launch {
             val result = withTimeoutOrNull(10_000L) {
-                deviceRepository.applyTrackingSettings(deviceId, mode, intervalMillis)
+                deviceRepository.applyTrackingSettings(
+                    deviceId,
+                    mode,
+                    intervalMillis,
+                    revertAfterMillis,
+                    currentDevice.trackingMode,
+                    currentDevice.revertToMode
+                )
             }
             if (result == null) {
                 _applyState.value = ApplyState.Error("No confirmation from the server. Check the internet connection. The change may still apply when the connection returns.")

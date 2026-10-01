@@ -51,6 +51,8 @@ data class DeviceUiModel(
     val trackingMode: String = "SCHEDULED",
     val scheduledIntervalMillis: Long = 900_000L,
     val liveIntervalMillis: Long = 10_000L,
+    val liveRevertAfterMillis: Long = 1_800_000L,
+    val revertToMode: String = "",
     val modeLabel: String = ""
 )
 
@@ -123,6 +125,8 @@ class DevicesViewModel @Inject constructor(
                     trackingMode = mode,
                     scheduledIntervalMillis = device.scheduledIntervalMillis,
                     liveIntervalMillis = device.liveIntervalMillis,
+                    liveRevertAfterMillis = device.liveRevertAfterMillis,
+                    revertToMode = device.revertToMode,
                     modeLabel = buildModeLabel(mode, device.scheduledIntervalMillis, device.liveIntervalMillis)
                 )
             }

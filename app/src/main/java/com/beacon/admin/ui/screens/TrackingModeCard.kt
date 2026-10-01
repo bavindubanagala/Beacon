@@ -1,5 +1,6 @@
 package com.beacon.admin.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +20,7 @@ import com.beacon.admin.ui.devices.DeviceUiModel
 import com.beacon.admin.ui.theme.*
 import com.beacon.admin.ui.viewmodels.ApplyState
 import kotlinx.coroutines.delay
+import kotlin.math.round
 
 private enum class TrackingTimeUnit(val label: String, val millisPerUnit: Long) {
     SECONDS("Seconds", 1_000L),
@@ -31,7 +33,7 @@ private enum class TrackingTimeUnit(val label: String, val millisPerUnit: Long) 
 fun TrackingModeCard(
     device: DeviceUiModel,
     applyState: ApplyState,
-    onApply: (mode: String, intervalMillis: Long?) -> Unit,
+    onApply: (mode: String, intervalMillis: Long?, revertAfterMillis: Long?) -> Unit,
     onStateHandled: () -> Unit
 ) {
     val liveCyan = Color(0xFF00E5FF)
@@ -60,6 +62,24 @@ fun TrackingModeCard(
         mutableStateOf((device.liveIntervalMillis.coerceIn(5_000L, 60_000L) / 1000L).toFloat())
     }
 
+    // Live revert-after state
+    val (revertValue, revertUnit) = remember(device.liveRevertAfterMillis) {
+        val ms = if (device.liveRevertAfterMillis <= 0L) 1_800_000L else device.liveRevertAfterMillis
+        when {
+            ms % 86_400_000L == 0L -> (ms / 86_400_000L) to TrackingTimeUnit.DAYS
+            ms % 3_600_000L == 0L -> (ms / 3_600_000L) to TrackingTimeUnit.HOURS
+            else -> {
+                val mins = round(ms.toDouble() / 60_000.0).toLong().coerceAtLeast(1L)
+                mins to TrackingTimeUnit.MINUTES
+            }
+        }
+    }
+
+    var neverSwitchBack by remember(device.liveRevertAfterMillis) { mutableStateOf(device.liveRevertAfterMillis == 0L) }
+    var revertNumberText by remember(device.liveRevertAfterMillis) { mutableStateOf(revertValue.toString()) }
+    var selectedRevertUnit by remember(device.liveRevertAfterMillis) { mutableStateOf(revertUnit) }
+    var expandedRevertDropdown by remember { mutableStateOf(false) }
+
     // Validation for Scheduled
     val num = numberText.toLongOrNull()
     val calculatedScheduledMs = if (num != null) num * selectedUnit.millisPerUnit else 0L
@@ -69,7 +89,24 @@ fun TrackingModeCard(
         calculatedScheduledMs > 2_592_000_000L -> "Maximum is 30 days"
         else -> null
     }
-    val isValid = if (selectedMode == "SCHEDULED") scheduledError == null else true
+
+    // Validation for Live revert
+    val revertNum = revertNumberText.toLongOrNull()
+    val calculatedRevertMs = if (revertNum != null) revertNum * selectedRevertUnit.millisPerUnit else 0L
+    val revertError = if (!neverSwitchBack) {
+        when {
+            revertNumberText.isBlank() || calculatedRevertMs <= 0L -> "Enter a number greater than 0"
+            calculatedRevertMs < 60_000L -> "Minimum is 1 minute"
+            calculatedRevertMs > 604_800_000L -> "Maximum is 7 days"
+            else -> null
+        }
+    } else null
+
+    val isValid = when (selectedMode) {
+        "SCHEDULED" -> scheduledError == null
+        "LIVE" -> revertError == null
+        else -> true
+    }
 
     // Check if anything has changed
     val hasChanged = when (selectedMode) {
@@ -79,7 +116,8 @@ fun TrackingModeCard(
         }
         "LIVE" -> {
             val liveMs = sliderValue.toLong() * 1000L
-            device.trackingMode.uppercase() != "LIVE" || liveMs != device.liveIntervalMillis
+            val currentRevertMs = if (neverSwitchBack) 0L else calculatedRevertMs
+            device.trackingMode.uppercase() != "LIVE" || liveMs != device.liveIntervalMillis || currentRevertMs != device.liveRevertAfterMillis
         }
         "ONLINE" -> {
             device.trackingMode.uppercase() != "ONLINE"
@@ -97,7 +135,7 @@ fun TrackingModeCard(
         }
     }
 
-    LaunchedEffect(selectedMode, numberText, selectedUnit, sliderValue) {
+    LaunchedEffect(selectedMode, numberText, selectedUnit, sliderValue, neverSwitchBack, revertNumberText, selectedRevertUnit) {
         if (applyState is ApplyState.Error) {
             onStateHandled()
         }
@@ -106,7 +144,7 @@ fun TrackingModeCard(
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = GlassSurface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, GlassSurfaceBorder),
+        border = BorderStroke(1.dp, GlassSurfaceBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -236,7 +274,10 @@ fun TrackingModeCard(
                     }
                 }
                 "LIVE" -> {
-                    Column(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
                             text = "Updating every ${sliderValue.toInt()} seconds",
                             style = MaterialTheme.typography.bodyMedium,
@@ -253,6 +294,108 @@ fun TrackingModeCard(
                                 activeTrackColor = liveCyan
                             )
                         )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        val baseMode = if (device.trackingMode.trim().uppercase() == "LIVE") device.revertToMode else device.trackingMode
+                        val normalizedBase = baseMode.trim().uppercase()
+                        val targetModeLabel = if (normalizedBase == "ONLINE") "Online" else "Scheduled"
+
+                        Text(
+                            text = "Switch back to $targetModeLabel after",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { neverSwitchBack = !neverSwitchBack }
+                        ) {
+                            Checkbox(
+                                checked = neverSwitchBack,
+                                onCheckedChange = { neverSwitchBack = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = BeaconCyan,
+                                    uncheckedColor = GlassSurfaceBorder
+                                )
+                            )
+                            Text(
+                                text = "Never switch back",
+                                color = TextPrimary,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        if (!neverSwitchBack) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                    value = revertNumberText,
+                                    onValueChange = { input ->
+                                        if (input.all { it.isDigit() } && input.length <= 4) {
+                                            revertNumberText = input
+                                        }
+                                    },
+                                    label = { Text("Switch back in") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = BeaconCyan,
+                                        unfocusedBorderColor = GlassSurfaceBorder,
+                                        focusedLabelColor = BeaconCyan,
+                                        unfocusedLabelColor = TextMuted,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary
+                                    )
+                                )
+
+                                Box {
+                                    OutlinedButton(
+                                        onClick = { expandedRevertDropdown = true },
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassSurfaceBorder)
+                                    ) {
+                                        Text(selectedRevertUnit.label)
+                                    }
+                                    DropdownMenu(
+                                        expanded = expandedRevertDropdown,
+                                        onDismissRequest = { expandedRevertDropdown = false }
+                                    ) {
+                                        val revertUnits = listOf(
+                                            TrackingTimeUnit.MINUTES,
+                                            TrackingTimeUnit.HOURS,
+                                            TrackingTimeUnit.DAYS
+                                        )
+                                        revertUnits.forEach { unit ->
+                                            DropdownMenuItem(
+                                                text = { Text(unit.label) },
+                                                onClick = {
+                                                    selectedRevertUnit = unit
+                                                    expandedRevertDropdown = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (revertError != null) {
+                                Text(
+                                    text = revertError,
+                                    color = BeaconCrimson,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                                )
+                            }
+                        }
                     }
                 }
                 "ONLINE" -> {
@@ -272,7 +415,11 @@ fun TrackingModeCard(
                         "LIVE" -> sliderValue.toLong() * 1000L
                         else -> null
                     }
-                    onApply(selectedMode, intervalMillis)
+                    val revertAfterMillis = when (selectedMode) {
+                        "LIVE" -> if (neverSwitchBack) 0L else calculatedRevertMs
+                        else -> null
+                    }
+                    onApply(selectedMode, intervalMillis, revertAfterMillis)
                 },
                 enabled = canApply,
                 modifier = Modifier.fillMaxWidth(),

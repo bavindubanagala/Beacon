@@ -21,6 +21,9 @@ data class TrackingConfig(
     val mode: TrackingMode = TrackingMode.SCHEDULED,
     val scheduledIntervalMillis: Long = 900_000L,
     val liveIntervalMillis: Long = 10_000L,
+    val liveRevertAfterMillis: Long = 1_800_000L,
+    val revertToMode: TrackingMode = TrackingMode.SCHEDULED,
+    val trackingChangedAt: Long = 0L,
     val onlineHeartbeatIntervalMillis: Long = DEFAULT_ONLINE_HEARTBEAT_MILLIS
 ) {
     companion object {

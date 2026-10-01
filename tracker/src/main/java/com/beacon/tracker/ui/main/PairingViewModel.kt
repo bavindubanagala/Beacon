@@ -145,12 +145,49 @@ class PairingViewModel(application: Application) : AndroidViewModel(application)
         if (deviceId.isBlank()) return
         viewModelScope.launch {
             try {
-                firestore.collection(FirestoreCollections.DEVICES).document(deviceId)
-                    .update(mapOf(
+                val deviceRef = firestore.collection(FirestoreCollections.DEVICES).document(deviceId)
+                val snapshot = deviceRef.get().await()
+
+                val rawMode = snapshot.getString("trackingMode")?.trim()?.uppercase() ?: ""
+                val normalizedMode = when (rawMode) {
+                    "INTERVAL", "SCHEDULED" -> "SCHEDULED"
+                    "ONLINE" -> "ONLINE"
+                    "LIVE" -> "LIVE"
+                    else -> "SCHEDULED"
+                }
+
+                val previousMode = if (normalizedMode == "LIVE") {
+                    val revertMode = snapshot.getString("revertToMode")?.trim()?.uppercase() ?: ""
+                    if (revertMode == "SCHEDULED" || revertMode == "ONLINE") revertMode else "SCHEDULED"
+                } else {
+                    normalizedMode
+                }
+
+                val now = System.currentTimeMillis()
+                val liveInterval = snapshot.getLong("liveIntervalMillis") ?: 10_000L
+
+                val batch = firestore.batch()
+                batch.update(
+                    deviceRef,
+                    mapOf(
                         "isEmergencyMode" to true,
-                        "trackingMode" to "live",
-                        "sosTimestamp" to System.currentTimeMillis()
-                    )).await()
+                        "trackingMode" to "LIVE",
+                        "sosTimestamp" to now,
+                        "liveRevertAfterMillis" to 0L,
+                        "revertToMode" to previousMode,
+                        "trackingChangedAt" to now
+                    )
+                )
+                batch.set(
+                    deviceRef.collection("mode_history").document(),
+                    mapOf(
+                        "mode" to "LIVE",
+                        "intervalMillis" to liveInterval,
+                        "changedBy" to "SOS",
+                        "timestamp" to now
+                    )
+                )
+                batch.commit().await()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "SOS Trigger Failed") }
             }

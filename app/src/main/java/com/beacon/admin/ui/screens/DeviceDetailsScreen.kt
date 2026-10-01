@@ -1,6 +1,7 @@
 package com.beacon.admin.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,7 +32,11 @@ import com.beacon.admin.ui.devices.DeviceUiModel
 import com.beacon.admin.ui.devices.DevicesViewModel
 import com.beacon.admin.ui.theme.*
 import com.beacon.admin.ui.viewmodels.DeviceDetailsViewModel
+import com.beacon.shared.models.ModeHistoryEntry
 import org.osmdroid.util.GeoPoint
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +53,7 @@ fun DeviceDetailsScreen(
     val telemetrySyncState by detailsViewModel.telemetrySyncState.collectAsStateWithLifecycle()
     val detailsUiState by detailsViewModel.uiState.collectAsStateWithLifecycle()
     val applyState by detailsViewModel.applyState.collectAsStateWithLifecycle()
+    val modeHistory by detailsViewModel.modeHistory.collectAsStateWithLifecycle()
     val device = (devicesState as? com.beacon.admin.ui.devices.DevicesListState.Success)
         ?.devices?.find { it.id == deviceId }
 
@@ -325,7 +332,7 @@ fun DeviceDetailsScreen(
                 TrackingModeCard(
                     device = device,
                     applyState = applyState,
-                    onApply = { mode, ms -> detailsViewModel.applyTrackingSettings(mode, ms) },
+                    onApply = { mode, intervalMs, revertMs -> detailsViewModel.applyTrackingSettings(mode, intervalMs, revertMs) },
                     onStateHandled = { detailsViewModel.clearApplyState() }
                 )
 
@@ -365,6 +372,8 @@ fun DeviceDetailsScreen(
                         Text("Unpair Device", color = MaterialTheme.colorScheme.onError)
                     }
                 }
+
+                ModeHistoryCard(entries = modeHistory)
             }
         }
 
@@ -596,4 +605,141 @@ private fun TelemetryMetricCard(
             }
         }
     }
+}
+
+@Composable
+private fun ModeHistoryCard(entries: List<ModeHistoryEntry>) {
+    val liveCyan = Color(0xFF00E5FF)
+    val scheduledViolet = Color(0xFF7C4DFF)
+    val onlineNeutral = Color(0xFF81C784)
+
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = GlassSurface,
+        border = BorderStroke(1.dp, GlassSurfaceBorder),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Mode history",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            )
+
+            val displayEntries = entries.take(20)
+            if (displayEntries.isEmpty()) {
+                Text(
+                    text = "No changes recorded yet.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted
+                )
+            } else {
+                val dateFormat = remember { SimpleDateFormat("d MMM, h:mm a", Locale.getDefault()) }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    displayEntries.forEachIndexed { index, entry ->
+                        if (index > 0) {
+                            HorizontalDivider(
+                                color = GlassSurfaceBorder,
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+
+                        val modeUpper = entry.mode.trim().uppercase()
+                        val dotColor = when (modeUpper) {
+                            "LIVE" -> liveCyan
+                            "SCHEDULED", "INTERVAL" -> scheduledViolet
+                            "ONLINE" -> onlineNeutral
+                            else -> scheduledViolet
+                        }
+
+                        val modeDisplayName = when (modeUpper) {
+                            "LIVE" -> "Live"
+                            "SCHEDULED", "INTERVAL" -> "Scheduled"
+                            "ONLINE" -> "Online"
+                            else -> modeUpper.lowercase().replaceFirstChar { it.uppercase() }
+                        }
+
+                        val delayText = if (modeUpper == "ONLINE" || entry.intervalMillis <= 0L) {
+                            ""
+                        } else {
+                            " - ${formatModeDelay(entry.intervalMillis)}"
+                        }
+
+                        val titleLine = "$modeDisplayName$delayText"
+
+                        val timeStr = if (entry.timestamp > 0L) dateFormat.format(Date(entry.timestamp)) else ""
+                        val authorStr = when (entry.changedBy.trim()) {
+                            "Admin" -> "by Admin"
+                            "Auto-revert" -> "by Auto-revert"
+                            "Geofence" -> "by Geofence"
+                            "" -> ""
+                            else -> if (entry.changedBy.startsWith("by ", ignoreCase = true)) entry.changedBy else "by ${entry.changedBy}"
+                        }
+                        val subtitleLine = listOf(timeStr, authorStr).filter { it.isNotBlank() }.joinToString(" ")
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(dotColor)
+                            )
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = titleLine,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextPrimary
+                                    )
+                                )
+                                if (subtitleLine.isNotBlank()) {
+                                    Text(
+                                        text = subtitleLine,
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = TextMuted
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun formatModeDelay(ms: Long): String {
+    if (ms <= 0L) return ""
+    val sec = ms / 1000L
+    if (sec < 60L) {
+        return "$sec seconds"
+    }
+    val min = sec / 60L
+    if (min < 60L) {
+        return if (min == 1L) "1 minute" else "$min minutes"
+    }
+    val hr = min / 60L
+    if (hr < 24L) {
+        return if (hr == 1L) "1 hour" else "$hr hours"
+    }
+    val days = hr / 24L
+    return if (days == 1L) "1 day" else "$days days"
 }
