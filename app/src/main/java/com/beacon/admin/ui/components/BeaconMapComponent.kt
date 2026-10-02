@@ -487,13 +487,13 @@ fun BeaconMapComponent(
                     }
                 }
 
-                if (fitPoints.size >= 2 && fitSignal != lastFitSignal) {
+                if (fitPoints.isNotEmpty() && fitSignal != lastFitSignal) {
                     lastFitSignal = fitSignal
                     val box = BoundingBox.fromGeoPoints(fitPoints)
-                    if (box.latSpan < 0.0005 && box.lonSpan < 0.0005) {
+                    if (box.latitudeSpan < 0.0005 && box.longitudeSpan < 0.0005) {
                         mapView.controller.animateTo(box.centerWithDateLine, 16.0, 1000L)
                     } else {
-                        mapView.zoomToBoundingBox(box, true, 150, 17.0)
+                        mapView.zoomToBoundingBox(box, true, 150)
                     }
                 }
 

@@ -1,7 +1,9 @@
 package com.beacon.admin.screens
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -113,12 +115,7 @@ private fun MapContent(
     modifier: Modifier
 ) {
     val viewCenterHolder = remember { arrayOfNulls<GeoPoint>(1) }
-    val viewCenterHolder = remember { arrayOfNulls<GeoPoint>(1) }
     val selectedPin = state.pins.find { it.id == state.selectedPinId }
-
-    LaunchedEffect(state.pins.isNotEmpty()) {
-        if (state.pins.isNotEmpty()) viewModel.requestFitAll()
-    }
 
     LaunchedEffect(state.pins.isNotEmpty()) {
         if (state.pins.isNotEmpty()) viewModel.requestFitAll()
@@ -566,12 +563,15 @@ private fun DeviceQuickSheet(
                     mapIntent.setPackage("com.google.android.apps.maps")
                     try {
                         context.startActivity(mapIntent)
-                    } catch (e: android.content.ActivityNotFoundException) {
+                    } catch (e: ActivityNotFoundException) {
                         try {
-                            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${pin.latitude},${pin.longitude}?q=${pin.latitude},${pin.longitude}"))
+                            val webIntent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("geo:${pin.latitude},${pin.longitude}?q=${pin.latitude},${pin.longitude}")
+                            )
                             context.startActivity(webIntent)
                         } catch (e2: Exception) {
-                            android.widget.Toast.makeText(context, "No maps app found", android.widget.Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "No maps app found", Toast.LENGTH_SHORT).show()
                         }
                     }
                 },

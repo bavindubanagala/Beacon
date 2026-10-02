@@ -159,6 +159,9 @@ fun MainScreen(
                     onNavigateToHistory = { deviceId, timestamp ->
                         val route = if (timestamp != null) "history/$deviceId?ts=$timestamp" else "history/$deviceId"
                         navController.navigate(route)
+                    },
+                    onOpenDevice = { deviceId ->
+                        navController.navigate("device_details/$deviceId")
                     }
                 ) 
             }

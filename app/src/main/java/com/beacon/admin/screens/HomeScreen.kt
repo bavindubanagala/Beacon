@@ -1,22 +1,31 @@
 package com.beacon.admin.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.beacon.admin.ui.theme.*
-import com.beacon.admin.ui.viewmodels.HomeViewModel
 import com.beacon.admin.ui.components.GlassCard
+import com.beacon.admin.ui.theme.*
 import com.beacon.admin.ui.utils.formatRelativeSyncTime
-import java.util.*
+import com.beacon.admin.ui.utils.getStatusUiConfig
+import com.beacon.admin.ui.viewmodels.HomeViewModel
 
 @Composable
 fun HomeScreen(
@@ -24,10 +33,19 @@ fun HomeScreen(
     onNavigateToDevices: (String?) -> Unit = {},
     onNavigateToGeofence: (String?) -> Unit = {},
     onNavigateToHistory: (String, Long?) -> Unit = { _, _ -> },
+    onOpenDevice: (String) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val metrics by viewModel.metrics.collectAsStateWithLifecycle()
     val recentAlerts by viewModel.activeAlerts.collectAsStateWithLifecycle()
+    val devices by viewModel.devices.collectAsStateWithLifecycle()
+
+    var selectedDeviceId by rememberSaveable { mutableStateOf<String?>(null) }
+    val effectiveSelectedId = if (selectedDeviceId != null && devices.any { it.deviceId == selectedDeviceId }) {
+        selectedDeviceId
+    } else {
+        devices.firstOrNull()?.deviceId
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -43,6 +61,69 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { Text("Dashboard", style = MaterialTheme.typography.headlineMedium, color = TextPrimary) }
+
+            // Device Story Avatars Row
+            item {
+                if (devices.isEmpty()) {
+                    Text(
+                        text = "No devices paired yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextMuted
+                    )
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        items(devices, key = { it.deviceId }) { device ->
+                            val isSelected = device.deviceId == effectiveSelectedId
+                            val ringColor = if (device.isEmergencyMode) BeaconCrimson else getStatusUiConfig(device.statusLight).first
+                            val ringThickness = if (device.isEmergencyMode) 4.dp else if (isSelected) 3.dp else 2.dp
+                            val fillColor = device.customColor?.let { Color(it).copy(alpha = 0.25f) } ?: GlassSurface
+                            val initialLetter = device.deviceName.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+
+                            Column(
+                                modifier = Modifier
+                                    .width(72.dp)
+                                    .clickable { selectedDeviceId = device.deviceId },
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .border(ringThickness, ringColor, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(if (isSelected) ringThickness + 4.dp else ringThickness)
+                                            .clip(CircleShape)
+                                            .background(fillColor),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = initialLetter,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = TextPrimary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = device.deviceName,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isSelected) TextPrimary else TextMuted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             
             // 1. Live Metrics Grid
             item {

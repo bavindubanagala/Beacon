@@ -277,10 +277,6 @@ class MapViewModel @Inject constructor(
         _uiSettings.update { it.copy(fitSignal = it.fitSignal + 1) }
     }
 
-    fun requestFitAll() {
-        _uiSettings.update { it.copy(fitSignal = it.fitSignal + 1) }
-    }
-
     fun toggleGeofences() {
         _uiSettings.update { it.copy(isGeofencesVisible = !it.isGeofencesVisible) }
     }
