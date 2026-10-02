@@ -61,6 +61,11 @@ fun DeviceDetailsScreen(
     var renameText by remember { mutableStateOf("") }
     var showUnpairConfirmDialog by remember { mutableStateOf(false) }
     var recenterTarget by remember { mutableStateOf<GeoPoint?>(null) }
+    var followEnabled by remember { mutableStateOf(true) }
+    var recenterSignal by remember { mutableStateOf(0) }
+    val isLive = device?.trackingMode?.trim()?.uppercase() == "LIVE"
+
+    LaunchedEffect(isLive) { if (isLive) followEnabled = true }
 
     LaunchedEffect(detailsViewModel) {
         detailsViewModel.unpairSuccessEvents.collect {
@@ -198,8 +203,14 @@ fun DeviceDetailsScreen(
                                 )
                             ),
                             centerOn = recenterTarget,
+                            followTarget = if (isLive && followEnabled && (device.latitude != 0.0 || device.longitude != 0.0)) GeoPoint(device.latitude, device.longitude) else null,
+                            isFollowing = isLive && followEnabled && (device.latitude != 0.0 || device.longitude != 0.0),
+                            recenterSignal = recenterSignal,
+                            onUserPanned = { followEnabled = false },
                             onRecenter = {
                                 recenterTarget = GeoPoint(device.latitude, device.longitude)
+                                followEnabled = true
+                                recenterSignal += 1
                             }
                         )
                     }
@@ -252,8 +263,14 @@ fun DeviceDetailsScreen(
                                     )
                                 ),
                                 centerOn = recenterTarget,
+                                followTarget = if (isLive && followEnabled && (device.latitude != 0.0 || device.longitude != 0.0)) GeoPoint(device.latitude, device.longitude) else null,
+                                isFollowing = isLive && followEnabled && (device.latitude != 0.0 || device.longitude != 0.0),
+                                recenterSignal = recenterSignal,
+                                onUserPanned = { followEnabled = false },
                                 onRecenter = {
                                     recenterTarget = GeoPoint(device.latitude, device.longitude)
+                                    followEnabled = true
+                                    recenterSignal += 1
                                 }
                             )
 

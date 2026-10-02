@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +44,11 @@ import com.beacon.shared.models.DeviceStatus
 import com.beacon.shared.models.GeofenceType
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.events.DelayedMapListener
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -126,10 +132,23 @@ fun BeaconMapComponent(
     onMarkerClick: (String) -> Unit = {},
     centerOn: GeoPoint? = null,
     targetZoom: Double? = null,
-    onRecenter: (() -> Unit)? = null
+    onRecenter: (() -> Unit)? = null,
+    followTarget: GeoPoint? = null,
+    isFollowing: Boolean = false,
+    recenterSignal: Int = 0,
+    onUserPanned: () -> Unit = {},
+    fitPoints: List<GeoPoint> = emptyList(),
+    fitSignal: Int = 0,
+    onMapMoved: (GeoPoint) -> Unit = {}
 ) {
     var mapViewRef by remember { mutableStateOf<MapView?>(null) }
     var lastCenteredOn by remember { mutableStateOf<GeoPoint?>(null) }
+    var lastZoomApplied by remember { mutableStateOf(initialZoom) }
+    var lastFollowed by remember { mutableStateOf<GeoPoint?>(null) }
+    var lastRecenterSignal by remember { mutableStateOf(recenterSignal) }
+    var lastFitSignal by remember { mutableStateOf(fitSignal) }
+    val currentOnUserPanned by rememberUpdatedState(onUserPanned)
+    val currentOnMapMoved by rememberUpdatedState(onMapMoved)
     
     val infiniteTransition = rememberInfiniteTransition(label = "MapPulse")
     val pulseProgress by infiniteTransition.animateFloat(
@@ -157,10 +176,24 @@ fun BeaconMapComponent(
                     controller.setZoom(initialZoom)
                     controller.setCenter(GeoPoint(initialLat, initialLng))
                     
+                    var downX = 0f
+                    var downY = 0f
                     setOnTouchListener { v, event ->
                         when (event.action) {
-                            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                            MotionEvent.ACTION_DOWN -> {
+                                downX = event.x
+                                downY = event.y
                                 v.parent?.requestDisallowInterceptTouchEvent(true)
+                            }
+                            MotionEvent.ACTION_MOVE -> {
+                                v.parent?.requestDisallowInterceptTouchEvent(true)
+                                if (event.pointerCount == 1) {
+                                    val dx = event.x - downX
+                                    val dy = event.y - downY
+                                    if (Math.sqrt((dx * dx + dy * dy).toDouble()) > 20) {
+                                        currentOnUserPanned()
+                                    }
+                                }
                             }
                             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                                 v.parent?.requestDisallowInterceptTouchEvent(false)
@@ -168,17 +201,26 @@ fun BeaconMapComponent(
                         }
                         false
                     }
+                    addMapListener(DelayedMapListener(object : MapListener {
+                        override fun onScroll(event: ScrollEvent?): Boolean {
+                            currentOnMapMoved(GeoPoint(mapCenter.latitude, mapCenter.longitude))
+                            return false
+                        }
+                        override fun onZoom(event: ZoomEvent?): Boolean {
+                            currentOnMapMoved(GeoPoint(mapCenter.latitude, mapCenter.longitude))
+                            return false
+                        }
+                    }, 300))
                 }
                 mapViewRef = mapView
                 mapView
             },
             update = { mapView ->
-                // Ensure zoom is synchronized if initialZoom changes
-                if (mapView.zoomLevelDouble != initialZoom && centerOn == null) {
+                if (initialZoom != lastZoomApplied) {
                     mapView.controller.setZoom(initialZoom)
+                    lastZoomApplied = initialZoom
                 }
 
-                // Update tile source based on mapStyle
                 val tileSource = when (mapStyle) {
                     "Satellite" -> TileSourceFactory.USGS_SAT
                     "Topographic" -> TileSourceFactory.USGS_TOPO
@@ -190,16 +232,16 @@ fun BeaconMapComponent(
 
                 mapView.overlays.clear()
 
-                // 1. Add Historical Path Polyline
+                // Historical Path
                 if (historicalPath.isNotEmpty()) {
                     val pathLine = Polyline(mapView)
                     pathLine.setPoints(historicalPath)
-                    pathLine.outlinePaint.color = 0xAA00BCD4.toInt() // Cyan semi-transparent
+                    pathLine.outlinePaint.color = 0xAA00BCD4.toInt() 
                     pathLine.outlinePaint.strokeWidth = 5f
                     mapView.overlays.add(pathLine)
                 }
 
-                // 2. Add Existing Geofence Overlays
+                // Geofences
                 geofences.forEach { fence ->
                     when (fence.type) {
                         GeofenceType.RADIAL -> {
@@ -209,7 +251,7 @@ fun BeaconMapComponent(
 
                             val circle = Polygon(mapView)
                             circle.points = Polygon.pointsAsCircle(GeoPoint(lat, lng), radius)
-                            circle.fillPaint.color = 0x3300BCD4 // Light Cyan semi-transparent
+                            circle.fillPaint.color = 0x3300BCD4 
                             circle.outlinePaint.color = 0xFF00BCD4.toInt()
                             circle.outlinePaint.strokeWidth = 2f
                             circle.title = fence.name
@@ -224,7 +266,7 @@ fun BeaconMapComponent(
                             val line = Polyline(mapView)
                             line.addPoint(GeoPoint(aLat, aLng))
                             line.addPoint(GeoPoint(bLat, bLng))
-                            line.outlinePaint.color = 0xFFFF5722.toInt() // Deep Orange
+                            line.outlinePaint.color = 0xFFFF5722.toInt() 
                             line.outlinePaint.strokeWidth = 6f
                             line.title = fence.name
                             mapView.overlays.add(line)
@@ -232,13 +274,12 @@ fun BeaconMapComponent(
                     }
                 }
 
-                // 2. Add Creation Mode Overlays
+                // Creation Mode
                 if (isCreationMode && draftGeofenceType != null) {
                     when (draftGeofenceType) {
                         GeofenceType.RADIAL -> {
                             draftCenter?.let { center ->
                                 val cyanArgb = BeaconCyan.toArgb()
-                                // Circle Overlay
                                 val circle = Polygon(mapView)
                                 circle.points = Polygon.pointsAsCircle(center, draftRadiusMeters)
                                 circle.fillPaint.color = (0x44 shl 24) or (cyanArgb and 0x00FFFFFF)
@@ -246,7 +287,6 @@ fun BeaconMapComponent(
                                 circle.outlinePaint.strokeWidth = 3f
                                 mapView.overlays.add(circle)
 
-                                // Draggable Center Marker
                                 val marker = Marker(mapView).apply {
                                     position = center
                                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
@@ -277,7 +317,6 @@ fun BeaconMapComponent(
                         }
                         GeofenceType.TRIPWIRE -> {
                             if (draftPointA != null && draftPointB != null) {
-                                // Polyline Overlay
                                 val line = Polyline(mapView)
                                 line.setPoints(listOf(draftPointA, draftPointB))
                                 line.outlinePaint.color = 0xFFFF5722.toInt()
@@ -287,7 +326,6 @@ fun BeaconMapComponent(
                                 var markerA: Marker? = null
                                 var markerB: Marker? = null
 
-                                // Endpoint A
                                 markerA = Marker(mapView).apply {
                                     position = draftPointA
                                     isDraggable = true
@@ -316,7 +354,6 @@ fun BeaconMapComponent(
                                     })
                                 }
 
-                                // Endpoint B
                                 markerB = Marker(mapView).apply {
                                     position = draftPointB
                                     isDraggable = true
@@ -352,7 +389,7 @@ fun BeaconMapComponent(
                     }
                 }
 
-                // 3. Add Pulse Overlays (so they are under markers)
+                // Pulse Overlays
                 markers.filterNot { it.latitude == 0.0 && it.longitude == 0.0 }.forEach { markerData ->
                     if (markerData.status == DeviceStatus.GREEN_LIVE || markerData.status == DeviceStatus.BLUE_INTERVAL) {
                         val (statusColor, _) = getStatusUiConfig(markerData.status)
@@ -365,9 +402,8 @@ fun BeaconMapComponent(
                     }
                 }
 
-                // 5. Add Device Markers & Accuracy Circles
+                // Device Markers
                 markers.filterNot { it.latitude == 0.0 && it.longitude == 0.0 }.forEach { markerData ->
-                    // Draw Accuracy Circle
                     if (markerData.accuracy > 0) {
                         val circle = Polygon(mapView)
                         circle.points = Polygon.pointsAsCircle(GeoPoint(markerData.latitude, markerData.longitude), markerData.accuracy.toDouble())
@@ -407,7 +443,7 @@ fun BeaconMapComponent(
                     mapView.overlays.add(osmMarker)
                 }
 
-                // 6. Add Playback Marker
+                // Playback Marker
                 playbackMarker?.let { pos ->
                     val marker = Marker(mapView).apply {
                         position = pos
@@ -424,16 +460,40 @@ fun BeaconMapComponent(
                     mapView.overlays.add(marker)
                 }
 
+                // Following Logic
+                if (followTarget == null) {
+                    lastFollowed = null
+                } else if (lastFollowed == null ||
+                    lastFollowed!!.latitude != followTarget.latitude ||
+                    lastFollowed!!.longitude != followTarget.longitude
+                ) {
+                    lastFollowed = followTarget
+                    mapView.controller.animateTo(followTarget)
+                }
+
+                // Centering Logic
                 if (centerOn != null &&
                     (lastCenteredOn == null ||
                         centerOn.latitude != lastCenteredOn!!.latitude ||
-                        centerOn.longitude != lastCenteredOn!!.longitude)
+                        centerOn.longitude != lastCenteredOn!!.longitude ||
+                        recenterSignal != lastRecenterSignal)
                 ) {
                     lastCenteredOn = centerOn
+                    lastRecenterSignal = recenterSignal
                     if (targetZoom != null) {
                         mapView.controller.animateTo(centerOn, targetZoom, 1000L)
                     } else {
                         mapView.controller.animateTo(centerOn)
+                    }
+                }
+
+                if (fitPoints.size >= 2 && fitSignal != lastFitSignal) {
+                    lastFitSignal = fitSignal
+                    val box = BoundingBox.fromGeoPoints(fitPoints)
+                    if (box.latSpan < 0.0005 && box.lonSpan < 0.0005) {
+                        mapView.controller.animateTo(box.centerWithDateLine, 16.0, 1000L)
+                    } else {
+                        mapView.zoomToBoundingBox(box, true, 150, 17.0)
                     }
                 }
 
@@ -457,7 +517,7 @@ fun BeaconMapComponent(
                     Icon(
                         imageVector = Icons.Rounded.GpsFixed,
                         contentDescription = "Recenter",
-                        tint = TextPrimary,
+                        tint = if (isFollowing) BeaconCyan else TextPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                 }

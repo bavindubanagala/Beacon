@@ -42,15 +42,17 @@ fun GeofenceConfigDialog(
     var revertOnExit by remember { mutableStateOf(geofence.revertOnExit) }
     
     // Temporal
-    val initialExpiration = if (geofence.activeUntil != null) "Keep" else "Never"
+    val currentActiveUntil = geofence.activeUntil
+    val initialExpiration = if (currentActiveUntil != null) "Keep" else "Never"
     var expirationOption by remember { mutableStateOf(initialExpiration) }
     var activeDays by remember { mutableStateOf(geofence.activeDaysOfWeek?.toSet() ?: setOf(1, 2, 3, 4, 5, 6, 7)) }
 
     val keepLabel = remember(geofence.activeUntil) {
-        if (geofence.activeUntil != null) {
+        val currentActiveUntil = geofence.activeUntil
+        if (currentActiveUntil != null) {
             val sdf = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
-            val formattedDate = sdf.format(Date(geofence.activeUntil))
-            val isExpired = geofence.activeUntil < System.currentTimeMillis()
+            val formattedDate = sdf.format(Date(currentActiveUntil))
+            val isExpired = currentActiveUntil < System.currentTimeMillis()
             if (isExpired) "Keep current (expired $formattedDate)" else "Keep current (ends $formattedDate)"
         } else {
             ""
@@ -58,7 +60,8 @@ fun GeofenceConfigDialog(
     }
 
     val expirationOptions = buildList {
-        if (geofence.activeUntil != null) {
+        val currentActiveUntilForOptions = geofence.activeUntil
+        if (currentActiveUntilForOptions != null) {
             add("Keep")
         }
         add("Never")

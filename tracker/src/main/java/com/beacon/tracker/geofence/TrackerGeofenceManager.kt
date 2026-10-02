@@ -182,12 +182,14 @@ class TrackerGeofenceManager(context: Context) {
     fun applyZones(zones: List<GeofenceZone>) {
         val now = System.currentTimeMillis()
         val filtered = zones.filter { zone ->
+            val zoneRadius = zone.radiusMeters
+            val zoneActiveUntil = zone.activeUntil
             zone.type == GeofenceType.RADIAL &&
             zone.centerLat != null &&
             zone.centerLng != null &&
-            zone.radiusMeters != null &&
-            zone.radiusMeters > 0.0 &&
-            (zone.activeUntil == null || zone.activeUntil > now)
+            zoneRadius != null &&
+            zoneRadius > 0.0 &&
+            (zoneActiveUntil == null || zoneActiveUntil > now)
         }.distinctBy { it.id }.take(90)
 
         val storedList = filtered.map { zone ->
@@ -215,9 +217,10 @@ class TrackerGeofenceManager(context: Context) {
             val aLng = zone.pointALng
             val bLat = zone.pointBLat
             val bLng = zone.pointBLng
+            val zoneActiveUntil = zone.activeUntil
             zone.type == GeofenceType.TRIPWIRE &&
             aLat != null && aLng != null && bLat != null && bLng != null &&
-            (zone.activeUntil == null || zone.activeUntil > now)
+            (zoneActiveUntil == null || zoneActiveUntil > now)
         }.distinctBy { it.id }.take(50)
 
         val tripwireList = tripwireFiltered.map { zone ->

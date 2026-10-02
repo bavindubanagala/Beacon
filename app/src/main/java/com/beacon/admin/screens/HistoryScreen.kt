@@ -158,13 +158,17 @@ fun HistoryScreen(
                 } else null
             }
 
+            val initialLat = playbackPos?.latitude ?: pathPoints.firstOrNull()?.latitude ?: 7.8731
+            val initialLng = playbackPos?.longitude ?: pathPoints.firstOrNull()?.longitude ?: 80.7718
+            val initialZoom = if (playbackPos == null && pathPoints.isEmpty()) 7.0 else 15.0
+
             BeaconMapComponent(
                 modifier = Modifier.fillMaxSize(),
                 historicalPath = pathPoints,
                 playbackMarker = playbackPos,
-                initialLat = playbackPos?.latitude ?: 1.35,
-                initialLng = playbackPos?.longitude ?: 103.87,
-                initialZoom = 15.0
+                initialLat = initialLat,
+                initialLng = initialLng,
+                initialZoom = initialZoom
             )
 
             // Playback Controls Overlay

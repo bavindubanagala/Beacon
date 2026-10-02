@@ -64,7 +64,8 @@ sealed interface MapUiState {
         val selectedGroups: Set<String> = emptySet(),
         val selectedDeviceIds: Set<String> = emptySet(),
         val allDevicesForFilter: List<Device> = emptyList(),
-        val allGroups: List<com.beacon.shared.models.DeviceGroup> = emptyList()
+        val allGroups: List<com.beacon.shared.models.DeviceGroup> = emptyList(),
+        val fitSignal: Int = 0
     ) : MapUiState
 
     data class Error(
@@ -93,7 +94,8 @@ class MapViewModel @Inject constructor(
         val centerOn: Pair<Double, Double>? = null,
         val targetZoom: Double? = null,
         val selectedGroups: Set<String> = emptySet(),
-        val selectedDeviceIds: Set<String> = emptySet()
+        val selectedDeviceIds: Set<String> = emptySet(),
+        val fitSignal: Int = 0
     )
 
     // Reactive devices stream
@@ -178,7 +180,7 @@ class MapViewModel @Inject constructor(
                 latitude = device.latitude,
                 longitude = device.longitude,
                 lastPing = "Just now",
-                speed = 0f,
+                speed = (device.speed * 3.6f).toFloat(),
                 accuracy = device.accuracy
             )
         }
@@ -220,7 +222,10 @@ class MapViewModel @Inject constructor(
             selectedDeviceIds = settings.selectedDeviceIds,
             allDevicesForFilter = devicesList,
             allGroups = groupsData,
-            totalActiveCount = filteredDevices.size,
+            fitSignal = settings.fitSignal,
+            totalActiveCount = filteredDevices.count { 
+                it.statusLight == DeviceStatus.GREEN_LIVE || it.statusLight == DeviceStatus.BLUE_INTERVAL 
+            },
             pins = pins,
             geofences = geofenceStates
         ) as MapUiState
@@ -268,6 +273,14 @@ class MapViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    fun requestFitAll() {
+        _uiSettings.update { it.copy(fitSignal = it.fitSignal + 1) }
+    }
+
+    fun requestFitAll() {
+        _uiSettings.update { it.copy(fitSignal = it.fitSignal + 1) }
+    }
+
     fun toggleGeofences() {
         _uiSettings.update { it.copy(isGeofencesVisible = !it.isGeofencesVisible) }
     }
@@ -303,7 +316,10 @@ class MapViewModel @Inject constructor(
                 }
                 pins.isEmpty() -> DEFAULT_SRI_LANKA_CENTER to DEFAULT_ZOOM
                 pins.size == 1 -> (pins[0].latitude to pins[0].longitude) to DETAIL_ZOOM
-                else -> DEFAULT_SRI_LANKA_CENTER to DEFAULT_ZOOM
+                else -> {
+                    _uiSettings.update { it.copy(fitSignal = it.fitSignal + 1) }
+                    settings.centerOn to settings.targetZoom
+                }
             }
 
             settings.copy(
@@ -341,11 +357,17 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun startGeofenceCreation(type: com.beacon.shared.models.GeofenceType) {
+    fun startGeofenceCreation(type: com.beacon.shared.models.GeofenceType, viewCenter: org.osmdroid.util.GeoPoint? = null) {
         _draftType.value = type
         _isCreationMode.value = true
         val currentState = uiState.value
-        val center = if (currentState is MapUiState.Success) currentState.centerOn ?: DEFAULT_SRI_LANKA_CENTER else DEFAULT_SRI_LANKA_CENTER
+        val center = if (viewCenter != null) {
+            Pair(viewCenter.latitude, viewCenter.longitude)
+        } else if (currentState is MapUiState.Success) {
+            currentState.centerOn ?: DEFAULT_SRI_LANKA_CENTER
+        } else {
+            DEFAULT_SRI_LANKA_CENTER
+        }
         _draftCenter.value = org.osmdroid.util.GeoPoint(center.first, center.second)
         _draftPointA.value = org.osmdroid.util.GeoPoint(center.first - 0.001, center.second - 0.001)
         _draftPointB.value = org.osmdroid.util.GeoPoint(center.first + 0.001, center.second + 0.001)

@@ -112,7 +112,17 @@ private fun MapContent(
     viewModel: MapViewModel,
     modifier: Modifier
 ) {
+    val viewCenterHolder = remember { arrayOfNulls<GeoPoint>(1) }
+    val viewCenterHolder = remember { arrayOfNulls<GeoPoint>(1) }
     val selectedPin = state.pins.find { it.id == state.selectedPinId }
+
+    LaunchedEffect(state.pins.isNotEmpty()) {
+        if (state.pins.isNotEmpty()) viewModel.requestFitAll()
+    }
+
+    LaunchedEffect(state.pins.isNotEmpty()) {
+        if (state.pins.isNotEmpty()) viewModel.requestFitAll()
+    }
 
     val initialCamera = remember(state.pins) {
         val validPins = state.pins.filter { it.latitude != 0.0 && it.longitude != 0.0 }
@@ -152,7 +162,10 @@ private fun MapContent(
                 viewModel.selectPin(markerId)
             },
             centerOn = state.centerOn?.let { GeoPoint(it.first, it.second) },
-            targetZoom = state.targetZoom
+            targetZoom = state.targetZoom,
+            fitPoints = state.pins.map { GeoPoint(it.latitude, it.longitude) },
+            fitSignal = state.fitSignal,
+            onMapMoved = { viewCenterHolder[0] = it }
         )
 
         // Top Floating Control Bar
@@ -200,14 +213,14 @@ private fun MapContent(
                             DropdownMenuItem(
                                 text = { Text("Radial Zone", color = TextPrimary) },
                                 onClick = {
-                                    viewModel.startGeofenceCreation(com.beacon.shared.models.GeofenceType.RADIAL)
+                                    viewModel.startGeofenceCreation(com.beacon.shared.models.GeofenceType.RADIAL, viewCenterHolder[0])
                                     showAddFenceMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text("Tripwire", color = TextPrimary) },
                                 onClick = {
-                                    viewModel.startGeofenceCreation(com.beacon.shared.models.GeofenceType.TRIPWIRE)
+                                    viewModel.startGeofenceCreation(com.beacon.shared.models.GeofenceType.TRIPWIRE, viewCenterHolder[0])
                                     showAddFenceMenu = false
                                 }
                             )
@@ -551,7 +564,16 @@ private fun DeviceQuickSheet(
                     val gmmIntentUri = Uri.parse("google.navigation:q=${pin.latitude},${pin.longitude}")
                     val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
                     mapIntent.setPackage("com.google.android.apps.maps")
-                    context.startActivity(mapIntent)
+                    try {
+                        context.startActivity(mapIntent)
+                    } catch (e: android.content.ActivityNotFoundException) {
+                        try {
+                            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${pin.latitude},${pin.longitude}?q=${pin.latitude},${pin.longitude}"))
+                            context.startActivity(webIntent)
+                        } catch (e2: Exception) {
+                            android.widget.Toast.makeText(context, "No maps app found", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = BeaconCyan),
                 modifier = Modifier.fillMaxWidth()
