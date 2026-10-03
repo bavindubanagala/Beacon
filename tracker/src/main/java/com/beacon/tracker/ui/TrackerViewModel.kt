@@ -79,39 +79,64 @@ class TrackerViewModel @Inject constructor(
     val isSosActive: State<Boolean> = _isSosActive
 
     private var deviceListener: ListenerRegistration? = null
+    private var listenerRetryCount = 0
 
     init {
-        ensureAnonymousAuth()
-        startDeviceListener()
+        viewModelScope.launch {
+            ensureAnonymousAuth()
+            ensureTrackerLink()
+            startDeviceListener()
+        }
     }
 
-    private fun ensureAnonymousAuth() {
+    private suspend fun ensureAnonymousAuth() {
         if (auth.currentUser == null) {
-            viewModelScope.launch {
-                try {
-                    // Sign-in handled by AuthManager or Repository in production, 
-                    // but keeping logic here for UI feedback during init
-                    auth.signInAnonymously()
-                    Log.d("TrackerViewModel", "Anonymous auth check triggered")
-                } catch (e: Exception) {
-                    Log.e("TrackerViewModel", "Anonymous auth failed", e)
-                    _statusMessage.value = "Setup Error: Enable 'Anonymous Auth' in Firebase"
-                }
+            try {
+                auth.signInAnonymously().await()
+                Log.d("TrackerViewModel", "Anonymous sign-in completed")
+            } catch (e: Exception) {
+                Log.e("TrackerViewModel", "Anonymous auth failed", e)
+                _statusMessage.value = "Setup Error: Enable 'Anonymous Auth' in Firebase"
             }
         }
     }
 
-    private fun startDeviceListener() {
+    private suspend fun ensureTrackerLink() {
+        val uid = auth.currentUser?.uid ?: return
         val id = _deviceId.value
         if (id.isEmpty()) return
-        
+        try {
+            firestore.collection("tracker_links").document(uid)
+                .set(mapOf("deviceId" to id))
+                .await()
+        } catch (e: Exception) {
+            Log.e("TrackerViewModel", "Could not write tracker link", e)
+        }
+    }
+
+    private fun startDeviceListener() {
+        deviceListener?.remove()
+        deviceListener = null
+
+        val id = _deviceId.value
+        if (id.isEmpty()) return
+
         deviceListener = firestore.collection("devices").document(id)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
                     Log.e("TrackerViewModel", "Device listener error", e)
+                    if (listenerRetryCount < 5) {
+                        listenerRetryCount++
+                        viewModelScope.launch {
+                            delay(3000)
+                            startDeviceListener()
+                        }
+                    }
                     return@addSnapshotListener
                 }
-                
+
+                listenerRetryCount = 0
+
                 if (snapshot != null && snapshot.exists()) {
                     val paired = snapshot.getBoolean("is_paired") ?: false
                     val wasPaired = _isPaired.value
@@ -140,6 +165,9 @@ class TrackerViewModel @Inject constructor(
                 _pairingExpiresAt.value = System.currentTimeMillis() + 15 * 60 * 1000L
                 _statusMessage.value = "Code generated: $code"
                 _isPaired.value = false
+                listenerRetryCount = 0
+                startDeviceListener()
+                viewModelScope.launch { ensureTrackerLink() }
             }.onFailure { e ->
                 _statusMessage.value = "Failed to generate code: ${e.message}"
             }
@@ -243,6 +271,8 @@ class TrackerViewModel @Inject constructor(
                 stopTrackingService()
                 TrackerGeofenceManager(getApplication()).clearAll()
                 deviceAuthManager.clearAuth()
+                deviceListener?.remove()
+                deviceListener = null
                 _deviceId.value = deviceAuthManager.getDeviceId() ?: ""
                 _isPaired.value = false
                 _pairingCode.value = null
@@ -256,12 +286,14 @@ class TrackerViewModel @Inject constructor(
     fun checkPairingStatus() {
         val id = _deviceId.value
         if (id.isEmpty()) return
-        
+
         viewModelScope.launch {
             try {
-                val doc = firestore.collection("devices").document(id).get()
-                // Synchronous check if possible or handled via listener
-                _statusMessage.value = "Checking pairing..."
+                val doc = firestore.collection("devices").document(id).get().await()
+                if (doc.exists() && doc.getBoolean("is_paired") == true) {
+                    _isPaired.value = true
+                    deviceAuthManager.setPaired(true)
+                }
             } catch (e: Exception) {
                 Log.e("TrackerViewModel", "Failed to check pairing", e)
             }
