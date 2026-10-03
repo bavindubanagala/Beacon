@@ -32,7 +32,7 @@ fun DocumentSnapshot.toDevice(): Device {
     val lng = getDouble("longitude")
         ?: getDouble("lng")
         ?: (lastLocMap?.get("longitude") as? Number)?.toDouble()
-        ?: (lastLocMap?.get("lat") as? Number)?.toDouble()
+        ?: (lastLocMap?.get("lng") as? Number)?.toDouble()
         ?: 0.0
 
     val accuracyVal = getDouble("accuracy")?.toFloat()
