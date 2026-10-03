@@ -466,6 +466,16 @@ class LocationTrackingService : Service() {
                     servicePrefs.edit().putBoolean("tracking_paused", trackingPaused).apply()
                     startTrackingLoop()
                 }
+                ACTION_STOP_SERVICE -> {
+                    stopForeground(true)
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                ACTION_STOP_SERVICE -> {
+                    stopForeground(true)
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
             }
         }
         return START_STICKY
@@ -565,6 +575,7 @@ class LocationTrackingService : Service() {
     companion object {
         const val ACTION_UPDATE_TRACKING_STATE = "com.beacon.tracker.ACTION_UPDATE_TRACKING_STATE"
         const val ACTION_FORCE_UPDATE = "com.beacon.tracker.ACTION_FORCE_UPDATE"
+        const val ACTION_STOP_SERVICE = "com.beacon.tracker.ACTION_STOP_SERVICE"
         const val ACTION_STATUS_UPDATE = "com.beacon.tracker.ACTION_STATUS_UPDATE"
         const val EXTRA_STATUS_MESSAGE = "extra_status_message"
         const val EXTRA_TRACKING_PAUSED = "extra_tracking_paused"

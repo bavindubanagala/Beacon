@@ -355,8 +355,6 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                 "is_paired" to false,
                 "isPaired" to false,
                 "status" to "unpaired",
-                "ownerId" to "",
-                "owner_id" to "",
                 "commandTimestamp" to System.currentTimeMillis()
             )
             collection.document(deviceId).update(updates).await()

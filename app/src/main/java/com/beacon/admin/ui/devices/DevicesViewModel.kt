@@ -67,6 +67,7 @@ sealed interface DevicesListState {
 @HiltViewModel
 class DevicesViewModel @Inject constructor(
     private val deviceRepository: DeviceRepository,
+    private val alertRepository: com.beacon.data.repository.AlertRepository,
     private val authManager: AuthManager,
     private val auth: FirebaseAuth,
     savedStateHandle: SavedStateHandle
@@ -316,6 +317,13 @@ class DevicesViewModel @Inject constructor(
             isVisible = false,
             isSyncing = false
         )
+    }
+
+    fun clearSos(deviceId: String, onDone: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val result = alertRepository.resolveSos(deviceId)
+            onDone(result.isSuccess, result.exceptionOrNull()?.message)
+        }
     }
 }
 

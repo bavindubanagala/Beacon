@@ -26,7 +26,7 @@ class ServiceWatchdogWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
-        private const val TAG = "WatchdogWorker"
+        const val TAG = "WatchdogWorker"
         const val WORK_NAME = "service_watchdog_15min"
         const val OLD_WORK_NAME = "service_watchdog_work"
 

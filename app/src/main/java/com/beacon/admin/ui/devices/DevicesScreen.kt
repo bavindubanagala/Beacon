@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.beacon.admin.ui.components.ClearSosConfirmDialog
 import com.beacon.admin.ui.components.SyncProgressDialog
 import com.beacon.admin.ui.theme.*
 import com.beacon.admin.ui.viewmodels.DeviceGroupsViewModel
@@ -185,6 +186,20 @@ fun DevicesScreen(
                         Text("No devices match filter", color = TextMuted)
                     }
                 } else {
+                    var sosToClear by remember { mutableStateOf<DeviceUiModel?>(null) }
+                    if (sosToClear != null) {
+                        ClearSosConfirmDialog(
+                            deviceName = sosToClear!!.name,
+                            onConfirm = {
+                                devicesViewModel.clearSos(sosToClear!!.id) { ok, msg ->
+                                    Toast.makeText(context, if (ok) "SOS cleared" else "Could not clear SOS: ${msg ?: "unknown error"}", Toast.LENGTH_LONG).show()
+                                }
+                                sosToClear = null
+                            },
+                            onDismiss = { sosToClear = null }
+                        )
+                    }
+
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(bottom = 80.dp)
@@ -195,7 +210,8 @@ fun DevicesScreen(
                                 onClick = { onDeviceClick(device.id) },
                                 onManualSyncClick = {
                                     devicesViewModel.triggerFullTelemetrySync(device.id)
-                                }
+                                },
+                                onClearSosClick = { sosToClear = device }
                             )
                         }
                     }
@@ -233,7 +249,8 @@ fun DevicesScreen(
 private fun DeviceCard(
     device: DeviceUiModel,
     onClick: () -> Unit,
-    onManualSyncClick: () -> Unit
+    onManualSyncClick: () -> Unit,
+    onClearSosClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
@@ -280,6 +297,15 @@ private fun DeviceCard(
                         text = device.modeLabel,
                         style = MaterialTheme.typography.labelSmall.copy(color = BeaconCyan)
                     )
+                }
+                if (device.hasActiveSos) {
+                    TextButton(
+                        onClick = onClearSosClick,
+                        colors = ButtonDefaults.textButtonColors(contentColor = BeaconCrimson),
+                        contentPadding = PaddingValues(vertical = 4.dp, horizontal = 8.dp)
+                    ) {
+                        Text("Clear SOS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 

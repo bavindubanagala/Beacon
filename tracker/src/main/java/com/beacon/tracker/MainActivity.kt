@@ -252,7 +252,7 @@ fun PairingScreen(viewModel: TrackerViewModel) {
             }
             Spacer(modifier = Modifier.height(48.dp))
             TextButton(onClick = { viewModel.resetAndUnpair() }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))) {
-                Text("Reset Device & Delete ID", style = MaterialTheme.typography.labelSmall)
+                Text("UNPAIR THIS PHONE", style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -334,7 +334,7 @@ fun StatusScreen(viewModel: TrackerViewModel, isFullyGranted: Boolean) {
                 if (isUpdating) CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp) else { Icon(Icons.Rounded.Refresh, null); Spacer(Modifier.width(8.dp)); Text("Force Sync Location") }
             }
             TextButton(onClick = { viewModel.generatePairingCode() }) { Text("Device Re-pair / Logout", style = MaterialTheme.typography.bodySmall) }
-            TextButton(onClick = { viewModel.resetAndUnpair() }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))) { Text("UNPAIR & DELETE ALL DATA", style = MaterialTheme.typography.labelSmall) }
+            TextButton(onClick = { viewModel.resetAndUnpair() }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))) { Text("UNPAIR THIS PHONE", style = MaterialTheme.typography.labelSmall) }
         }
     }
 }

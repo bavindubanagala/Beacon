@@ -549,6 +549,20 @@ class DeviceDetailsViewModel @Inject constructor(
         }
     }
 
+    fun confirmDeleteDevice() {
+        if (_isUnpairing.value) return
+
+        viewModelScope.launch {
+            _isUnpairing.value = true
+            val result = deviceRepository.removeDevice(deviceId)
+            if (result.isSuccess) {
+                _showUnpairDialog.value = false
+                _unpairSuccessEvents.emit(Unit)
+            }
+            _isUnpairing.value = false
+        }
+    }
+
     fun saveGeofence(geofence: com.beacon.shared.models.GeofenceZone) {
         if (_isSavingGeofence.value) return
         viewModelScope.launch {

@@ -195,8 +195,17 @@ class FirestoreAlertRepositoryImpl @Inject constructor(
 
     override suspend fun resolveSos(deviceId: String): Result<Unit> {
         return try {
+            val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "admin"
             firestore.collection("devices").document(deviceId)
-                .update(mapOf("sosActive" to false))
+                .update(
+                    mapOf(
+                        "sosActive" to false,
+                        "isEmergencyMode" to false,
+                        "is_emergency_mode" to false,
+                        "sosResolvedAt" to System.currentTimeMillis(),
+                        "sosResolvedBy" to uid
+                    )
+                )
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {

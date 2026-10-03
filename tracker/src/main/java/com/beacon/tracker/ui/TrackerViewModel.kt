@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
@@ -113,8 +114,12 @@ class TrackerViewModel @Inject constructor(
                 
                 if (snapshot != null && snapshot.exists()) {
                     val paired = snapshot.getBoolean("is_paired") ?: false
+                    val wasPaired = _isPaired.value
                     _isPaired.value = paired
                     deviceAuthManager.setPaired(paired)
+                    if (wasPaired && !paired) {
+                        stopTrackingService()
+                    }
 
                     val sos = snapshot.getBoolean("isEmergencyMode")
                         ?: snapshot.getBoolean("is_emergency_mode")
@@ -206,22 +211,44 @@ class TrackerViewModel @Inject constructor(
         }
     }
 
+    private fun stopTrackingService() {
+        val context = getApplication<Application>()
+        androidx.work.WorkManager.getInstance(context)
+            .cancelUniqueWork(com.beacon.tracker.worker.ServiceWatchdogWorker.WORK_NAME)
+        val stopIntent = Intent(context, LocationTrackingService::class.java).apply {
+            action = LocationTrackingService.ACTION_STOP_SERVICE
+        }
+        context.startService(stopIntent)
+    }
+
     fun resetAndUnpair() {
         val id = _deviceId.value
         viewModelScope.launch {
             _statusMessage.value = "Unpairing..."
-            // Repository should handle full cleanup in production, 
-            // but keeping this for immediate local auth clearing
             try {
-                firestore.collection("devices").document(id).delete()
+                try {
+                    firestore.collection("devices").document(id)
+                        .update(
+                            mapOf(
+                                "is_paired" to false,
+                                "status" to "unpaired",
+                                "unpairRequested" to true,
+                                "unpairRequestedAt" to System.currentTimeMillis()
+                            )
+                        )
+                        .await()
+                } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                    if (e.code != com.google.firebase.firestore.FirebaseFirestoreException.Code.NOT_FOUND) throw e
+                }
+                stopTrackingService()
                 TrackerGeofenceManager(getApplication()).clearAll()
                 deviceAuthManager.clearAuth()
                 _deviceId.value = deviceAuthManager.getDeviceId() ?: ""
                 _isPaired.value = false
                 _pairingCode.value = null
-                _statusMessage.value = "Device reset successfully"
+                _statusMessage.value = "Phone unpaired. The Admin must delete the device record."
             } catch (e: Exception) {
-                _statusMessage.value = "Reset failed: ${e.message}"
+                _statusMessage.value = "Unpair failed: ${e.message}"
             }
         }
     }

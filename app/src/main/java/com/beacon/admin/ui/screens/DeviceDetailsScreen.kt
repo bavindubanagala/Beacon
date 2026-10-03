@@ -26,6 +26,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.beacon.admin.ui.components.BeaconMapComponent
+import com.beacon.admin.ui.components.ClearSosConfirmDialog
 import com.beacon.admin.ui.components.MapMarkerState
 import com.beacon.admin.ui.components.SyncProgressDialog
 import com.beacon.admin.ui.devices.DeviceUiModel
@@ -63,7 +64,21 @@ fun DeviceDetailsScreen(
     var recenterTarget by remember { mutableStateOf<GeoPoint?>(null) }
     var followEnabled by remember { mutableStateOf(true) }
     var recenterSignal by remember { mutableStateOf(0) }
+    var showClearSos by remember { mutableStateOf(false) }
     val isLive = device?.trackingMode?.trim()?.uppercase() == "LIVE"
+
+    if (showClearSos) {
+        ClearSosConfirmDialog(
+            deviceName = device?.name ?: "",
+            onConfirm = {
+                viewModel.clearSos(deviceId) { ok, msg ->
+                    Toast.makeText(context, if (ok) "SOS cleared" else "Could not clear SOS: ${msg ?: "unknown error"}", Toast.LENGTH_LONG).show()
+                }
+                showClearSos = false
+            },
+            onDismiss = { showClearSos = false }
+        )
+    }
 
     LaunchedEffect(isLive) { if (isLive) followEnabled = true }
 
@@ -300,6 +315,29 @@ fun DeviceDetailsScreen(
                 TelemetryGrid(device = device)
 
                 // Quick Action Shortcuts
+                if (device.hasActiveSos) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, BeaconCrimson),
+                        colors = CardDefaults.cardColors(containerColor = BeaconCrimson.copy(alpha = 0.1f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("SOS ACTIVE", color = BeaconCrimson, fontWeight = FontWeight.Bold)
+                            Button(
+                                onClick = { showClearSos = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = BeaconCrimson)
+                            ) {
+                                Text("Clear SOS")
+                            }
+                        }
+                    }
+                }
+
                 Text(
                     text = "Quick Actions",
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -377,16 +415,16 @@ fun DeviceDetailsScreen(
                         onClick = { showUnpairConfirmDialog = true },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = BeaconCrimson)
+                        colors = ButtonDefaults.buttonColors(containerColor = if (device.is_paired) BeaconCrimson else BeaconCyan)
                     ) {
                         Icon(
-                            Icons.Rounded.Delete,
+                            if (device.is_paired) Icons.Rounded.Delete else Icons.Rounded.Add,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.onError
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Unpair Device", color = MaterialTheme.colorScheme.onError)
+                        Text(if (device.is_paired) "Unpair Device" else "Delete Device", color = MaterialTheme.colorScheme.onError)
                     }
                 }
 
@@ -448,15 +486,16 @@ fun DeviceDetailsScreen(
             )
         }
 
-        // Unpair Confirmation Dialog
+        // Unpair / Delete Confirmation Dialog
         if (showUnpairConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showUnpairConfirmDialog = false },
                 containerColor = ObsidianBase,
-                title = { Text("Unpair Device", color = BeaconCrimson) },
+                title = { Text(if (device.is_paired) "Unpair Device" else "Delete this device?", color = BeaconCrimson) },
                 text = {
                     Text(
-                        "Are you sure you want to unpair ${device?.name ?: deviceId}? This device will be removed from your account.",
+                        if (device.is_paired) "Are you sure you want to unpair ${device.name ?: deviceId}? This device will be removed from your account."
+                        else "This permanently deletes the device record and any SOS on it. This cannot be undone.",
                         color = TextPrimary
                     )
                 },
@@ -464,12 +503,16 @@ fun DeviceDetailsScreen(
                     Button(
                         onClick = {
                             showUnpairConfirmDialog = false
-                            detailsViewModel.confirmUnpairing()
-                            viewModel.unpairDevice(deviceId)
+                            if (device.is_paired) {
+                                detailsViewModel.confirmUnpairing()
+                                viewModel.unpairDevice(deviceId)
+                            } else {
+                                detailsViewModel.confirmDeleteDevice()
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = BeaconCrimson)
                     ) {
-                        Text("Unpair", color = MaterialTheme.colorScheme.onError)
+                        Text(if (device.is_paired) "Unpair" else "Delete", color = MaterialTheme.colorScheme.onError)
                     }
                 },
                 dismissButton = {
