@@ -298,6 +298,12 @@ private fun DeviceCard(
                         style = MaterialTheme.typography.labelSmall.copy(color = BeaconCyan)
                     )
                 }
+                if (!device.is_paired) {
+                    Text(
+                        text = "Unpaired - open the device to delete it",
+                        style = MaterialTheme.typography.labelSmall.copy(color = TextMuted)
+                    )
+                }
                 if (device.hasActiveSos) {
                     TextButton(
                         onClick = onClearSosClick,
