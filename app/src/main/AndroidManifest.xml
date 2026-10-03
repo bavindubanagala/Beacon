@@ -39,12 +39,6 @@
         </service>
 
         <service
-            android:name=".services.LocationTrackingService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location" />
-
-        <service
             android:name=".services.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>

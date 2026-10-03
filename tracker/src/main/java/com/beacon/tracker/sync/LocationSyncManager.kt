@@ -88,22 +88,36 @@ class LocationSyncManager @Inject constructor(
     }
 
     suspend fun syncPendingLocations() {
-        val unsyncedLocations = locationDao.getUnsyncedLocations()
+        val unsyncedLocations = locationDao.getUnsyncedLocations().sortedBy { it.timestamp }
         if (unsyncedLocations.isEmpty()) return
+
+        var lastKept: LocationEntity? = null
 
         for (i in unsyncedLocations.indices) {
             val location = unsyncedLocations[i]
+            val isFirst = i == 0
             val isLast = i == unsyncedLocations.lastIndex
-            try {
-                uploadLocationToFirestore(
-                    userId = location.userId,
-                    location = location,
-                    force = true,
-                    updateDevice = isLast
-                )
+
+            val shouldKeep = isFirst || isLast || (lastKept != null && (
+                (location.timestamp - lastKept.timestamp) >= 300_000L ||
+                calculateDistanceMeters(lastKept.latitude, lastKept.longitude, location.latitude, location.longitude) >= max(25f, location.accuracy)
+            ))
+
+            if (shouldKeep) {
+                try {
+                    uploadLocationToFirestore(
+                        userId = location.userId,
+                        location = location,
+                        force = true,
+                        updateDevice = isLast
+                    )
+                    locationDao.markAsSynced(location.id)
+                    lastKept = location
+                } catch (e: Exception) {
+                    break
+                }
+            } else {
                 locationDao.markAsSynced(location.id)
-            } catch (e: Exception) {
-                break
             }
         }
     }

@@ -44,6 +44,7 @@ class FirestoreAlertRepositoryImpl @Inject constructor(
 
             callbackFlow {
                 var alertsListener: ListenerRegistration? = null
+                var lastDeviceIds: Set<String>? = null
 
                 // First get device IDs to filter collection group
                 val devicesListener = firestore.collection("devices")
@@ -60,9 +61,16 @@ class FirestoreAlertRepositoryImpl @Inject constructor(
                         
                         val deviceIds = devicesSnapshot?.documents?.map { it.id } ?: emptyList()
                         if (deviceIds.isEmpty()) {
+                            lastDeviceIds = null
                             trySend(emptyList())
                             return@addSnapshotListener
                         }
+
+                        val deviceIdSet = deviceIds.toSet()
+                        if (deviceIdSet == lastDeviceIds && alertsListener != null) {
+                            return@addSnapshotListener
+                        }
+                        lastDeviceIds = deviceIdSet
 
                         // Remove previous alerts listener if it exists (re-attaching with new deviceIds filter)
                         alertsListener?.remove()

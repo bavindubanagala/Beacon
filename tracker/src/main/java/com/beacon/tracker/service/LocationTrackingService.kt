@@ -289,9 +289,14 @@ class LocationTrackingService : Service() {
         val deviceId = deviceAuthManager.getDeviceId()
         if (deviceId.isBlank()) return
 
-        val updates = mapOf(
+        val updates = mutableMapOf<String, Any>(
             "lastSeenTimestamp" to System.currentTimeMillis()
         )
+        val battery = getBatteryLevel()
+        if (battery > 0) {
+            updates["batteryLevel"] = battery
+            updates["battery_level"] = battery
+        }
         firestore.collection("devices").document(deviceId)
             .update(updates)
             .addOnFailureListener { e ->
