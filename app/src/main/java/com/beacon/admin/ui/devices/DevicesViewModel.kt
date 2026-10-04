@@ -53,7 +53,8 @@ data class DeviceUiModel(
     val liveIntervalMillis: Long = 10_000L,
     val liveRevertAfterMillis: Long = 1_800_000L,
     val revertToMode: String = "",
-    val modeLabel: String = ""
+    val modeLabel: String = "",
+    val is_paired: Boolean = true
 )
 
 sealed interface DevicesListState {
@@ -128,7 +129,8 @@ class DevicesViewModel @Inject constructor(
                     liveIntervalMillis = device.liveIntervalMillis,
                     liveRevertAfterMillis = device.liveRevertAfterMillis,
                     revertToMode = device.revertToMode,
-                    modeLabel = buildModeLabel(mode, device.scheduledIntervalMillis, device.liveIntervalMillis)
+                    modeLabel = buildModeLabel(mode, device.scheduledIntervalMillis, device.liveIntervalMillis),
+                    is_paired = device.is_paired
                 )
             }
             if (devices.isEmpty()) DevicesListState.Empty else DevicesListState.Success(devices)

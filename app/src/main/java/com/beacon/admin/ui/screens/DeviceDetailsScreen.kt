@@ -487,7 +487,7 @@ fun DeviceDetailsScreen(
         }
 
         // Unpair / Delete Confirmation Dialog
-        if (showUnpairConfirmDialog) {
+        if (showUnpairConfirmDialog && device != null) {
             AlertDialog(
                 onDismissRequest = { showUnpairConfirmDialog = false },
                 containerColor = ObsidianBase,
