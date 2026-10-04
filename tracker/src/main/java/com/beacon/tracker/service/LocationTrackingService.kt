@@ -65,6 +65,9 @@ class LocationTrackingService : Service() {
     private val geofenceManager by lazy { TrackerGeofenceManager(applicationContext) }
     private var deviceZonesListener: ListenerRegistration? = null
     private var groupZonesListener: ListenerRegistration? = null
+    private val listenerRetryHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var listenerRetryCount = 0
+    private var listenerRetryPending = false
     private var deviceZones: List<GeofenceZone> = emptyList()
     private var groupZones: List<GeofenceZone> = emptyList()
     private var currentGroupId: String? = null
@@ -89,18 +92,38 @@ class LocationTrackingService : Service() {
         startTrackingLoop()
     }
 
+    private fun scheduleListenerRetry() {
+        if (listenerRetryPending || listenerRetryCount >= 10) return
+        listenerRetryPending = true
+        listenerRetryCount++
+        listenerRetryHandler.postDelayed({
+            listenerRetryPending = false
+            startDeviceListener()
+        }, 5000L)
+    }
+
     private fun startDeviceListener() {
         val deviceAuthManager = DeviceAuthManager(applicationContext)
         val deviceId = deviceAuthManager.getDeviceId()
         if (deviceId.isBlank()) return
+
+        deviceZonesListener?.remove()
+        deviceZonesListener = null
+        deviceListenerRegistration?.remove()
+        deviceListenerRegistration = null
+        groupZonesListener?.remove()
+        groupZonesListener = null
+        currentGroupId = null
 
         deviceZonesListener = firestore.collection("geofences")
             .whereArrayContains("assignedDeviceIds", deviceId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e("TrackerService", "Device zones listener error", error)
+                    scheduleListenerRetry()
                     return@addSnapshotListener
                 }
+                listenerRetryCount = 0
                 deviceZones = snapshot?.documents?.mapNotNull { it.toObject(GeofenceZone::class.java)?.copy(id = it.id) } ?: emptyList()
                 applyMergedZones()
             }
@@ -109,8 +132,10 @@ class LocationTrackingService : Service() {
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e("TrackerService", "Device listener error", error)
+                    scheduleListenerRetry()
                     return@addSnapshotListener
                 }
+                listenerRetryCount = 0
 
                 if (snapshot != null && snapshot.exists()) {
                     val groupId = snapshot.getString("groupId")?.takeIf { it.isNotBlank() }
@@ -125,6 +150,7 @@ class LocationTrackingService : Service() {
                                 .addSnapshotListener { groupSnap, groupErr ->
                                     if (groupErr != null) {
                                         Log.e("TrackerService", "Group zones listener error", groupErr)
+                                        scheduleListenerRetry()
                                         return@addSnapshotListener
                                     }
                                     groupZones = groupSnap?.documents?.mapNotNull { it.toObject(GeofenceZone::class.java)?.copy(id = it.id) } ?: emptyList()
@@ -254,31 +280,38 @@ class LocationTrackingService : Service() {
         trackingLoopJob = serviceScope.launch {
             delay(3000)
             while (isActive) {
-                val config = trackingConfigFlow.value
+                try {
+                    val config = trackingConfigFlow.value
 
-                if (config.mode == TrackingMode.LIVE) {
-                    val deadline = servicePrefs.getLong("live_deadline_at", 0L)
-                    if (deadline > 0L && System.currentTimeMillis() >= deadline) {
-                        revertFromLive(config)
-                        delay(5000)
-                        continue
+                    if (config.mode == TrackingMode.LIVE) {
+                        val deadline = servicePrefs.getLong("live_deadline_at", 0L)
+                        if (deadline > 0L && System.currentTimeMillis() >= deadline) {
+                            revertFromLive(config)
+                            delay(5000)
+                            continue
+                        }
                     }
-                }
 
-                val activeMode = if (trackingPaused) TrackingMode.ONLINE else config.mode
-                when (activeMode) {
-                    TrackingMode.SCHEDULED -> {
-                        triggerImmediateSync(priority = Priority.PRIORITY_BALANCED_POWER_ACCURACY)
-                        delay(capDelayWithDeadline(config, config.scheduledIntervalMillis))
+                    val activeMode = if (trackingPaused) TrackingMode.ONLINE else config.mode
+                    when (activeMode) {
+                        TrackingMode.SCHEDULED -> {
+                            triggerImmediateSync(priority = Priority.PRIORITY_BALANCED_POWER_ACCURACY)
+                            delay(capDelayWithDeadline(config, config.scheduledIntervalMillis))
+                        }
+                        TrackingMode.LIVE -> {
+                            triggerImmediateSync(priority = Priority.PRIORITY_HIGH_ACCURACY)
+                            delay(capDelayWithDeadline(config, config.liveIntervalMillis))
+                        }
+                        TrackingMode.ONLINE -> {
+                            sendHeartbeat()
+                            delay(capDelayWithDeadline(config, config.onlineHeartbeatIntervalMillis))
+                        }
                     }
-                    TrackingMode.LIVE -> {
-                        triggerImmediateSync(priority = Priority.PRIORITY_HIGH_ACCURACY)
-                        delay(capDelayWithDeadline(config, config.liveIntervalMillis))
-                    }
-                    TrackingMode.ONLINE -> {
-                        sendHeartbeat()
-                        delay(capDelayWithDeadline(config, config.onlineHeartbeatIntervalMillis))
-                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e("TrackerService", "Tracking loop error", e)
+                    delay(10_000L)
                 }
             }
         }
@@ -471,11 +504,6 @@ class LocationTrackingService : Service() {
                     stopSelf()
                     return START_NOT_STICKY
                 }
-                ACTION_STOP_SERVICE -> {
-                    stopForeground(true)
-                    stopSelf()
-                    return START_NOT_STICKY
-                }
             }
         }
         return START_STICKY
@@ -485,7 +513,7 @@ class LocationTrackingService : Service() {
         if (auth.currentUser == null) {
             auth.signInAnonymously()
                 .addOnSuccessListener { result ->
-                    Log.d("TrackerService", "Anonymous auth succeeded: ${result.user?.uid}")
+                    Log.d("TrackerService", "Anonymous auth succeeded")
                 }
                 .addOnFailureListener { e ->
                     Log.e("TrackerService", "Anonymous auth failed", e)
@@ -559,6 +587,7 @@ class LocationTrackingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        listenerRetryHandler.removeCallbacksAndMessages(null)
         deviceListenerRegistration?.remove()
         deviceZonesListener?.remove()
         groupZonesListener?.remove()

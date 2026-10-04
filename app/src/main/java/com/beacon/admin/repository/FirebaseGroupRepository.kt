@@ -56,10 +56,16 @@ class FirebaseGroupRepository @Inject constructor(
     }.map { Unit }
 
     suspend fun assignDeviceToGroup(deviceId: String, groupId: String): Result<Unit> = runCatching {
-        collection.document(groupId).update("deviceIds", FieldValue.arrayUnion(deviceId)).await()
+        val batch = firestore.batch()
+        batch.update(collection.document(groupId), "deviceIds", FieldValue.arrayUnion(deviceId))
+        batch.update(firestore.collection("devices").document(deviceId), "groupId", groupId)
+        batch.commit().await()
     }.map { Unit }
 
     suspend fun removeDeviceFromGroup(deviceId: String, groupId: String): Result<Unit> = runCatching {
-        collection.document(groupId).update("deviceIds", FieldValue.arrayRemove(deviceId)).await()
+        val batch = firestore.batch()
+        batch.update(collection.document(groupId), "deviceIds", FieldValue.arrayRemove(deviceId))
+        batch.update(firestore.collection("devices").document(deviceId), "groupId", FieldValue.delete())
+        batch.commit().await()
     }.map { Unit }
 }

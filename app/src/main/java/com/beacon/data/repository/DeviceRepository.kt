@@ -194,6 +194,11 @@ class FirestoreDeviceRepositoryImpl @Inject constructor(
                     throw IllegalStateException("Pairing code has already been claimed or deleted.")
                 }
 
+                val expiresAt = codeSnapshot.getLong("expiresAt") ?: 0L
+                if (expiresAt > 0L && System.currentTimeMillis() > expiresAt + 5 * 60 * 1000L) {
+                    throw IllegalStateException("Pairing code has expired. Generate a new one on the Tracker.")
+                }
+
                 val deviceId = codeSnapshot.getString("deviceId")
                     ?: throw IllegalStateException("Invalid device metadata in pairing code.")
                 val trackerAuthUid = codeSnapshot.getString("trackerAuthUid")

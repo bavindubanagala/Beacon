@@ -107,7 +107,7 @@ class AdminSosService : Service() {
             return
         }
 
-        Log.d(TAG, "Starting SOS monitoring for authenticated user: ${currentUser.uid}")
+        Log.d(TAG, "Starting SOS monitoring for authenticated user")
 
         sosListenerRegistration = db.collection("devices")
             .whereEqualTo("ownerId", currentUser.uid)

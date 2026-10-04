@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.beacon.shared.constants.SharedPrefsKeys
+import com.beacon.admin.data.auth.AuthSessionCleanupRegistry
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.channels.awaitClose
@@ -43,20 +44,7 @@ class AuthManager @Inject constructor(
     }
 
     suspend fun ensureAuthenticated(): String? {
-        val existingId = currentUserId
-        if (!existingId.isNullOrEmpty()) {
-            return existingId
-        }
-
-        return try {
-            val authResult = firebaseAuth.signInAnonymously().await()
-            val newUid = authResult.user?.uid
-            Log.d("PairDebug", "AuthManager: Authenticated anonymously with UID: $newUid")
-            newUid
-        } catch (e: Exception) {
-            Log.e("PairDebug", "AuthManager: Anonymous authentication failed", e)
-            null
-        }
+        return currentUserId?.takeIf { it.isNotEmpty() }
     }
 
     suspend fun signUp(email: String, password: String): Result<FirebaseUser> {
@@ -84,6 +72,7 @@ class AuthManager @Inject constructor(
     }
 
     fun signOut() {
+        AuthSessionCleanupRegistry.clear()
         firebaseAuth.signOut()
         encryptedPrefs.edit().clear().apply()
     }

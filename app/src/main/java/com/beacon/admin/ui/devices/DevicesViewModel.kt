@@ -180,8 +180,11 @@ class DevicesViewModel @Inject constructor(
 
     fun unpairDevice(deviceId: String) {
         viewModelScope.launch {
-            try { deviceRepository.unpairDevice(deviceId) }
-            catch (e: Exception) { }
+            try {
+                deviceRepository.unpairDevice(deviceId)
+            } catch (e: Exception) {
+                Log.e("DevicesViewModel", "unpairDevice failed", e)
+            }
         }
     }
 
@@ -228,20 +231,23 @@ class DevicesViewModel @Inject constructor(
 
                 val snapshot = kotlinx.coroutines.withTimeoutOrNull(10000L) {
                     kotlinx.coroutines.suspendCancellableCoroutine<com.google.firebase.firestore.DocumentSnapshot> { continuation ->
-                        val listener = firestore.collection("devices").document(targetDeviceId)
+                        var registration: com.google.firebase.firestore.ListenerRegistration? = null
+                        registration = firestore.collection("devices").document(targetDeviceId)
                             .addSnapshotListener { snap, error ->
                                 if (error != null) {
+                                    registration?.remove()
                                     if (continuation.isActive) continuation.resumeWith(Result.failure(error))
                                     return@addSnapshotListener
                                 }
                                 if (snap != null && snap.exists()) {
                                     val lastSeen = snap.getLong("lastSeenTimestamp") ?: snap.getLong("last_seen") ?: 0L
                                     if (lastSeen >= pingSentAt && continuation.isActive) {
+                                        registration?.remove()
                                         continuation.resumeWith(Result.success(snap))
                                     }
                                 }
                             }
-                        continuation.invokeOnCancellation { listener.remove() }
+                        continuation.invokeOnCancellation { registration?.remove() }
                     }
                 }
 

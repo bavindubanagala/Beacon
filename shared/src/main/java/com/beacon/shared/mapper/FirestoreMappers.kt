@@ -68,7 +68,7 @@ fun DocumentSnapshot.toDevice(): Device {
             ?: 0,
         ownerId = getString("ownerId") ?: getString("owner_id") ?: "",
         trackerAuthUid = getString("trackerAuthUid") ?: "",
-        groupId = getString("groupId") ?: getString("group_id") ?: "",
+        groupId = (getString("groupId") ?: getString("group_id"))?.takeIf { it.isNotBlank() },
         is_paired = getBoolean("is_paired") ?: getBoolean("isPaired") ?: false,
         trackingMode = getString("trackingMode") ?: getString("tracking_mode") ?: "interval",
         scheduledIntervalMillis = getLong("scheduledIntervalMillis") ?: 900_000L,

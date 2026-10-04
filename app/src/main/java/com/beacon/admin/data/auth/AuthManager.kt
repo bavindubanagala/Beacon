@@ -82,7 +82,7 @@ class AuthManager @Inject constructor(
         return try {
             val authResult = firebaseAuth.signInAnonymously().await()
             val newUid = authResult.user?.uid
-            Log.d("PairDebug", "AuthManager: Authenticated anonymously with UID: $newUid")
+            Log.d("PairDebug", "AuthManager: Authenticated anonymously")
             newUid
         } catch (e: FirebaseAuthInvalidUserException) {
             Log.w("PairDebug", "Auth session expired", e)

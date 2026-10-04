@@ -65,7 +65,7 @@ class BeaconFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d("FCMTracker", "New token generated: $token")
+        Log.d("FCMTracker", "New token generated")
         
         val deviceId = deviceAuthManager.getDeviceId()
         if (deviceId.isNotEmpty()) {
