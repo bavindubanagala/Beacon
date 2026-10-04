@@ -2,103 +2,187 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isAuthenticated() {
+    // ---------- Helper checks ----------
+
+    function signedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    // Only your own Admin accounts (email and password sign-in).
+    function isAdminAccount() {
+      return signedIn()
+      && request.auth.token.firebase.sign_in_provider == 'password'
+      && request.auth.token.email in [
+        'bgbsbanagala@gmail.com'
+      ];
     }
 
-    function isDeviceOwner() {
-      return isAuthenticated() && (
-        resource.data.ownerId == request.auth.uid ||
-        resource.data.adminUid == request.auth.uid ||
-        resource.data.userId == request.auth.uid
+    // These look at the device document being read or changed right now.
+    function isDocOwner() {
+      return signedIn() && (
+        resource.data.get('ownerId', '') == request.auth.uid ||
+        resource.data.get('owner_id', '') == request.auth.uid
       );
     }
 
-    // Default deny for unmatched documents
-    match /{document=**} {
-      allow read, write: if false;
+    function isDocTracker() {
+      return signedIn() && resource.data.get('trackerAuthUid', '') == request.auth.uid;
     }
 
-    // Users Collection
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
+    function isUnowned() {
+      return resource.data.get('ownerId', '') == '' &&
+      resource.data.get('owner_id', '') == '';
     }
 
-    // Devices Collection
+    function protectedFieldsUntouched() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['ownerId', 'owner_id', 'trackerAuthUid']);
+    }
+
+    // A Tracker may turn an SOS on, but never off.
+    function sosNotCleared() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['sosActive', 'isEmergencyMode', 'is_emergency_mode'])
+      || (request.resource.data.get('sosActive', false) == true
+      && request.resource.data.get('isEmergencyMode', false) == true
+      && request.resource.data.get('is_emergency_mode', false) == true);
+    }
+
+    // These look up the parent device from inside a subcollection.
+    function parentDevice(deviceId) {
+      return get(/databases/$(database)/documents/devices/$(deviceId)).data;
+    }
+
+    function isOwnerOf(deviceId) {
+      return signedIn() && (
+        parentDevice(deviceId).get('ownerId', '') == request.auth.uid ||
+        parentDevice(deviceId).get('owner_id', '') == request.auth.uid
+      );
+    }
+
+    function isTrackerOf(deviceId) {
+      return signedIn() && parentDevice(deviceId).get('trackerAuthUid', '') == request.auth.uid;
+    }
+
+    // The device ID linked to this Tracker's account (see tracker_links).
+    function trackerDeviceId() {
+      return get(/databases/$(database)/documents/tracker_links/$(request.auth.uid)).data.deviceId;
+    }
+
+    // ---------- Devices ----------
+
     match /devices/{deviceId} {
-      // Device creation requires owner/admin ID matching the authenticated user
-      allow create: if isAuthenticated() && (
-        request.resource.data.ownerId == request.auth.uid ||
-        request.resource.data.adminUid == request.auth.uid
+      allow list: if signedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.owner_id == request.auth.uid
       );
 
-      // Read and delete require device ownership
-      allow read, delete: if isDeviceOwner();
+      allow get: if isDocOwner() || isDocTracker();
 
-      // Updates: device owners have full update permissions;
-      // authenticated paired devices can update telemetry and status fields only
-      allow update: if isDeviceOwner() || (
-        isAuthenticated() && (
-          resource.data.is_paired == true || resource.data.paired == true
-        ) && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['latitude', 'longitude', 'location', 'batteryLevel', 'speed', 'signalStrength', 'lastSeen', 'updatedAt', 'isEmergencyMode', 'sosTimestamp', 'status'])
+      allow create: if signedIn() && (
+        request.resource.data.get('trackerAuthUid', '') == request.auth.uid ||
+        request.resource.data.get('ownerId', '') == request.auth.uid
       );
 
-      // Sub-collections under a device document
-      match /{subcollection=**} {
-        allow read, write: if isAuthenticated();
+      allow update: if isDocOwner()
+      || (isDocTracker() && protectedFieldsUntouched() && sosNotCleared())
+      || (isUnowned() && request.resource.data.get('ownerId', '') == request.auth.uid)
+      || (isUnowned() && request.resource.data.get('trackerAuthUid', '') == request.auth.uid);
+
+      // Only the Admin (owner) can delete a device record.
+      allow delete: if isDocOwner();
+
+      match /location_history/{pointId} {
+        allow read: if isOwnerOf(deviceId);
+        allow create, update: if isTrackerOf(deviceId);
+        allow delete: if isOwnerOf(deviceId);
+      }
+
+      match /mode_history/{entryId} {
+        allow read: if isOwnerOf(deviceId);
+        allow create: if isOwnerOf(deviceId) || isTrackerOf(deviceId);
+      }
+
+      match /alerts/{alertId} {
+        allow create: if isOwnerOf(deviceId) || isTrackerOf(deviceId);
+        allow update, delete: if isOwnerOf(deviceId);
       }
     }
 
-    // Telemetry and Location Data Collection
-    match /locations/{locationId} {
-      allow create: if isAuthenticated() && (
-        request.resource.data.userId == request.auth.uid ||
-        request.resource.data.ownerId == request.auth.uid ||
-        request.resource.data.deviceId != null
+    // ---------- Alerts: the Admin app reads these across all devices ----------
+
+    match /{path=**}/alerts/{alertId} {
+      allow read: if signedIn();
+    }
+
+    // ---------- Pairing codes ----------
+
+    match /pairing_codes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.trackerAuthUid == request.auth.uid;
+      allow update: if signedIn() && resource.data.trackerAuthUid == request.auth.uid;
+      allow delete: if signedIn();
+    }
+
+    // ---------- Tracker badges ----------
+    // One small document per Tracker account, holding the device it belongs to.
+    // It can only be written if the device record names this account as its Tracker.
+
+    match /tracker_links/{authUid} {
+      allow read: if signedIn() && request.auth.uid == authUid;
+      allow create, update: if signedIn()
+      && request.auth.uid == authUid
+      && request.resource.data.keys().hasOnly(['deviceId'])
+      && request.resource.data.deviceId is string
+      && get(/databases/$(database)/documents/devices/$(request.resource.data.deviceId))
+        .data.get('trackerAuthUid', '') == request.auth.uid;
+      allow delete: if signedIn() && request.auth.uid == authUid;
+    }
+
+    // ---------- Events and commands (writes protected) ----------
+
+    match /geofence_events/{eventId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && (
+        isTrackerOf(request.resource.data.deviceId) ||
+        isOwnerOf(request.resource.data.deviceId)
       );
-      allow read, update, delete: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.ownerId == request.auth.uid
-      );
+      allow update: if false;
+      allow delete: if signedIn() && isOwnerOf(resource.data.deviceId);
     }
 
-    // Pairing Codes and Requests Collections
-    match /pairing_codes/{codeId} {
-      allow read, create, delete: if isAuthenticated();
-      allow update: if isAuthenticated();
+    match /device_commands/{commandId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && isOwnerOf(request.resource.data.deviceId);
+      allow update, delete: if false;
     }
 
-    match /pairings/{pairingId} {
-      allow read, create, delete: if isAuthenticated();
-      allow update: if isAuthenticated();
+    // ---------- Admin-only collections ----------
+
+    // Only your Admin accounts can read or write groups.
+    match /groups/{groupId} {
+      allow read, write: if isAdminAccount();
     }
 
-    // Remote Commands Collection
-    match /commands/{commandId} {
-      allow read, write: if isAuthenticated();
-    }
-
-    // Geofences Collection
+    // Admin accounts read and change every zone. A Tracker can read only the zones
+    // assigned to its own device or to its own group.
     match /geofences/{geofenceId} {
-      allow create: if isAuthenticated() && (
-        request.resource.data.ownerId == request.auth.uid ||
-        request.resource.data.userId == request.auth.uid
-      );
-      allow read, update, delete: if isAuthenticated() && (
-        resource.data.ownerId == request.auth.uid ||
-        resource.data.userId == request.auth.uid
-      );
+      allow read: if isAdminAccount()
+      || (signedIn() && (
+        trackerDeviceId() in resource.data.assignedDeviceIds
+        || parentDevice(trackerDeviceId()).get('groupId', '') in resource.data.assignedGroupIds
+      ));
+      allow write: if isAdminAccount();
     }
 
-    // Alerts and Notifications Collection
-    match /alerts/{alertId} {
-      allow read, write: if isAuthenticated();
+    // Only your Admin accounts.
+    match /admin_settings/{settingId} {
+      allow read, write: if isAdminAccount();
+    }
+
+    // Only your Admin accounts.
+    match /device_groups/{groupId} {
+      allow read, write: if isAdminAccount();
     }
   }
 }
